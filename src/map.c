@@ -2,6 +2,8 @@
 
 #include <math.h>
 
+static void DrawHazardVisuals(HazardType hazard, Rectangle rect, float elapsedSeconds);
+
 static int MaxInt(int a, int b) {
     return a > b ? a : b;
 }
@@ -308,6 +310,11 @@ void Map_Draw(const GameMap *map, const AssetBundle *assets, Camera2D camera, in
                     DrawRectangleRec(rect, (Color){5, 9, 15, 255});
                     break;
             }
+            
+            HazardType hazard = Map_GetHazardAt(map, column, row);
+            if (hazard != HAZARD_NONE) {
+                DrawHazardVisuals(hazard, rect, elapsedSeconds);
+            }
 
             if (map->campPlaced && column == map->campX && row == map->campY) {
                 DrawRectangle((int)rect.x + 10, (int)rect.y + 26, 44, 24, (Color){122, 89, 60, 255});
@@ -319,6 +326,73 @@ void Map_Draw(const GameMap *map, const AssetBundle *assets, Camera2D camera, in
                 );
             }
         }
+    }
+}
+
+static void DrawHazardVisuals(HazardType hazard, Rectangle rect, float elapsedSeconds) {
+    float pulse;
+    int centerX;
+    int centerY;
+    
+    centerX = (int)(rect.x + rect.width * 0.5f);
+    centerY = (int)(rect.y + rect.height * 0.5f);
+    pulse = (sinf(elapsedSeconds * 4.0f) + 1.0f) * 0.5f;
+    
+    switch (hazard) {
+        case HAZARD_TRIP: {
+            DrawCircleLines(centerX, centerY, TileScale(18.0f), (Color){220, 60, 60, 180});
+            DrawCircle(centerX, centerY, TileScale(3.0f), (Color){220, 60, 60, 200 + (int)(pulse * 55.0f)});
+            
+            DrawLineEx(
+                (Vector2){rect.x + 8.0f, rect.y + 16.0f},
+                (Vector2){rect.x + 56.0f, rect.y + 48.0f},
+                TileScale(2.0f),
+                (Color){180, 40, 40, 160}
+            );
+            break;
+        }
+        case HAZARD_SWAMP: {
+            int bubbleCount;
+            int i;
+            
+            bubbleCount = 3 + (int)(pulse * 2.0f);
+            for (i = 0; i < bubbleCount; i++) {
+                float offsetX;
+                float offsetY;
+                float bubbleSize;
+                
+                offsetX = (sinf(elapsedSeconds * 3.0f + i * 2.0f) + 1.0f) * 0.5f;
+                offsetY = (cosf(elapsedSeconds * 2.5f + i * 1.5f) + 1.0f) * 0.5f;
+                bubbleSize = TileScale(4.0f + offsetX * 3.0f);
+                
+                DrawCircle(
+                    centerX + (int)((offsetX - 0.5f) * 20.0f),
+                    centerY + (int)((offsetY - 0.5f) * 20.0f),
+                    bubbleSize,
+                    (Color){133, 179, 66, 120 + (int)(pulse * 80.0f)}
+                );
+            }
+            break;
+        }
+        case HAZARD_POISON: {
+            int i;
+            float angle;
+            
+            for (i = 0; i < 6; i++) {
+                angle = elapsedSeconds * 0.8f + i * (PI / 3.0f);
+                DrawCircle(
+                    centerX + (int)(cosf(angle) * TileScale(12.0f)),
+                    centerY + (int)(sinf(angle) * TileScale(12.0f)),
+                    TileScale(3.0f),
+                    (Color){150, 60, 180, 140 + (int)(pulse * 70.0f)}
+                );
+            }
+            
+            DrawCircleLines(centerX, centerY, TileScale(16.0f), (Color){180, 80, 200, 100 + (int)(pulse * 100.0f)});
+            break;
+        }
+        default:
+            break;
     }
 }
 
