@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include "assets.h"
 #include "player.h"
+#include "puzzle.h"
 
 typedef enum DayPhase {
     DAY_PHASE_DAY = 0,
@@ -94,6 +95,7 @@ typedef struct TaskSystem {
     bool signalTowerActivated;
     bool monolithActivated[3];
     int monolithsLit;
+    MonolithPuzzle monolithPuzzle;
     GameEnding ending;
     ResourceNode nodes[MAX_RESOURCE_NODES];
     int nodeCount;

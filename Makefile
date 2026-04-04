@@ -12,7 +12,8 @@ SOURCES := \
 	src/player.c \
 	src/task_system.c \
 	src/ui_system.c \
-	src/game_manager.c
+	src/game_manager.c \
+	src/puzzle.c
 
 CFLAGS := -std=c11 -Wall -Wextra -pedantic -Iinclude -I$(RAYLIB_PREFIX)/include
 LDFLAGS := -L$(RAYLIB_PREFIX)/lib -lraylib -framework IOKit -framework Cocoa -framework OpenGL -framework CoreVideo

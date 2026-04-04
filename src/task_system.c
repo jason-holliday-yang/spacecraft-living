@@ -683,6 +683,8 @@ void Tasks_Init(TaskSystem *tasks, GameMap *map) {
     tasks->phase = DAY_PHASE_DAY;
     tasks->currentEvent = EVENT_HARVEST;
     tasks->communicatorUnlocked = false;
+    
+    Puzzle_Init(&tasks->monolithPuzzle);
 
     AddNode(tasks, RESOURCE_WOOD, 34, 55, 1, 3, false);
     AddNode(tasks, RESOURCE_WOOD, 37, 56, 1, 3, false);
@@ -1082,11 +1084,35 @@ bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, ch
             WriteMessage(message, messageSize, "The monolith is still dormant. Loxi suggests finishing the main prep first.");
             return true;
         }
-
-        if (monolithIndex >= 0 && !tasks->monolithActivated[monolithIndex]) {
-            tasks->monolithActivated[monolithIndex] = true;
-            tasks->monolithsLit += 1;
-            WriteMessage(message, messageSize, "The ancient monolith lit up. The final boss has been weakened.");
+        
+        if (!tasks->monolithPuzzle.active) {
+            tasks->monolithPuzzle.active = true;
+            tasks->monolithPuzzle.correctOrder[0] = 1;
+            tasks->monolithPuzzle.correctOrder[1] = 0;
+            tasks->monolithPuzzle.correctOrder[2] = 2;
+            WriteMessage(message, messageSize, "The monolith hums to life! A puzzle mechanism has been activated. Try activating them in the correct sequence.");
+            return true;
+        }
+        
+        if (tasks->monolithPuzzle.solved) {
+            WriteMessage(message, messageSize, "This monolith is already active and resonating with power.");
+            return true;
+        }
+        
+        if (Puzzle_TryActivate(&tasks->monolithPuzzle, monolithIndex)) {
+            if (Puzzle_CheckSolved(&tasks->monolithPuzzle)) {
+                tasks->monolithPuzzle.solved = true;
+                tasks->monolithsLit = 3;
+                tasks->monolithActivated[0] = true;
+                tasks->monolithActivated[1] = true;
+                tasks->monolithActivated[2] = true;
+                WriteMessage(message, messageSize, "All three monoliths resonate in harmony! The final boss has been significantly weakened.");
+            } else if (tasks->monolithPuzzle.currentStep < MAX_PUZZLE_STEPS) {
+                WriteMessage(message, messageSize, "The monolith responds. The sequence continues...");
+            } else {
+                Puzzle_Reset(&tasks->monolithPuzzle);
+                WriteMessage(message, messageSize, "The monoliths fall silent. The sequence was incorrect. Try again.");
+            }
             return true;
         }
 
