@@ -607,6 +607,7 @@ void Game_Init(Game *game) {
     Audio_ApplySettings(&game->audio, &game->settings);
     Assets_Load(&game->assets);
 
+    MiniMap_Init(&game->miniMap);
     ResetGameplayWorld(game);
     game->state = GAME_STATE_INTRO;
     game->hasSaveFile = SaveSystem_HasSave();
@@ -692,6 +693,11 @@ void Game_Update(Game *game, float deltaTime) {
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
         return;
     }
+    if (IsKeyPressed(KEY_M)) {
+        MiniMap_Toggle(&game->miniMap);
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        return;
+    }
     if (IsKeyPressed(KEY_C)) {
         game->player.crouching = !game->player.crouching;
         PostMessage(game, game->player.crouching ? "Stealth crouch enabled." : "Stealth crouch disabled.", 2.0f);
@@ -771,6 +777,7 @@ void Game_Update(Game *game, float deltaTime) {
     }
 
     Tasks_Update(&game->tasks, &game->map, &game->player, deltaTime);
+    MiniMap_Update(&game->miniMap, &game->player, &game->map);
     UpdateAudioScene(game);
 
     if (game->tasks.ending != ENDING_NONE) {
@@ -810,6 +817,7 @@ void Game_Draw(Game *game) {
         UI_DrawEnding(game->tasks.ending, &game->player, &game->tasks, &game->assets, screenWidth, screenHeight, game->elapsedSeconds);
     } else {
         UI_DrawHud(&game->player, &game->tasks, &game->hudMessage, &game->assets, screenWidth, screenHeight);
+        MiniMap_Draw(&game->miniMap, &game->player, &game->map, screenWidth, screenHeight);
         if (game->pauseMenuOpen) {
             UI_DrawPauseMenu(&game->assets, screenWidth, screenHeight);
         }

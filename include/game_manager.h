@@ -15,6 +15,8 @@ typedef enum GameState {
     GAME_STATE_ENDING
 } GameState;
 
+#include "minimap.h"
+
 typedef struct Game {
     GameState state;
     GameMap map;
@@ -25,6 +27,7 @@ typedef struct Game {
     AssetBundle assets;
     Camera2D camera;
     HudMessage hudMessage;
+    MiniMap miniMap;
     float elapsedSeconds;
     int bufferedMoveX;
     int bufferedMoveY;
