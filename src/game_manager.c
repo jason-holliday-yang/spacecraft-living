@@ -338,6 +338,10 @@ static void HandleMovement(Game *game, int deltaX, int deltaY) {
     int targetX;
     int targetY;
 
+    if (game->player.isDowned) {
+        return;
+    }
+
     targetX = game->player.gridX + deltaX;
     targetY = game->player.gridY + deltaY;
 
@@ -730,11 +734,15 @@ void Game_Update(Game *game, float deltaTime) {
     }
 
     if (IsKeyPressed(KEY_SPACE)) {
-        if (Tasks_HandleAttack(&game->tasks, &game->map, &game->player, actionMessage, sizeof(actionMessage))) {
-            Audio_PlayCue(&game->audio, game->player.hasLaserGun ? AUDIO_CUE_LASER : AUDIO_CUE_CONFIRM);
-            PostMessage(game, actionMessage, 2.8f);
+        if (!game->player.isDowned) {
+            if (Tasks_HandleAttack(&game->tasks, &game->map, &game->player, actionMessage, sizeof(actionMessage))) {
+                Audio_PlayCue(&game->audio, game->player.hasLaserGun ? AUDIO_CUE_LASER : AUDIO_CUE_CONFIRM);
+                PostMessage(game, actionMessage, 2.8f);
+            } else {
+                PostMessage(game, actionMessage, 2.2f);
+            }
         } else {
-            PostMessage(game, actionMessage, 2.2f);
+            PostMessage(game, "You are downed! Use food or medicine to recover.", 2.0f);
         }
     }
 
@@ -742,7 +750,11 @@ void Game_Update(Game *game, float deltaTime) {
         if (Player_UseQuickConsumable(&game->player, CONSUMABLE_FOOD, actionMessage, (int)sizeof(actionMessage))) {
             PostMessage(game, actionMessage, 2.8f);
         } else {
-            PostMessage(game, actionMessage, 2.4f);
+            if (game->player.isDowned) {
+                PostMessage(game, "No food available! You need to eat to recover.", 2.0f);
+            } else {
+                PostMessage(game, actionMessage, 2.4f);
+            }
         }
     }
 
@@ -750,7 +762,11 @@ void Game_Update(Game *game, float deltaTime) {
         if (Player_UseQuickConsumable(&game->player, CONSUMABLE_CALM, actionMessage, (int)sizeof(actionMessage))) {
             PostMessage(game, actionMessage, 2.8f);
         } else {
-            PostMessage(game, actionMessage, 2.4f);
+            if (game->player.isDowned) {
+                PostMessage(game, "No medicine available! You need treatment to recover.", 2.0f);
+            } else {
+                PostMessage(game, actionMessage, 2.4f);
+            }
         }
     }
 
