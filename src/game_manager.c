@@ -599,6 +599,28 @@ static void UpdateHelpOverlay(Game *game) {
     }
 }
 
+static void UpdateLogReader(Game *game) {
+    if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_L)) {
+        game->logReaderOpen = false;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        return;
+    }
+    
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
+        if (game->selectedLogIndex > 0) {
+            game->selectedLogIndex--;
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+        }
+    }
+    
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
+        if (game->selectedLogIndex < game->tasks.logCount - 1) {
+            game->selectedLogIndex++;
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+        }
+    }
+}
+
 void Game_Init(Game *game) {
     memset(game, 0, sizeof(*game));
 
@@ -663,6 +685,11 @@ void Game_Update(Game *game, float deltaTime) {
         UpdateHelpOverlay(game);
         return;
     }
+    
+    if (game->logReaderOpen) {
+        UpdateLogReader(game);
+        return;
+    }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
         game->pauseMenuOpen = true;
@@ -691,6 +718,16 @@ void Game_Update(Game *game, float deltaTime) {
     if (IsKeyPressed(KEY_H)) {
         game->helpOpen = true;
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        return;
+    }
+    if (IsKeyPressed(KEY_L)) {
+        if (game->tasks.logCount > 0) {
+            game->logReaderOpen = true;
+            game->selectedLogIndex = 0;
+            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        } else {
+            PostMessage(game, "No ship logs collected yet.", 2.0f);
+        }
         return;
     }
     if (IsKeyPressed(KEY_M)) {
@@ -827,6 +864,8 @@ void Game_Draw(Game *game) {
         UI_DrawEnding(game->tasks.ending, &game->player, &game->tasks, &game->assets, screenWidth, screenHeight, game->elapsedSeconds);
     } else if (game->showDeathPopup) {
         UI_DrawDeathPopup(&game->player, &game->assets, screenWidth, screenHeight);
+    } else if (game->logReaderOpen) {
+        UI_DrawLogReader(&game->tasks, game->selectedLogIndex, &game->assets, screenWidth, screenHeight);
     } else {
         UI_DrawHud(&game->player, &game->tasks, &game->hudMessage, &game->assets, screenWidth, screenHeight);
         MiniMap_Draw(&game->miniMap, &game->player, &game->map, screenWidth, screenHeight);

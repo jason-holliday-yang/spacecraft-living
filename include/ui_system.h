@@ -38,5 +38,6 @@ void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHe
 void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds);
 void UI_DrawDownedOverlay(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight);
 void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight);
+void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundle *assets, int screenWidth, int screenHeight);
 
 #endif

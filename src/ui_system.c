@@ -441,3 +441,39 @@ void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int scre
     
     DrawLine(panel.x + 40.0f * scale, panel.y + 180.0f * scale, panel.x + panel.width - 40.0f * scale, panel.y + 180.0f * scale, (Color){255, 100, 100, 120});
 }
+
+void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundle *assets, int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+    Rectangle contentPanel;
+    char buffer[128];
+    
+    scale = GetUIScale(screenWidth, screenHeight);
+    panel = (Rectangle){screenWidth * 0.5f - 400.0f * scale, screenHeight * 0.5f - 220.0f * scale, 800.0f * scale, 440.0f * scale};
+    contentPanel = (Rectangle){panel.x + 30.0f * scale, panel.y + 100.0f * scale, panel.width - 60.0f * scale, panel.height - 140.0f * scale};
+    
+    DrawRectangle(0, 0, screenWidth, screenHeight, (Color){5, 9, 16, 190});
+    DrawPanel(panel, (Color){8, 18, 30, 245}, (Color){99, 233, 195, 75});
+    
+    DrawUIText(assets, "Ship Log Archive", (Vector2){panel.x + 30.0f * scale, panel.y + 22.0f * scale}, 33.0f * scale, WHITE);
+    DrawUIText(assets, "Press ESC or L to close", (Vector2){panel.x + panel.width - MeasureUIText(assets, "Press ESC or L to close", 17.5f * scale).x - 30.0f * scale, panel.y + 28.0f * scale}, 17.5f * scale, (Color){182, 199, 214, 255});
+    
+    if (selectedLog >= 0 && selectedLog < tasks->logCount && tasks->logs[selectedLog].active) {
+        const ShipLog *log = &tasks->logs[selectedLog];
+        
+        DrawUIText(assets, log->title, (Vector2){contentPanel.x, contentPanel.y}, 24.0f * scale, (Color){166, 255, 226, 255});
+        
+        snprintf(buffer, sizeof(buffer), "Location: (%d, %d)", log->gridX, log->gridY);
+        DrawUIText(assets, buffer, (Vector2){contentPanel.x, contentPanel.y + 40.0f * scale}, 16.0f * scale, (Color){194, 224, 255, 255});
+        
+        DrawPanel((Rectangle){contentPanel.x, contentPanel.y + 70.0f * scale, contentPanel.width, contentPanel.height - 70.0f * scale}, (Color){14, 26, 42, 220}, (Color){255, 255, 255, 22});
+        
+        DrawUIText(assets, log->storyText, (Vector2){contentPanel.x + 15.0f * scale, contentPanel.y + 85.0f * scale}, 17.0f * scale, (Color){220, 235, 248, 255});
+        
+        if (log->rewardKind != 0) {
+            DrawUIText(assets, log->rewardDesc, (Vector2){contentPanel.x, contentPanel.y + contentPanel.height - 25.0f * scale}, 15.0f * scale, (Color){255, 220, 150, 255});
+        }
+    } else {
+        DrawUIText(assets, "No log selected", (Vector2){contentPanel.x, contentPanel.y + contentPanel.height * 0.5f}, 20.0f * scale, (Color){180, 180, 180, 255});
+    }
+}
