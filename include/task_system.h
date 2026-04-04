@@ -76,6 +76,9 @@ typedef struct ShipLog {
     int gridX;
     int gridY;
     int rewardKind;
+    char title[64];
+    char storyText[512];
+    char rewardDesc[128];
 } ShipLog;
 
 typedef struct TaskSystem {

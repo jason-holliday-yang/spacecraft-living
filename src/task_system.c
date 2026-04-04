@@ -104,7 +104,7 @@ static void AddMonster(TaskSystem *tasks, MonsterType type, int gridX, int gridY
     monster->health = monster->maxHealth;
 }
 
-static void AddLog(TaskSystem *tasks, int gridX, int gridY, int rewardKind) {
+static void AddLog(TaskSystem *tasks, int gridX, int gridY, int rewardKind, const char *title, const char *story, const char *rewardDesc) {
     ShipLog *log;
 
     if (tasks->logCount >= MAX_LOGS) {
@@ -117,6 +117,10 @@ static void AddLog(TaskSystem *tasks, int gridX, int gridY, int rewardKind) {
     log->gridX = gridX;
     log->gridY = gridY;
     log->rewardKind = rewardKind;
+    
+    snprintf(log->title, sizeof(log->title), "%s", title ? title : "Unknown Log");
+    snprintf(log->storyText, sizeof(log->storyText), "%s", story ? story : "");
+    snprintf(log->rewardDesc, sizeof(log->rewardDesc), "%s", rewardDesc ? rewardDesc : "");
 }
 
 static ResourceNode *FindNearbyNode(TaskSystem *tasks, const Player *player) {
@@ -249,31 +253,29 @@ static void UnlockStageIfNeeded(TaskSystem *tasks, GameMap *map, int newStage) {
 }
 
 static void GrantLogReward(TaskSystem *tasks, Player *player, ShipLog *log, char *message, size_t messageSize) {
+    (void)tasks;
     log->collected = true;
+
+    snprintf(message, messageSize, "=== %s ===\n%s\n\n[REWARD] %s", 
+        log->title, log->storyText, log->rewardDesc);
 
     switch (log->rewardKind) {
         case 0:
             player->maxStaminaBonus += 6.0f;
-            WriteMessage(message, messageSize, "Ship log recovered: permanent max stamina increased.");
             break;
         case 1:
             player->attackBonus += 4.0f;
-            WriteMessage(message, messageSize, "Ship log recovered: weapon calibration improved your attacks.");
             break;
         case 2:
             Player_AddOxygen(player, 18.0f);
-            WriteMessage(message, messageSize, "Ship log recovered: Loxi restored part of the oxygen reserve.");
             break;
         case 3:
             Player_RelievePressure(player, 22.0f);
-            WriteMessage(message, messageSize, "Ship log recovered: the crash truth helped you regain control.");
             break;
         case 4:
             Player_AddResource(player, RESOURCE_ENERGY_CORE, 1);
-            WriteMessage(message, messageSize, "Hidden log reward: gained one Energy Core.");
             break;
         default:
-            WriteMessage(message, messageSize, "Ship log recovered: new clues were added.");
             break;
     }
 
@@ -732,11 +734,30 @@ void Tasks_Init(TaskSystem *tasks, GameMap *map) {
     AddMonster(tasks, MONSTER_RELIC_GUARD, 95, 47, 7);
     AddMonster(tasks, MONSTER_FINAL_BOSS, 92, 45, 7);
 
-    AddLog(tasks, 33, 33, 0);
-    AddLog(tasks, 58, 57, 1);
-    AddLog(tasks, 52, 73, 2);
-    AddLog(tasks, 90, 37, 3);
-    AddLog(tasks, 96, 67, 4);
+    AddLog(tasks, 33, 33, 0, 
+        "Log Entry #1: The Crash",
+        "Day 1: The emergency landing tore through the atmosphere. We barely survived the impact. The ship's oxygen systems are damaged, but the base is intact. Loxi says we can repair them if we gather enough resources. I hope rescue comes soon.",
+        "Permanent max stamina +6");
+    
+    AddLog(tasks, 58, 57, 1,
+        "Log Entry #2: Missing Crew",
+        "Day 3: Three crew members are still missing. We found traces near the swamp entrance, but the airlock is sealed. Loxi mentions ancient technology that could help, but we need to restore communications first.",
+        "Permanent attack power +4");
+    
+    AddLog(tasks, 52, 73, 2,
+        "Log Entry #3: Alien Ecology",
+        "Day 7: This world is more complex than we thought. The swamp ecosystems seem artificial - like they were designed. The monoliths in the ruins pulse with energy. Loxi believes they're connected to the planet's defense system.",
+        "Instant oxygen +18");
+    
+    AddLog(tasks, 90, 37, 3,
+        "Log Entry #4: Hope",
+        "Day 12: We detected a signal from the crash site - the distress beacon is still active! But something powerful is blocking it. The final boss guards the signal tower. We need to defeat it or find another way.",
+        "Pressure -22");
+    
+    AddLog(tasks, 96, 67, 4,
+        "Log Entry #5: The Decision",
+        "Day 15: We've learned enough. The choice is ours: fight the guardian and call for rescue, use ancient tech to signal peacefully, or stay here and build a new home. Whatever we choose, there's no going back.",
+        "Reward: 1 Energy Core");
 
     tasks->stage = 1;
     tasks->objective[0] = '\0';
