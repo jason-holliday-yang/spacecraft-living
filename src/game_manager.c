@@ -776,9 +776,19 @@ void Game_Update(Game *game, float deltaTime) {
         }
     }
 
+    bool wasDowned = game->player.isDowned;
+    
     Tasks_Update(&game->tasks, &game->map, &game->player, deltaTime);
     MiniMap_Update(&game->miniMap, &game->player, &game->map);
     UpdateAudioScene(game);
+
+    if (wasDowned && !game->player.isDowned && game->player.stamina <= 0.0f) {
+        game->showDeathPopup = true;
+    }
+    
+    if (game->showDeathPopup && IsKeyPressed(KEY_ENTER)) {
+        game->showDeathPopup = false;
+    }
 
     if (game->tasks.ending != ENDING_NONE) {
         game->state = GAME_STATE_ENDING;
@@ -815,9 +825,16 @@ void Game_Draw(Game *game) {
 
     if (game->state == GAME_STATE_ENDING) {
         UI_DrawEnding(game->tasks.ending, &game->player, &game->tasks, &game->assets, screenWidth, screenHeight, game->elapsedSeconds);
+    } else if (game->showDeathPopup) {
+        UI_DrawDeathPopup(&game->player, &game->assets, screenWidth, screenHeight);
     } else {
         UI_DrawHud(&game->player, &game->tasks, &game->hudMessage, &game->assets, screenWidth, screenHeight);
         MiniMap_Draw(&game->miniMap, &game->player, &game->map, screenWidth, screenHeight);
+        
+        if (game->player.isDowned) {
+            UI_DrawDownedOverlay(&game->player, &game->assets, screenWidth, screenHeight);
+        }
+        
         if (game->pauseMenuOpen) {
             UI_DrawPauseMenu(&game->assets, screenWidth, screenHeight);
         }

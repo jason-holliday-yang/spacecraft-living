@@ -41,6 +41,7 @@ typedef struct Game {
     bool craftOpen;
     bool communicatorOpen;
     bool helpOpen;
+    bool showDeathPopup;
     bool requestClose;
 } Game;
 

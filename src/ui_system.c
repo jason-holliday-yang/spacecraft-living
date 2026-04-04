@@ -387,3 +387,57 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
     DrawUIText(assets, detail, (Vector2){screenWidth * 0.5f - MeasureUIText(assets, detail, 20.0f).x * 0.5f, 320.0f}, 20.0f, (Color){255, 205, 151, 255});
     DrawUIText(assets, LOC_UI_END_EXIT, (Vector2){screenWidth * 0.5f - MeasureUIText(assets, LOC_UI_END_EXIT, 20.0f).x * 0.5f, screenHeight - 90.0f}, 20.0f, (Color){196, 213, 225, 255});
 }
+
+void UI_DrawDownedOverlay(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+    char timerBuffer[32];
+    float alpha;
+    
+    scale = GetUIScale(screenWidth, screenHeight);
+    panel = (Rectangle){screenWidth * 0.5f - 300.0f * scale, screenHeight * 0.5f - 120.0f * scale, 600.0f * scale, 240.0f * scale};
+    
+    alpha = 0.7f + 0.3f * sinf(player->downedTimer * 3.0f);
+    
+    DrawRectangle(0, 0, screenWidth, screenHeight, (Color){50, 10, 10, (unsigned char)(180 * alpha)});
+    
+    for (int i = 0; i < screenWidth; i += 4) {
+        DrawLine(i, 0, i, screenHeight, (Color){255, 0, 0, (unsigned char)(40 * alpha)});
+    }
+    
+    DrawPanel(panel, (Color){40, 8, 8, (unsigned char)(240 * alpha)}, (Color){255, 100, 100, (unsigned char)(180 * alpha)});
+    
+    DrawUIText(assets, "CRITICAL STATE", (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, "CRITICAL STATE", 32.0f * scale).x * 0.5f, panel.y + 30.0f * scale}, 32.0f * scale, (Color){255, 100, 100, 255});
+    
+    DrawUIText(assets, "Use a healing item to recover", (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, "Use a healing item to recover", 20.0f * scale).x * 0.5f, panel.y + 90.0f * scale}, 20.0f * scale, (Color){220, 220, 220, 255});
+    
+    snprintf(timerBuffer, sizeof(timerBuffer), "%.1f seconds remaining", player->downedTimer);
+    DrawUIText(assets, timerBuffer, (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, timerBuffer, 26.0f * scale).x * 0.5f, panel.y + 140.0f * scale}, 26.0f * scale, (Color){255, 150, 150, 255});
+    
+    DrawRectangle(0, 0, screenWidth, 8, (Color){255, 50, 50, (unsigned char)(200 * alpha)});
+    DrawRectangle(0, screenHeight - 8, screenWidth, 8, (Color){255, 50, 50, (unsigned char)(200 * alpha)});
+}
+
+void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+    char deathBuffer[128];
+    
+    scale = GetUIScale(screenWidth, screenHeight);
+    panel = (Rectangle){screenWidth * 0.5f - 350.0f * scale, screenHeight * 0.5f - 150.0f * scale, 700.0f * scale, 300.0f * scale};
+    
+    DrawRectangle(0, 0, screenWidth, screenHeight, (Color){10, 5, 5, 220});
+    
+    DrawPanel(panel, (Color){30, 10, 10, 245}, (Color){255, 80, 80, 90});
+    
+    DrawUIText(assets, "MISSION FAILED", (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, "MISSION FAILED", 38.0f * scale).x * 0.5f, panel.y + 35.0f * scale}, 38.0f * scale, (Color){255, 80, 80, 255});
+    
+    snprintf(deathBuffer, sizeof(deathBuffer), "Collapse #%d", player->deathCount);
+    DrawUIText(assets, deathBuffer, (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, deathBuffer, 22.0f * scale).x * 0.5f, panel.y + 95.0f * scale}, 22.0f * scale, (Color){200, 200, 200, 255});
+    
+    DrawUIText(assets, "You have been rescued and returned to base.", (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, "You have been rescued and returned to base.", 19.0f * scale).x * 0.5f, panel.y + 140.0f * scale}, 19.0f * scale, (Color){180, 180, 180, 255});
+    
+    DrawUIText(assets, "Press ENTER to continue", (Vector2){panel.x + panel.width * 0.5f - MeasureUIText(assets, "Press ENTER to continue", 20.0f * scale).x * 0.5f, panel.y + 210.0f * scale}, 20.0f * scale, (Color){255, 200, 150, 255});
+    
+    DrawLine(panel.x + 40.0f * scale, panel.y + 180.0f * scale, panel.x + panel.width - 40.0f * scale, panel.y + 180.0f * scale, (Color){255, 100, 100, 120});
+}

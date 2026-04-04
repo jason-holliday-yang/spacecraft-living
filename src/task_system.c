@@ -747,22 +747,6 @@ static void UpdateDownedState(Player *player, float deltaTime) {
     }
 }
 
-static bool TrySelfRescue(Player *player, ConsumableFocus focus) {
-    if (!player->isDowned) {
-        return false;
-    }
-    
-    char dummyMessage[256];
-    if (Player_UseQuickConsumable(player, focus, dummyMessage, sizeof(dummyMessage))) {
-        if (player->stamina > 0.0f) {
-            player->isDowned = false;
-            player->downedTimer = 0.0f;
-            return true;
-        }
-    }
-    return false;
-}
-
 static void UpdatePlayerStatus(TaskSystem *tasks, GameMap *map, Player *player, float deltaTime) {
     HazardType hazard;
     float safeRecoveryAmount;
