@@ -71,6 +71,8 @@ typedef struct Player {
     bool hasProtectionSuit;
     bool hasSignalAmplifier;
     bool hasFieldCamp;
+    bool isDowned;
+    float downedTimer;
     int resources[RESOURCE_COUNT];
 } Player;
 

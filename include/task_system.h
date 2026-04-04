@@ -54,6 +54,14 @@ typedef struct ResourceNode {
     float awayTimer;
 } ResourceNode;
 
+typedef enum BossAttackType {
+    BOSS_ATTACK_NONE = 0,
+    BOSS_ATTACK_MELEE,
+    BOSS_ATTACK_CHARGE,
+    BOSS_ATTACK_SPAWN,
+    BOSS_ATTACK_AOE
+} BossAttackType;
+
 typedef struct Monster {
     bool active;
     MonsterType type;
@@ -68,6 +76,10 @@ typedef struct Monster {
     float moveTimer;
     float attackTimer;
     bool phaseTriggered;
+    BossAttackType currentAttack;
+    float attackTelegraph;
+    int targetX;
+    int targetY;
 } Monster;
 
 typedef struct ShipLog {

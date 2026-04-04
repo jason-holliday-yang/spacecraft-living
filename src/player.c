@@ -66,6 +66,8 @@ void Player_Init(Player *player) {
     player->lastFoodType = -1;
     player->repeatedFoodCount = 0;
     player->crouching = false;
+    player->isDowned = false;
+    player->downedTimer = 0.0f;
     player->hasAxe = true;
     player->hasKnife = true;
     player->hasGlowStick = false;

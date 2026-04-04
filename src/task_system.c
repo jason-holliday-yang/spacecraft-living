@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static float ClampFloat(float value, float minValue, float maxValue) {
@@ -516,6 +517,111 @@ static void TrySpawnBossGuards(TaskSystem *tasks) {
     AddMonster(tasks, MONSTER_RELIC_GUARD, 94, 49, 7);
 }
 
+static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player, const GameMap *map) {
+    (void)map;
+    
+    switch (boss->currentAttack) {
+        case BOSS_ATTACK_MELEE: {
+            int dx = abs(player->gridX - boss->gridX);
+            int dy = abs(player->gridY - boss->gridY);
+            if (dx + dy == 1) {
+                ApplyMonsterAttack(tasks, boss->type, player);
+            }
+            break;
+        }
+        case BOSS_ATTACK_CHARGE: {
+            int steps = 0;
+            int x = boss->gridX;
+            int y = boss->gridY;
+            int dirX = (player->gridX > x) ? 1 : (player->gridX < x) ? -1 : 0;
+            int dirY = (player->gridY > y) ? 1 : (player->gridY < y) ? -1 : 0;
+            
+            while (steps < 5 && Map_IsWithinBounds(x + dirX, y + dirY) && Map_IsWalkable(map, x + dirX, y + dirY)) {
+                x += dirX;
+                y += dirY;
+                steps++;
+                
+                if (x == player->gridX && y == player->gridY) {
+                    ApplyMonsterAttack(tasks, boss->type, player);
+                    break;
+                }
+            }
+            boss->gridX = x;
+            boss->gridY = y;
+            break;
+        }
+        case BOSS_ATTACK_AOE: {
+            int dist = DistanceManhattan(boss->gridX, boss->gridY, player->gridX, player->gridY);
+            if (dist <= 3) {
+                float aoeDamage = 10.0f;
+                float aoePressure = 15.0f;
+                
+                if (player->hasProtectionSuit) {
+                    aoeDamage *= 0.70f;
+                    aoePressure *= 0.60f;
+                }
+                
+                Player_ConsumeStamina(player, aoeDamage);
+                Player_AddPressure(player, aoePressure);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    
+    boss->currentAttack = BOSS_ATTACK_NONE;
+    boss->attackTimer = 1.5f;
+}
+
+static void ChooseBossAttack(TaskSystem *tasks, Monster *boss, Player *player) {
+    (void)player;
+    float healthPercent = boss->health / boss->maxHealth;
+    int attackChoice;
+    
+    if (healthPercent > 0.70f) {
+        attackChoice = rand() % 3;
+        switch (attackChoice) {
+            case 0:
+                boss->currentAttack = BOSS_ATTACK_MELEE;
+                boss->attackTelegraph = 1.0f;
+                break;
+            case 1:
+                boss->currentAttack = BOSS_ATTACK_CHARGE;
+                boss->attackTelegraph = 1.5f;
+                break;
+            case 2:
+                boss->currentAttack = BOSS_ATTACK_AOE;
+                boss->attackTelegraph = 2.0f;
+                break;
+        }
+    } else {
+        attackChoice = rand() % 4;
+        switch (attackChoice) {
+            case 0:
+                boss->currentAttack = BOSS_ATTACK_MELEE;
+                boss->attackTelegraph = 0.8f;
+                break;
+            case 1:
+                boss->currentAttack = BOSS_ATTACK_CHARGE;
+                boss->attackTelegraph = 1.2f;
+                break;
+            case 2:
+                boss->currentAttack = BOSS_ATTACK_SPAWN;
+                boss->attackTelegraph = 1.5f;
+                if (!boss->phaseTriggered) {
+                    boss->phaseTriggered = true;
+                    TrySpawnBossGuards(tasks);
+                }
+                break;
+            case 3:
+                boss->currentAttack = BOSS_ATTACK_AOE;
+                boss->attackTelegraph = 1.5f;
+                break;
+        }
+    }
+}
+
 static void UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *player, float deltaTime) {
     int index;
     MapArea playerArea;
@@ -539,6 +645,14 @@ static void UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *player
         if (monster->type == MONSTER_FINAL_BOSS && monster->health <= monster->maxHealth * 0.70f && !monster->phaseTriggered) {
             monster->phaseTriggered = true;
             TrySpawnBossGuards(tasks);
+        }
+        
+        if (monster->type == MONSTER_FINAL_BOSS && monster->attackTelegraph > 0.0f) {
+            monster->attackTelegraph -= deltaTime;
+            if (monster->attackTelegraph <= 0.0f) {
+                ExecuteBossAttack(tasks, monster, player, map);
+            }
+            continue;
         }
 
         sameArea = monster->area == playerArea;
@@ -570,8 +684,12 @@ static void UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *player
 
         if (DistanceManhattan(player->gridX, player->gridY, monster->gridX, monster->gridY) == 1) {
             if (monster->attackTimer <= 0.0f) {
-                ApplyMonsterAttack(tasks, monster->type, player);
-                monster->attackTimer = monster->type == MONSTER_FINAL_BOSS ? 1.2f : 0.9f;
+                if (monster->type == MONSTER_FINAL_BOSS && monster->currentAttack == BOSS_ATTACK_NONE) {
+                    ChooseBossAttack(tasks, monster, player);
+                } else {
+                    ApplyMonsterAttack(tasks, monster->type, player);
+                    monster->attackTimer = monster->type == MONSTER_FINAL_BOSS ? 1.2f : 0.9f;
+                }
             }
             continue;
         }
@@ -604,11 +722,45 @@ static void HandlePlayerCollapse(TaskSystem *tasks, GameMap *map, Player *player
     player->glowStickTimer = 0.0f;
     player->speedBoostTimer = 0.0f;
     player->noPressureTimer = 0.0f;
+    player->isDowned = false;
+    player->downedTimer = 0.0f;
     map->campPlaced = false;
 
     if (player->deathCount >= 3) {
         tasks->ending = ENDING_FAILURE;
     }
+}
+
+static void TryEnterDownedState(Player *player) {
+    if (!player->isDowned && player->stamina <= 0.0f) {
+        player->isDowned = true;
+        player->downedTimer = 10.0f;
+    }
+}
+
+static void UpdateDownedState(Player *player, float deltaTime) {
+    if (player->isDowned) {
+        player->downedTimer -= deltaTime;
+        if (player->downedTimer <= 0.0f) {
+            player->stamina = 0.0f;
+        }
+    }
+}
+
+static bool TrySelfRescue(Player *player, ConsumableFocus focus) {
+    if (!player->isDowned) {
+        return false;
+    }
+    
+    char dummyMessage[256];
+    if (Player_UseQuickConsumable(player, focus, dummyMessage, sizeof(dummyMessage))) {
+        if (player->stamina > 0.0f) {
+            player->isDowned = false;
+            player->downedTimer = 0.0f;
+            return true;
+        }
+    }
+    return false;
 }
 
 static void UpdatePlayerStatus(TaskSystem *tasks, GameMap *map, Player *player, float deltaTime) {
@@ -619,6 +771,8 @@ static void UpdatePlayerStatus(TaskSystem *tasks, GameMap *map, Player *player, 
     player->speedBoostTimer = fmaxf(0.0f, player->speedBoostTimer - deltaTime);
     player->noPressureTimer = fmaxf(0.0f, player->noPressureTimer - deltaTime);
     player->blurPulse += deltaTime;
+    
+    UpdateDownedState(player, deltaTime);
 
     Player_DamageOxygen(player, GetOxygenLeakRate(tasks) * deltaTime);
     if (player->oxygen < 10.0f) {
@@ -671,8 +825,10 @@ static void UpdatePlayerStatus(TaskSystem *tasks, GameMap *map, Player *player, 
     } else {
         player->safeRecoveryTimer = 0.0f;
     }
-
-    if (player->stamina <= 0.0f) {
+    
+    TryEnterDownedState(player);
+    
+    if (player->stamina <= 0.0f && !player->isDowned) {
         HandlePlayerCollapse(tasks, map, player);
     }
 }
