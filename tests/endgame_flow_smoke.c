@@ -157,6 +157,10 @@ int main(void) {
             "loxi terminal should stay interactive when X3 is ready");
     Require(message[0] != '\0',
             "loxi terminal should keep returning guidance once west and south routes are both complete");
+    Require(strstr(message, "heroic rescue") != NULL
+                && strstr(message, "peaceful rescue") != NULL
+                && strstr(message, "settlement") != NULL,
+            "X3-ready Loxi guidance should explicitly frame all three player-facing ending routes");
 
     player.gridX = SIGNAL_TOWER_X - 1;
     player.gridY = SIGNAL_TOWER_Y;

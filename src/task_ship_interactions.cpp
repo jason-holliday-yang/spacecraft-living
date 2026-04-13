@@ -20,6 +20,14 @@ static bool IsCrossX3Ready(const TaskSystem *tasks) {
         && tasks->southS5Completed;
 }
 
+static const char *GetStage7RouteChoiceMessage(const TaskSystem *tasks) {
+    if (IsCrossX3Ready(tasks)) {
+        return "Loxi online. West crew testimony and south system truth are fully aligned. Heroic rescue now reads as a costly beacon launch, peaceful rescue as lattice stabilization, and settlement as inheriting the maintenance work. Choose here on purpose before touching the tower. Settlement still requires explicit confirmation because it will close both rescue routes.";
+    }
+
+    return "Loxi online. The main archive is assembled, west and south route work is complete, and this terminal is now the ending branch point. Choose heroic rescue, peaceful rescue, or settlement here on purpose before touching the tower. Settlement still requires explicit confirmation because it will close both rescue routes.";
+}
+
 static bool TryRepairAtOxygenConsole(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize) {
     if (tasks->stage == 1) {
         if (Player_HasResources(player, RESOURCE_WOOD, 3) && Player_HasResources(player, RESOURCE_METAL_SCRAP, 2)) {
@@ -82,12 +90,24 @@ static bool TryUseLoxiTerminal(TaskSystem *tasks, GameMap *map, Player *player, 
         Player_SpendResource(player, RESOURCE_RELIC_FRAGMENT, 3);
         tasks->amplifierUnlocked = true;
         TasksRuntime_UnlockStageIfNeeded(tasks, map, 7);
-        TasksRuntime_WriteMessage(message, messageSize, "Loxi finished the endgame analysis: the ruins now resolve into three real outcomes. Craft the Signal Amplifier for peaceful rescue, confront the guardian for heroic rescue, or keep the base as the place where settlement must be chosen on purpose.");
+        if (IsCrossX2Ready(tasks)) {
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi finished the endgame analysis: west crew traces, purifier controls, and monolith routing now resolve into one failing maintenance lattice. Heroic rescue accepts the cost and forces a beacon through, peaceful rescue stabilizes the lattice, and settlement inherits the work. Finish the main archive, then choose with full context.");
+        } else if (IsCrossX1Ready(tasks)) {
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi finished the fragment sync: west crew traces and south facility handovers now read as one coordinated survival timeline. Heroic rescue, peaceful rescue, and settlement are all visible now, but the main archive still needs to be completed before the final branch opens.");
+        } else {
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi finished the endgame analysis: the ruins now resolve into three real outcomes. Craft the Signal Amplifier for peaceful rescue, confront the guardian for heroic rescue, or keep the base as the place where settlement must be chosen on purpose.");
+        }
         return true;
     }
 
     if (tasks->stage == 6) {
-        TasksRuntime_WriteMessage(message, messageSize, "Loxi needs 3 Relic Fragments at the upper terminal before the final routes can be explained cleanly. Bring the full set back here to turn the ruins into a readable endgame plan.");
+        if (IsCrossX2Ready(tasks)) {
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi already has enough west/south evidence to rewrite the late-route comparison, but it still needs 3 Relic Fragments before the final rescue-versus-settlement plan can be explained cleanly.");
+        } else if (IsCrossX1Ready(tasks)) {
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi can already align the west crew trail with the south facility record, but it still needs 3 Relic Fragments before the final route comparison becomes readable.");
+        } else {
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi needs 3 Relic Fragments at the upper terminal before the final routes can be explained cleanly. Bring the full set back here to turn the ruins into a readable endgame plan.");
+        }
         return true;
     }
 
@@ -112,7 +132,7 @@ static bool TryUseLoxiTerminal(TaskSystem *tasks, GameMap *map, Player *player, 
 
     if (tasks->stage == 7) {
         if (Tasks_IsEndingBranchReady(tasks) && selectedRoute == ENDING_NONE) {
-            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. The main archive is assembled, west and south route work is complete, and this terminal is now the ending branch point. Choose heroic rescue, peaceful rescue, or settlement here on purpose before touching the tower. Settlement still requires explicit confirmation because it will close both rescue routes.");
+            TasksRuntime_WriteMessage(message, messageSize, GetStage7RouteChoiceMessage(tasks));
         } else if (selectedRoute == ENDING_HEROIC) {
             if (tasks->bossDefeated) {
                 TasksRuntime_WriteMessage(message, messageSize, "Loxi online. Heroic route locked. The guardian is down, so your next step is the Signal Tower.");
@@ -130,11 +150,11 @@ static bool TryUseLoxiTerminal(TaskSystem *tasks, GameMap *map, Player *player, 
         } else if (settlementAvailable) {
             TasksRuntime_WriteMessage(message, messageSize, "Settlement is available. Confirm only if you want to close both rescue routes.");
         } else if (IsCrossX3Ready(tasks)) {
-            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. West and south conclusions are synchronized, but the main archive is not complete yet. Recover the remaining mainline logs before choosing the ending route here.");
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. West crew testimony and south system truth are already synchronized, but the main archive is not complete yet. Recover the remaining mainline logs before choosing heroic rescue, peaceful rescue, or settlement here.");
         } else if (IsCrossX2Ready(tasks)) {
-            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. The late-route analysis is stable. Finish the remaining archive work and bring back the missing mainline logs before the final branch opens.");
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. The late-route analysis has been rewritten: tower, purifier ring, and monolith network all read as one failing maintenance lattice. Finish the remaining mainline logs before the final branch opens.");
         } else if (IsCrossX1Ready(tasks)) {
-            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. Shared route alignment has started. Keep clearing west and south tasks and recover the missing mainline logs.");
+            TasksRuntime_WriteMessage(message, messageSize, "Loxi online. West-route handoffs and south-route maintenance records now align into one survival timeline. Keep clearing archive work so the final route comparison has full context.");
         } else {
             TasksRuntime_WriteMessage(message, messageSize, "Loxi online. Final act is not open yet. Recover the remaining mainline logs and finish the west/south field work before choosing an ending.");
         }

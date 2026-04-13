@@ -559,6 +559,20 @@ int main(void) {
     Require(strstr(message, "Energy Core") != NULL && strstr(message, "north-route unlock") != NULL,
             "power bay should explain that installing the core is what converts east proof into north progression");
 
+    tasks.stage = 6;
+    tasks.westW4Completed = true;
+    tasks.southS4Completed = true;
+    player.resources[RESOURCE_RELIC_FRAGMENT] = 3;
+    player.gridX = LOXI_TERMINAL_X - 1;
+    player.gridY = LOXI_TERMINAL_Y;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "stage 6 Loxi interaction should still accept a full fragment set");
+    Require(strstr(message, "maintenance lattice") != NULL,
+            "stage 6 fragment sync should explain the rewritten system-level route comparison once X2 is ready");
+    Require(strstr(message, "peaceful rescue") != NULL && strstr(message, "settlement") != NULL,
+            "stage 6 fragment sync should explain all three route meanings once cross-route context is ready");
+
     {
         ResourceNode *baseOre;
 

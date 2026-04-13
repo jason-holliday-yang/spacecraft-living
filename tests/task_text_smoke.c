@@ -394,6 +394,10 @@ int main(void) {
     Tasks_UpdateObjective(&tasks, &player);
     Require(strstr(tasks.communicator, "W4") == NULL && strstr(tasks.communicator, "S4") == NULL && strstr(tasks.communicator, "X1") == NULL,
             "communicator should keep shorthand hidden once cross-route context unlocks");
+    tasks.stage = 6;
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(strstr(tasks.communicator, "timeline") != NULL || strstr(tasks.communicator, "west and south") != NULL,
+            "communicator should explain that early cross-route context now aligns the west and south record without exposing shorthand");
 
     tasks.westW4Started = true;
     tasks.southS4Started = true;
@@ -464,6 +468,8 @@ int main(void) {
             "stage 7 objective should send the player back to the Loxi branch point once the archive is complete");
     Require(strstr(tasks.objective, "X3") == NULL,
             "stage 7 objective should no longer expose shorthand cross-route codes");
+    Require(strstr(tasks.communicator, "heroic rescue") != NULL && strstr(tasks.communicator, "peaceful rescue") != NULL,
+            "stage 7 base communicator should now explain the three-route comparison with explicit player-facing route names");
 
     puts("task_text smoke ok");
     return 0;

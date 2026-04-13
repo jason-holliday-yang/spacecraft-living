@@ -57,6 +57,12 @@ static int GetEndingBackdropIndex(GameEnding ending) {
     }
 }
 
+static bool IsCrossX1Ready(const TaskSystem *tasks) {
+    return tasks != nullptr
+        && tasks->westW3Completed
+        && tasks->southS2Completed;
+}
+
 static bool IsCrossX2Ready(const TaskSystem *tasks) {
     return tasks != nullptr
         && tasks->westW4Completed
@@ -91,7 +97,35 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     }
 
     if (IsCrossX2Ready(tasks)) {
-        return "Shared route context: Loxi had already revised the final route comparison before the ending choice.";
+        switch (ending) {
+            case ENDING_HEROIC:
+                return "Late-route context: you chose force knowing the tower, purifier ring, and monoliths were one damaged maintenance lattice.";
+            case ENDING_PEACEFUL:
+                return "Late-route context: you chose stabilization knowing the tower and purifier controls were the same failing system.";
+            case ENDING_SETTLEMENT:
+                return "Late-route context: settlement means inheriting the maintenance lattice instead of escaping it.";
+            case ENDING_FAILURE:
+                return "Late-route context was already visible, but the damaged lattice still outlasted the run.";
+            case ENDING_NONE:
+            default:
+                return "";
+        }
+    }
+
+    if (IsCrossX1Ready(tasks)) {
+        switch (ending) {
+            case ENDING_HEROIC:
+                return "Shared trace context: west crew handoffs and south facility records had already aligned into one survival timeline.";
+            case ENDING_PEACEFUL:
+                return "Shared trace context: the archive had already shown coordination mattered more than panic.";
+            case ENDING_SETTLEMENT:
+                return "Shared trace context: the archive had already shown staying was a deliberate option, not surrender.";
+            case ENDING_FAILURE:
+                return "Shared trace context existed, but the run still collapsed before it could be carried through.";
+            case ENDING_NONE:
+            default:
+                return "";
+        }
     }
 
     return "";

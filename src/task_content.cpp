@@ -101,18 +101,18 @@ const char *TasksContent_GetStageObjective(const TaskSystem *tasks, const Player
     if (tasks->stage == 6) {
         if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
             if (IsCrossX2Ready(tasks)) {
-                return "Sync fragments at Loxi and review the shared late-route analysis before the final route commit.";
+                return "Sync fragments at Loxi and review its rewritten route comparison for rescue, stabilization, and settlement.";
             }
             if (IsCrossX1Ready(tasks)) {
-                return "Sync fragments at Loxi and finish aligning the west and south evidence.";
+                return "Sync fragments at Loxi and let it align the west crew trail with the south facility record.";
             }
             return "Sync fragments at Loxi terminal.";
         }
         if (IsCrossX2Ready(tasks)) {
-            return "Collect 3 Relic Fragments and confirm Loxi's late-route analysis at the terminal.";
+            return "Collect 3 Relic Fragments and bring them to Loxi so it can compare force, stabilization, and settlement with full system context.";
         }
         if (IsCrossX1Ready(tasks)) {
-            return "Collect 3 Relic Fragments and prepare the west-south evidence alignment at Loxi.";
+            return "Collect 3 Relic Fragments and bring them to Loxi so it can align the west and south evidence into one timeline.";
         }
     }
     if (tasks->stage == 7) {
@@ -431,24 +431,24 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
             if (area == MAP_AREA_BASE) {
                 if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
                     if (IsCrossX2Ready(tasks)) {
-                        return "Shared late-route analysis is ready. Sync fragments at Loxi before the final route commit.";
+                        return "Fragments ready. Loxi can now rewrite the route comparison around one failing maintenance lattice.";
                     }
                     if (IsCrossX1Ready(tasks)) {
-                        return "Shared route evidence is ready. Sync fragments at Loxi before the final route commit.";
+                        return "Fragments ready. Loxi can now align the west crew trail with the south facility record.";
                     }
                     return "Sync fragments at Loxi terminal.";
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Shared late-route analysis is unlocked. Gather 3 fragments, then return to Loxi.";
+                    return "Late-route analysis is unlocked. Gather 3 fragments so Loxi can finish its rewritten route comparison.";
                 }
                 if (IsCrossX1Ready(tasks)) {
-                    return "Shared route evidence is unlocked. Gather 3 fragments, then return to Loxi.";
+                    return "Shared route evidence is unlocked. Gather 3 fragments so Loxi can join the west and south record.";
                 }
                 return "Collect 3 Relic Fragments in north ruins.";
             }
             if (area == MAP_AREA_RUINS) {
                 if (IsCrossX2Ready(tasks)) {
-                    return "Ruins prep now supports Loxi's late-route analysis. Finish the fragment set and return to Loxi.";
+                    return "Ruins prep now supports Loxi's rewritten route comparison. Finish the fragment set and return.";
                 }
                 return "Collect fragments in ruins and return to base.";
             }
@@ -456,7 +456,7 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
         case 7:
             if (area == MAP_AREA_BASE) {
                 if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
-                    return "All evidence is assembled. Loxi is now the ending branch point.";
+                    return "Full archive context is assembled. Loxi can now frame heroic rescue, peaceful rescue, or settlement as deliberate answers to the same truth.";
                 }
                 if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                     if (tasks->bossDefeated) {
@@ -471,10 +471,13 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
                     return "Peaceful route chosen. Craft the Signal Amplifier before the tower run.";
                 }
                 if (IsCrossX3Ready(tasks)) {
-                    return "West and south conclusions are synchronized. Finish the main archive and return here to choose.";
+                    return "West crew testimony and south system truth now agree on what the final choice means. Finish the main archive and return here.";
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Late-route analysis is stable. Finish the main archive work before the final branch opens.";
+                    return "Loxi has rewritten the late-route comparison around one failing maintenance lattice. Finish the main archive before the branch opens.";
+                }
+                if (IsCrossX1Ready(tasks)) {
+                    return "Crew traces and facility handovers now align into one timeline. Keep recovering the main archive.";
                 }
                 return "Final stage is now an archive phase: recover every remaining mainline log, then choose your ending here.";
             }
@@ -783,24 +786,24 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
             if (tasks->stage == 6) {
                 if (player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
                     if (IsCrossX2Ready(tasks)) {
-                        return "Shared late-route analysis is unlocked. Sync fragments at Loxi before the final route choice.";
+                        return "Fragments can now let Loxi compare rescue, repair, and settlement with full system context.";
                     }
                     if (IsCrossX1Ready(tasks)) {
-                        return "Shared route evidence is unlocked. Return fragments to Loxi and align the west/south record.";
+                        return "Fragments can now let Loxi align west crew traces with south facility handovers.";
                     }
                     return "Return fragments to Loxi terminal.";
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Shared late-route analysis is ready. Finish fragment runs and return to Loxi.";
+                    return "Finish fragment runs so Loxi can complete its maintenance-lattice route comparison.";
                 }
                 if (IsCrossX1Ready(tasks)) {
-                    return "Shared route evidence is ready. Finish fragment runs and return to Loxi.";
+                    return "Finish fragment runs so Loxi can lock the west/south timeline together.";
                 }
                 return "Collect 3 Relic Fragments in north ruins.";
             }
             if (tasks->stage == 7) {
                 if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
-                    return "All mainline logs recovered. Return to Loxi and choose the ending route.";
+                    return "All mainline logs recovered. Return to Loxi and choose how to answer the full archive truth.";
                 }
                 if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                     if (tasks->bossDefeated) {
@@ -815,7 +818,13 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
                     return "Peaceful route locked. Craft the amplifier before leaving base.";
                 }
                 if (IsCrossX3Ready(tasks)) {
-                    return "Archive almost complete. One final sweep should unlock the ending choice.";
+                    return "Archive almost complete. One final sweep should let Loxi frame the ending choice with full context.";
+                }
+                if (IsCrossX2Ready(tasks)) {
+                    return "Main archive is now the last blocker before Loxi's rewritten route comparison becomes a real choice.";
+                }
+                if (IsCrossX1Ready(tasks)) {
+                    return "Aligned crew and facility evidence is ready. Keep bringing back mainline proof.";
                 }
                 return "Final stage archive phase: collect truth first, choose an ending second.";
             }
