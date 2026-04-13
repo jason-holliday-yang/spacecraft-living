@@ -23,6 +23,20 @@ static void PrepareGame(Game *game) {
     game->state = GAME_STATE_PLAYING;
 }
 
+static void MovePlayerAndUpdate(Game *game, int gridX, int gridY) {
+    game->player.gridX = gridX;
+    game->player.gridY = gridY;
+    Player_UpdateWorldPosition(&game->player);
+    Game_MaybePostNorthRouteTransitionHint(game);
+}
+
+static void CollectArchiveEvidence(TaskSystem *tasks, int logIndex) {
+    Require(tasks != NULL, "archive evidence helper requires a task system");
+    Require(logIndex >= 0 && logIndex < tasks->logCount, "archive evidence helper should target a valid log");
+    tasks->logs[logIndex].active = true;
+    tasks->logs[logIndex].collected = true;
+}
+
 static void ConfigureIsolatedSaveHome(void) {
     char tempHomeTemplate[] = "/tmp/scl-session-smoke-XXXXXX";
     char *tempHome;
@@ -296,130 +310,124 @@ int main(void) {
     PrepareGame(&game);
     game.tasks.stage = 4;
     game.tasks.commRepairLevel = 1;
-    game.player.gridX = EXTERIOR_X(24);
-    game.player.gridY = EXTERIOR_Y(72);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(24), EXTERIOR_Y(72));
     Require(game.tasks.westW1Started,
             "entering West Frontier with relay recovery complete should start W1");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.westW1Completed,
+            "returning to base from West Frontier without the record should keep W1 open");
+    Require(strstr(game.hudMessage.text, "West Frontier record") != NULL,
+            "missing west evidence should explain which record still needs to be recovered");
+    CollectArchiveEvidence(&game.tasks, 3);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(24), EXTERIOR_Y(72));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW1Completed,
-            "returning to base from West Frontier should complete W1");
-    game.player.gridX = EXTERIOR_X(34);
-    game.player.gridY = EXTERIOR_Y(68);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from West Frontier with the record should complete W1");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(34), EXTERIOR_Y(68));
     Require(game.tasks.westW2Started && !game.tasks.westW2Completed,
             "entering Survey Break after W1 should transition to W2");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.westW2Completed,
+            "returning to base from Survey Break without the record should keep W2 open");
+    CollectArchiveEvidence(&game.tasks, 4);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(34), EXTERIOR_Y(68));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW2Completed,
-            "returning to base from Survey Break during W2 should archive W2");
-    game.player.gridX = EXTERIOR_X(44);
-    game.player.gridY = EXTERIOR_Y(68);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from Survey Break with the record should archive W2");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(44), EXTERIOR_Y(68));
     Require(game.tasks.westW3Started && !game.tasks.westW3Completed,
             "entering Canopy Hollow after W2 should transition to W3");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.westW3Completed,
+            "returning to base from Canopy Hollow without the record should keep W3 open");
+    CollectArchiveEvidence(&game.tasks, 5);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(44), EXTERIOR_Y(68));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW3Completed,
-            "returning to base from Canopy Hollow during W3 should archive W3");
-    game.player.gridX = EXTERIOR_X(48);
-    game.player.gridY = EXTERIOR_Y(78);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from Canopy Hollow with the record should archive W3");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(78));
     Require(game.tasks.westW4Started && !game.tasks.westW4Completed,
             "entering Echo Basin after W3 should transition to W4");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.westW4Completed,
+            "returning to base from Echo Basin without the record should keep W4 open");
+    CollectArchiveEvidence(&game.tasks, 6);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(78));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW4Completed,
-            "returning to base from Echo Basin during W4 should archive W4");
-    game.player.gridX = EXTERIOR_X(48);
-    game.player.gridY = EXTERIOR_Y(88);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from Echo Basin with the record should archive W4");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(88));
     Require(game.tasks.westW5Started && !game.tasks.westW5Completed,
             "entering Last Camp after W4 should transition to W5");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.westW5Completed,
+            "returning to base from Last Camp without the record should keep W5 open");
+    CollectArchiveEvidence(&game.tasks, 7);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(88));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW5Completed,
-            "returning to base from Last Camp during W5 should archive W5");
+            "returning to base from Last Camp with the record should archive W5");
 
     PrepareGame(&game);
     game.tasks.stage = 5;
     game.tasks.energyRepairLevel = 1;
-    game.player.gridX = EXTERIOR_X(82);
-    game.player.gridY = EXTERIOR_Y(96);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(82), EXTERIOR_Y(96));
     Require(game.tasks.southS1Started,
             "entering South Collapse with power restore complete should start S1");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.southS1Completed,
+            "returning to base from South Collapse without the record should keep S1 open");
+    Require(strstr(game.hudMessage.text, "South Collapse record") != NULL,
+            "missing south evidence should explain which record still needs to be recovered");
+    CollectArchiveEvidence(&game.tasks, 9);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(82), EXTERIOR_Y(96));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.southS1Completed,
-            "returning to base from South Collapse should complete S1");
-    game.player.gridX = EXTERIOR_X(90);
-    game.player.gridY = EXTERIOR_Y(96);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from South Collapse with the record should complete S1");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(90), EXTERIOR_Y(96));
     Require(game.tasks.southS2Started && !game.tasks.southS2Completed,
             "entering Vent Galleries after S1 should transition to S2");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.southS2Completed,
+            "returning to base from Vent Galleries without the record should keep S2 open");
+    CollectArchiveEvidence(&game.tasks, 10);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(90), EXTERIOR_Y(96));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.southS2Completed,
-            "returning to base from Vent Galleries during S2 should archive S2");
-    game.player.gridX = EXTERIOR_X(104);
-    game.player.gridY = EXTERIOR_Y(96);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from Vent Galleries with the record should archive S2");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(104), EXTERIOR_Y(96));
     Require(game.tasks.southS3Started && !game.tasks.southS3Completed,
             "entering Service Shafts after S2 should transition to S3");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.southS3Completed,
+            "returning to base from Service Shafts without the record should keep S3 open");
+    CollectArchiveEvidence(&game.tasks, 11);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(104), EXTERIOR_Y(96));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.southS3Completed,
-            "returning to base from Service Shafts during S3 should archive S3");
-    game.player.gridX = EXTERIOR_X(112);
-    game.player.gridY = EXTERIOR_Y(96);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from Service Shafts with the record should archive S3");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(112), EXTERIOR_Y(96));
     Require(game.tasks.southS4Started && !game.tasks.southS4Completed,
             "entering Purifier Ring after S3 should transition to S4");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.southS4Completed,
+            "returning to base from Purifier Ring without the record should keep S4 open");
+    CollectArchiveEvidence(&game.tasks, 12);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(112), EXTERIOR_Y(96));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.southS4Completed,
-            "returning to base from Purifier Ring during S4 should archive S4");
-    game.player.gridX = EXTERIOR_X(120);
-    game.player.gridY = EXTERIOR_Y(96);
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+            "returning to base from Purifier Ring with the record should archive S4");
+    MovePlayerAndUpdate(&game, EXTERIOR_X(120), EXTERIOR_Y(96));
     Require(game.tasks.southS5Started && !game.tasks.southS5Completed,
             "entering Root Vault after S4 should transition to S5");
-    game.player.gridX = WORKBENCH_X;
-    game.player.gridY = WORKBENCH_Y;
-    Player_UpdateWorldPosition(&game.player);
-    Game_MaybePostNorthRouteTransitionHint(&game);
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
+    Require(!game.tasks.southS5Completed,
+            "returning to base from Root Vault without the record should keep S5 open");
+    CollectArchiveEvidence(&game.tasks, 13);
+    MovePlayerAndUpdate(&game, EXTERIOR_X(120), EXTERIOR_Y(96));
+    MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.southS5Completed,
-            "returning to base from Root Vault during S5 should archive S5");
+            "returning to base from Root Vault with the record should archive S5");
 
     PrepareGame(&game);
     game.tasks.stage = 5;

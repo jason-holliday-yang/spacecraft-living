@@ -4,9 +4,9 @@
 
 从当前这轮开始，项目执行口径固定为：
 
-- `当前主目标是补齐西线 Echo Wilds 与南线 Subsurface Sink`
-- `补齐西线 / 南线后，再冻结地图、剧情和玩法设计范围`
-- `在此之前，不再继续扩展超出西线 / 南线补完之外的新地图、新剧情主线或大型新玩法系统`
+- `西线 Echo Wilds 与南线 Subsurface Sink 的主体内容已落地`
+- `当前主目标切换为跨区整合、终局反哺、平衡护栏与发布级收口`
+- `在此阶段，不再继续扩展超出当前版图之外的新地图、新剧情主线或大型新玩法系统`
 
 如果后续有新增工作，也应优先归入下面几类：
 
@@ -19,41 +19,43 @@
 
 当前执行快照（按代码与运行时口径）：
 
-- `W1-W3`、`S1-S3` 已可跑通并已接入主流程
-- 当前最优先缺口为 `W4-W5`、`S4-S5` 与 `X1-X3` 终局反哺整合
+- `W1-W5`、`S1-S5` 已可跑通并已接入主流程
+- 日志已区分 `Main Archive` 与 `Supplemental Archive`
+- 西线 / 南线任务现在要求玩家把对应现场记录带回基地后才会归档完成
+- 当前最优先缺口为 `X1-X3` 终局反哺整合、路线提示收口与发布级打磨
 - 核心游玩体验已经固定为 `求生 + 搜集真相 + 主动选择结局`
 - 大多数日志应继续通过任务、设施交互与调查闭环解锁，避免回退到“随手捡 lore”的旧结构
 - 本文档中的“首批开工”段落改为历史快照，仅用于回归核对
 
 ## 当前最值得直接推进的任务（第二轮）
 
-### 任务 1：西线任务链与区域落地
+### 任务 1：跨区整合与终局反哺
 
 目标：
 
-- 把 `Echo Wilds` 从首批可玩推进到完整调查线
+- 把西线、南线、东线、北线真正收束成同一局里的完整真相链
 
 本轮至少要完成：
 
-- 按 [`../design/EXPANSION_MAP_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_MAP_DESIGN.md) 固定 `West Frontier -> Survey Break -> Canopy Hollow -> Echo Basin -> Last Camp`
-- 按 [`../design/EXPANSION_STORY_TASKS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_STORY_TASKS.md) 落地 `W1 - W5`
-- 按 [`../design/WEST_SOUTH_FULL_STORY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/WEST_SOUTH_FULL_STORY.md) 对齐西线剧情事件与回基地总结口径
-- 让西线承担失踪船员调查、人物痕迹补完与定居路线补强职责
-- 让西线完成后能反哺地图情报、日志、基地总结和结局文本
+- 落地并补强 `X1 - X3`
+- 让 Loxi 能明确总结“玩家已经知道了什么、还缺什么、哪条路线因此发生了意义变化”
+- 把西线 / 南线证据继续写入终局前文本、结局页和回船总结
+- 统一 objective、communicator、field note、map overlay 与 ending panel 的终局口径
+- 让 `Main Archive` 与 `Supplemental Archive` 的区别在提示层保持一致，不出现互相矛盾的说法
 
-### 任务 2：南线任务链与区域落地
+### 任务 2：北线终局与结局流程收口
 
 目标：
 
-- 把 `Subsurface Sink` 从首批可玩推进到完整设施与真相线
+- 让终局从“可以跑通”进一步靠近“能清楚理解并愿意复盘”
 
 本轮至少要完成：
 
-- 固定 `South Collapse -> Vent Galleries -> Service Shafts -> Purifier Ring -> Root Vault`
-- 落地 `S1 - S5`
-- 按 [`../design/WEST_SOUTH_FULL_STORY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/WEST_SOUTH_FULL_STORY.md) 对齐南线剧情事件与真相揭示口径
-- 让南线承担设施控制、风险改写、事故真相与终局准备补强职责
-- 让南线完成后能反哺主地图路线质量、设施收益和终局执行稳定性
+- 固定 `飞船 / Loxi -> 结局分支点 -> 路线执行` 的终局顺序
+- 继续清除所有旧的“直接塔顶选结局”残留文案
+- 让英雄 / 和平 / 定居三条路线都能明确引用西线 / 南线调查成果
+- 提高结局页的信息层次、路线复盘感与“主动选择”的确认感
+- 补清楚结局后的返回路径或产品级收束
 
 ### 任务 3：地图-剧情联动补齐
 
@@ -65,8 +67,8 @@
 
 - 按 [`MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md) 固定各区域的叙事身份
 - 补清楚 `进入理由 -> 信息收获 -> 返回结果` 这套区域闭环
+- 把 `返回结果` 明确细化为“带回了什么证据、因此改写了什么判断”
 - 统一 objective、communicator、field note、map overlay 与 objective marker 的口径
-- 把西线 / 南线正式接入 `Stage 4 - Stage 7`，而不是悬浮在主流程外
 - 修改顺序先按 `基地 -> 东线 -> 西线`，再进入 `基地 -> 南线 -> 北线 -> 终局选择`
 
 ### 任务 4：资源经济与终局预算收口

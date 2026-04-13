@@ -168,6 +168,158 @@ static bool IsShipBaseLocation(const char *locationName) {
             || std::strcmp(locationName, "Power Bay") == 0);
 }
 
+static bool IsLogCollectedAtIndex(const TaskSystem *tasks, int logIndex) {
+    return tasks != NULL
+        && logIndex >= 0
+        && logIndex < tasks->logCount
+        && tasks->logs[logIndex].collected;
+}
+
+static int GetRequiredArchiveEvidenceLogIndex(const char *locationName) {
+    if (locationName == NULL) {
+        return -1;
+    }
+
+    if (std::strcmp(locationName, "West Frontier") == 0) {
+        return 3;
+    }
+    if (std::strcmp(locationName, "Survey Break") == 0) {
+        return 4;
+    }
+    if (std::strcmp(locationName, "Canopy Hollow") == 0) {
+        return 5;
+    }
+    if (std::strcmp(locationName, "Echo Basin") == 0) {
+        return 6;
+    }
+    if (std::strcmp(locationName, "Last Camp") == 0) {
+        return 7;
+    }
+    if (std::strcmp(locationName, "South Collapse") == 0) {
+        return 9;
+    }
+    if (std::strcmp(locationName, "Vent Galleries") == 0) {
+        return 10;
+    }
+    if (std::strcmp(locationName, "Service Shafts") == 0) {
+        return 11;
+    }
+    if (std::strcmp(locationName, "Purifier Ring") == 0) {
+        return 12;
+    }
+    if (std::strcmp(locationName, "Root Vault") == 0) {
+        return 13;
+    }
+
+    return -1;
+}
+
+static const char *GetRequiredArchiveEvidenceLabel(const char *locationName) {
+    if (locationName == NULL) {
+        return NULL;
+    }
+
+    if (std::strcmp(locationName, "West Frontier") == 0) {
+        return "West Frontier record";
+    }
+    if (std::strcmp(locationName, "Survey Break") == 0) {
+        return "Survey Break record";
+    }
+    if (std::strcmp(locationName, "Canopy Hollow") == 0) {
+        return "Canopy Hollow record";
+    }
+    if (std::strcmp(locationName, "Echo Basin") == 0) {
+        return "Echo Basin record";
+    }
+    if (std::strcmp(locationName, "Last Camp") == 0) {
+        return "Last Camp record";
+    }
+    if (std::strcmp(locationName, "South Collapse") == 0) {
+        return "South Collapse record";
+    }
+    if (std::strcmp(locationName, "Vent Galleries") == 0) {
+        return "Vent Galleries record";
+    }
+    if (std::strcmp(locationName, "Service Shafts") == 0) {
+        return "Service Shafts record";
+    }
+    if (std::strcmp(locationName, "Purifier Ring") == 0) {
+        return "Purifier Ring record";
+    }
+    if (std::strcmp(locationName, "Root Vault") == 0) {
+        return "Root Vault record";
+    }
+
+    return NULL;
+}
+
+static bool CanArchiveEvidencePass(const TaskSystem *tasks,
+                                   const char *locationName,
+                                   const char *previousLocationName,
+                                   bool started,
+                                   bool completed,
+                                   const char *targetLocationName) {
+    return IsShipBaseLocation(locationName)
+        && previousLocationName != NULL
+        && started
+        && !completed
+        && targetLocationName != NULL
+        && std::strcmp(previousLocationName, targetLocationName) == 0
+        && IsLogCollectedAtIndex(tasks, GetRequiredArchiveEvidenceLogIndex(targetLocationName));
+}
+
+static bool IsAwaitingArchiveEvidence(const TaskSystem *tasks,
+                                      const char *locationName,
+                                      const char *previousLocationName,
+                                      bool started,
+                                      bool completed,
+                                      const char *targetLocationName) {
+    return IsShipBaseLocation(locationName)
+        && previousLocationName != NULL
+        && started
+        && !completed
+        && targetLocationName != NULL
+        && std::strcmp(previousLocationName, targetLocationName) == 0
+        && !IsLogCollectedAtIndex(tasks, GetRequiredArchiveEvidenceLogIndex(targetLocationName));
+}
+
+static const char *GetPendingArchiveEvidenceLabelOnBaseReturn(const TaskSystem *tasks,
+                                                              const char *locationName,
+                                                              const char *previousLocationName) {
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW5Started, tasks->westW5Completed, "Last Camp")) {
+        return GetRequiredArchiveEvidenceLabel("Last Camp");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW4Started, tasks->westW4Completed, "Echo Basin")) {
+        return GetRequiredArchiveEvidenceLabel("Echo Basin");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW3Started, tasks->westW3Completed, "Canopy Hollow")) {
+        return GetRequiredArchiveEvidenceLabel("Canopy Hollow");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW2Started, tasks->westW2Completed, "Survey Break")) {
+        return GetRequiredArchiveEvidenceLabel("Survey Break");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW1Started, tasks->westW1Completed, "West Frontier")) {
+        return GetRequiredArchiveEvidenceLabel("West Frontier");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS5Started, tasks->southS5Completed, "Root Vault")) {
+        return GetRequiredArchiveEvidenceLabel("Root Vault");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS4Started, tasks->southS4Completed, "Purifier Ring")) {
+        return GetRequiredArchiveEvidenceLabel("Purifier Ring");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS3Started, tasks->southS3Completed, "Service Shafts")) {
+        return GetRequiredArchiveEvidenceLabel("Service Shafts");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS2Started, tasks->southS2Completed, "Vent Galleries")) {
+        return GetRequiredArchiveEvidenceLabel("Vent Galleries");
+    }
+    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS1Started, tasks->southS1Completed, "South Collapse")) {
+        return GetRequiredArchiveEvidenceLabel("South Collapse");
+    }
+
+    return NULL;
+}
+
 static bool TryAdvanceWestSouthRouteFlags(Game *game, const char *locationName, const char *previousLocationName) {
     if (game == NULL || locationName == NULL) {
         return false;
@@ -251,92 +403,102 @@ static bool TryAdvanceWestSouthRouteFlags(Game *game, const char *locationName, 
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.westW5Started
-        && !game->tasks.westW5Completed
-        && std::strcmp(previousLocationName, "Last Camp") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.westW5Started,
+                               game->tasks.westW5Completed,
+                               "Last Camp")) {
         game->tasks.westW5Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.westW4Started
-        && !game->tasks.westW4Completed
-        && std::strcmp(previousLocationName, "Echo Basin") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.westW4Started,
+                               game->tasks.westW4Completed,
+                               "Echo Basin")) {
         game->tasks.westW4Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.westW3Started
-        && !game->tasks.westW3Completed
-        && std::strcmp(previousLocationName, "Canopy Hollow") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.westW3Started,
+                               game->tasks.westW3Completed,
+                               "Canopy Hollow")) {
         game->tasks.westW3Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.westW2Started
-        && !game->tasks.westW2Completed
-        && std::strcmp(previousLocationName, "Survey Break") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.westW2Started,
+                               game->tasks.westW2Completed,
+                               "Survey Break")) {
         game->tasks.westW2Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.westW1Started
-        && !game->tasks.westW1Completed
-        && std::strcmp(previousLocationName, "West Frontier") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.westW1Started,
+                               game->tasks.westW1Completed,
+                               "West Frontier")) {
         game->tasks.westW1Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.southS5Started
-        && !game->tasks.southS5Completed
-        && std::strcmp(previousLocationName, "Root Vault") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.southS5Started,
+                               game->tasks.southS5Completed,
+                               "Root Vault")) {
         game->tasks.southS5Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.southS4Started
-        && !game->tasks.southS4Completed
-        && std::strcmp(previousLocationName, "Purifier Ring") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.southS4Started,
+                               game->tasks.southS4Completed,
+                               "Purifier Ring")) {
         game->tasks.southS4Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.southS3Started
-        && !game->tasks.southS3Completed
-        && std::strcmp(previousLocationName, "Service Shafts") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.southS3Started,
+                               game->tasks.southS3Completed,
+                               "Service Shafts")) {
         game->tasks.southS3Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.southS2Started
-        && !game->tasks.southS2Completed
-        && std::strcmp(previousLocationName, "Vent Galleries") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.southS2Started,
+                               game->tasks.southS2Completed,
+                               "Vent Galleries")) {
         game->tasks.southS2Completed = true;
         return true;
     }
 
-    if (IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && game->tasks.southS1Started
-        && !game->tasks.southS1Completed
-        && std::strcmp(previousLocationName, "South Collapse") == 0) {
+    if (CanArchiveEvidencePass(&game->tasks,
+                               locationName,
+                               previousLocationName,
+                               game->tasks.southS1Started,
+                               game->tasks.southS1Completed,
+                               "South Collapse")) {
         game->tasks.southS1Completed = true;
         return true;
     }
@@ -394,6 +556,7 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     const char *locationName;
     const char *previousLocationName;
     const char *baseReturnSummary;
+    const char *missingArchiveEvidenceLabel;
     bool routeFlagsChanged;
     bool westCompletedNow;
     bool southCompletedNow;
@@ -412,6 +575,7 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     bool x2ReadyNow;
     bool x3ReadyNow;
     const bool detailedLocationHintsEnabled = false;
+    char baseSummaryBuffer[160];
 
     if (game == NULL) {
         return;
@@ -426,56 +590,67 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     x1ReadyBefore = IsCrossX1Ready(&game->tasks);
     x2ReadyBefore = IsCrossX2Ready(&game->tasks);
     x3ReadyBefore = IsCrossX3Ready(&game->tasks);
-    westCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.westW1Started
-        && !game->tasks.westW1Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "West Frontier") == 0;
-    southCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.southS1Started
-        && !game->tasks.southS1Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "South Collapse") == 0;
-    westSecondCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.westW2Started
-        && !game->tasks.westW2Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Survey Break") == 0;
-    southSecondCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.southS2Started
-        && !game->tasks.southS2Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Vent Galleries") == 0;
-    westThirdCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.westW3Started
-        && !game->tasks.westW3Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Canopy Hollow") == 0;
-    southThirdCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.southS3Started
-        && !game->tasks.southS3Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Service Shafts") == 0;
-    westFourthCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.westW4Started
-        && !game->tasks.westW4Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Echo Basin") == 0;
-    southFourthCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.southS4Started
-        && !game->tasks.southS4Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Purifier Ring") == 0;
-    westFifthCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.westW5Started
-        && !game->tasks.westW5Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Last Camp") == 0;
-    southFifthCompletedNow = IsShipBaseLocation(locationName)
-        && game->tasks.southS5Started
-        && !game->tasks.southS5Completed
-        && previousLocationName != NULL
-        && std::strcmp(previousLocationName, "Root Vault") == 0;
+    westCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                              locationName,
+                                              previousLocationName,
+                                              game->tasks.westW1Started,
+                                              game->tasks.westW1Completed,
+                                              "West Frontier");
+    southCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                               locationName,
+                                               previousLocationName,
+                                               game->tasks.southS1Started,
+                                               game->tasks.southS1Completed,
+                                               "South Collapse");
+    westSecondCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                    locationName,
+                                                    previousLocationName,
+                                                    game->tasks.westW2Started,
+                                                    game->tasks.westW2Completed,
+                                                    "Survey Break");
+    southSecondCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                     locationName,
+                                                     previousLocationName,
+                                                     game->tasks.southS2Started,
+                                                     game->tasks.southS2Completed,
+                                                     "Vent Galleries");
+    westThirdCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                   locationName,
+                                                   previousLocationName,
+                                                   game->tasks.westW3Started,
+                                                   game->tasks.westW3Completed,
+                                                   "Canopy Hollow");
+    southThirdCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                    locationName,
+                                                    previousLocationName,
+                                                    game->tasks.southS3Started,
+                                                    game->tasks.southS3Completed,
+                                                    "Service Shafts");
+    westFourthCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                    locationName,
+                                                    previousLocationName,
+                                                    game->tasks.westW4Started,
+                                                    game->tasks.westW4Completed,
+                                                    "Echo Basin");
+    southFourthCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                     locationName,
+                                                     previousLocationName,
+                                                     game->tasks.southS4Started,
+                                                     game->tasks.southS4Completed,
+                                                     "Purifier Ring");
+    westFifthCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                   locationName,
+                                                   previousLocationName,
+                                                   game->tasks.westW5Started,
+                                                   game->tasks.westW5Completed,
+                                                   "Last Camp");
+    southFifthCompletedNow = CanArchiveEvidencePass(&game->tasks,
+                                                    locationName,
+                                                    previousLocationName,
+                                                    game->tasks.southS5Started,
+                                                    game->tasks.southS5Completed,
+                                                    "Root Vault");
+    missingArchiveEvidenceLabel = GetPendingArchiveEvidenceLabelOnBaseReturn(&game->tasks, locationName, previousLocationName);
     routeFlagsChanged = TryAdvanceWestSouthRouteFlags(game, locationName, previousLocationName);
     x1ReadyNow = IsCrossX1Ready(&game->tasks);
     x2ReadyNow = IsCrossX2Ready(&game->tasks);
@@ -535,6 +710,14 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     }
     if (southCompletedNow) {
         Game_PostMessage(game, "Base summary: the South Collapse outage memo is archived.", 3.4f);
+        return;
+    }
+    if (missingArchiveEvidenceLabel != NULL) {
+        std::snprintf(baseSummaryBuffer,
+                      sizeof(baseSummaryBuffer),
+                      "Base summary: archive pass still open. Bring back the %s before Loxi can close it.",
+                      missingArchiveEvidenceLabel);
+        Game_PostMessage(game, baseSummaryBuffer, 3.4f);
         return;
     }
     if (baseReturnSummary != NULL) {
