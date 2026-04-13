@@ -2,9 +2,14 @@
 #define MAP_H
 
 #include <stdbool.h>
+#include "c_compat.h"
 #include "assets.h"
 #include "config.h"
 #include "raylib.h"
+
+/* Public world-map data, tile queries, area identity, and traversal helpers. */
+
+SCL_EXTERN_C_BEGIN
 
 typedef enum MapArea {
     MAP_AREA_BASE = 0,
@@ -24,7 +29,11 @@ typedef enum TileType {
     TILE_RUINS_GROUND,
     TILE_TREE,
     TILE_ROCK,
-    TILE_SHIP_CORE,
+    TILE_TECH_TABLE,
+    TILE_STORAGE_LOCKER,
+    TILE_BUNK,
+    TILE_OXYGEN_CONSOLE,
+    TILE_LOXI_TERMINAL,
     TILE_WORKBENCH,
     TILE_AIRLOCK_CONSOLE,
     TILE_AIRLOCK_DOOR,
@@ -47,7 +56,8 @@ typedef enum HazardType {
 } HazardType;
 
 typedef struct GameMap {
-    TileType tiles[MAP_HEIGHT][MAP_WIDTH];
+    TileType groundTiles[MAP_HEIGHT][MAP_WIDTH];
+    TileType propTiles[MAP_HEIGHT][MAP_WIDTH];
     bool campPlaced;
     int campX;
     int campY;
@@ -60,20 +70,26 @@ bool Map_IsWithinBounds(int gridX, int gridY);
 bool Map_IsWalkable(const GameMap *map, int gridX, int gridY);
 bool Map_IsOpaque(const GameMap *map, int gridX, int gridY);
 TileType Map_GetTileAt(const GameMap *map, int gridX, int gridY);
+TileType Map_GetGroundTileAt(const GameMap *map, int gridX, int gridY);
+TileType Map_GetPropTileAt(const GameMap *map, int gridX, int gridY);
 HazardType Map_GetHazardAt(const GameMap *map, int gridX, int gridY);
 MapArea Map_GetAreaAt(int gridX, int gridY);
-float Map_GetMoveStaminaCost(const GameMap *map, int gridX, int gridY);
 Vector2 Map_GridToWorld(int gridX, int gridY);
 Rectangle Map_GridToRect(int gridX, int gridY);
 const char *Map_GetAreaName(MapArea area);
+const char *Map_GetLocationNameAt(int gridX, int gridY);
 const char *Map_GetRoomNameAt(int gridX, int gridY);
 
 void Map_UnlockSwampOuter(GameMap *map);
+void Map_LockSwampOuter(GameMap *map);
+bool Map_IsSwampOuterUnlocked(const GameMap *map);
 void Map_UnlockSwampDeep(GameMap *map);
 void Map_UnlockRuins(GameMap *map);
 void Map_SetFieldCamp(GameMap *map, int gridX, int gridY);
 
 bool Map_CanCrossWithRope(const GameMap *map, int fromX, int fromY, int toX, int toY);
 void Map_CreateRopeBridge(GameMap *map, int gridX, int gridY);
+
+SCL_EXTERN_C_END
 
 #endif

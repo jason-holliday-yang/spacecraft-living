@@ -3,6 +3,11 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "c_compat.h"
+
+/* Public lightweight puzzle state and monolith-sequence helper APIs. */
+
+SCL_EXTERN_C_BEGIN
 
 #define MAX_PUZZLE_STEPS 3
 
@@ -30,5 +35,7 @@ bool Puzzle_CheckSolved(const MonolithPuzzle *puzzle);
 void Puzzle_GetHint(const MonolithPuzzle *puzzle, char *buffer, size_t bufferSize);
 void Puzzle_Reset(MonolithPuzzle *puzzle);
 const char *Puzzle_GetStatusName(const MonolithPuzzle *puzzle);
+
+SCL_EXTERN_C_END
 
 #endif

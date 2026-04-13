@@ -1,2 +1,15 @@
-build/
+# Generated build output
+/build/
+/build-*/
+/cmake-build-*/
+/compile_commands.json
+/CMakeUserPresets.json
+
+# Platform / IDE noise
 .DS_Store
+*.dSYM/
+*.xcuserstate
+*.xcworkspace/
+*.xcuserdata/
+.idea/
+.vscode/

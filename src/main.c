@@ -37,12 +37,34 @@ static void ConfigureWindowForMonitor(void) {
     SetWindowPosition(offsetX, offsetY);
 }
 
+static void EnableDefaultFullscreen(void) {
+    int monitor;
+    Vector2 monitorPosition;
+    int monitorWidth;
+    int monitorHeight;
+
+    monitor = GetCurrentMonitor();
+    monitorPosition = GetMonitorPosition(monitor);
+    monitorWidth = GetMonitorWidth(monitor);
+    monitorHeight = GetMonitorHeight(monitor);
+    if (IsWindowFullscreen()) {
+        ToggleFullscreen();
+    }
+    ClearWindowState(FLAG_FULLSCREEN_MODE);
+    SetWindowPosition((int)monitorPosition.x, (int)monitorPosition.y);
+    SetWindowSize(monitorWidth, monitorHeight);
+    if (!IsWindowState(FLAG_BORDERLESS_WINDOWED_MODE)) {
+        ToggleBorderlessWindowed();
+    }
+}
+
 int main(void) {
     Game game;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
     ConfigureWindowForMonitor();
+    EnableDefaultFullscreen();
     SetTargetFPS(TARGET_FPS);
     SetExitKey(KEY_NULL);
 

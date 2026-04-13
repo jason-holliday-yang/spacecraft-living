@@ -2,18 +2,34 @@
 #define AUDIO_SYSTEM_H
 
 #include <stdbool.h>
+#include "c_compat.h"
 #include "raylib.h"
 #include "save_system.h"
+
+/* Public C ABI for optional cue/music playback and scene-based audio state. */
+
+SCL_EXTERN_C_BEGIN
 
 typedef enum AudioCue {
     AUDIO_CUE_CONFIRM = 0,
     AUDIO_CUE_OPEN,
+    AUDIO_CUE_CLOSE,
     AUDIO_CUE_WARNING,
     AUDIO_CUE_CRAFT,
     AUDIO_CUE_COLLECT,
+    AUDIO_CUE_LOG,
     AUDIO_CUE_REPAIR,
+    AUDIO_CUE_HURT,
+    AUDIO_CUE_MELEE,
+    AUDIO_CUE_MONSTER,
+    AUDIO_CUE_MONOLITH,
+    AUDIO_CUE_STEP_FOREST,
+    AUDIO_CUE_STEP_METAL,
+    AUDIO_CUE_STEP_SWAMP,
     AUDIO_CUE_LASER,
-    AUDIO_CUE_ENDING
+    AUDIO_CUE_ENDING,
+    AUDIO_CUE_ENDING_PEACEFUL,
+    AUDIO_CUE_ENDING_SETTLEMENT
 } AudioCue;
 
 typedef enum AudioScene {
@@ -40,16 +56,32 @@ typedef struct OptionalMusic {
 typedef struct AudioManager {
     bool ready;
     bool sfxEnabled;
+    bool sceneTransitionActive;
+    bool activeSceneStopped;
     float masterVolume;
+    float sceneTransitionTimer;
     AudioScene activeScene;
+    AudioScene requestedScene;
+    AudioScene pendingScene;
     OptionalSound confirm;
     OptionalSound open;
+    OptionalSound close;
     OptionalSound warning;
     OptionalSound craft;
     OptionalSound collect;
+    OptionalSound log;
     OptionalSound repair;
+    OptionalSound hurt;
+    OptionalSound melee;
+    OptionalSound monster;
+    OptionalSound monolith;
+    OptionalSound stepForest;
+    OptionalSound stepMetal;
+    OptionalSound stepSwamp;
     OptionalSound laser;
     OptionalSound ending;
+    OptionalSound endingPeaceful;
+    OptionalSound endingSettlement;
     OptionalMusic menuLoop;
     OptionalMusic baseLoop;
     OptionalMusic forestLoop;
@@ -67,5 +99,7 @@ void Audio_SetMasterVolumeSetting(AudioManager *audio, float volume);
 void Audio_SetSfxEnabled(AudioManager *audio, bool enabled);
 void Audio_SetScene(AudioManager *audio, AudioScene scene);
 void Audio_PlayCue(AudioManager *audio, AudioCue cue);
+
+SCL_EXTERN_C_END
 
 #endif

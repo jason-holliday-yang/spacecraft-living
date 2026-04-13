@@ -3,9 +3,14 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "c_compat.h"
 #include "assets.h"
 #include "player.h"
 #include "puzzle.h"
+
+/* Public task/runtime state, progression enums, and gameplay-side task APIs. */
+
+SCL_EXTERN_C_BEGIN
 
 typedef enum DayPhase {
     DAY_PHASE_DAY = 0,
@@ -49,6 +54,7 @@ typedef struct ResourceNode {
     int gridY;
     int baseYield;
     int respawnsRemaining;
+    int initialRespawnsRemaining;
     bool special;
     MapArea area;
     float awayTimer;
@@ -82,11 +88,17 @@ typedef struct Monster {
     int targetY;
 } Monster;
 
+typedef enum ShipLogCategory {
+    SHIP_LOG_MAINLINE = 0,
+    SHIP_LOG_SUPPLEMENTAL
+} ShipLogCategory;
+
 typedef struct ShipLog {
     bool active;
     bool collected;
     int gridX;
     int gridY;
+    ShipLogCategory category;
     int rewardKind;
     char title[64];
     char storyText[512];
@@ -108,10 +120,31 @@ typedef struct TaskSystem {
     bool communicatorUnlocked;
     bool bossDefeated;
     bool signalTowerActivated;
+    bool westW1Started;
+    bool westW1Completed;
+    bool westW2Started;
+    bool westW2Completed;
+    bool westW3Started;
+    bool westW3Completed;
+    bool westW4Started;
+    bool westW4Completed;
+    bool westW5Started;
+    bool westW5Completed;
+    bool southS1Started;
+    bool southS1Completed;
+    bool southS2Started;
+    bool southS2Completed;
+    bool southS3Started;
+    bool southS3Completed;
+    bool southS4Started;
+    bool southS4Completed;
+    bool southS5Started;
+    bool southS5Completed;
     bool monolithActivated[3];
     int monolithsLit;
     MonolithPuzzle monolithPuzzle;
     GameEnding ending;
+    GameEnding selectedEndingRoute;
     ResourceNode nodes[MAX_RESOURCE_NODES];
     int nodeCount;
     Monster monsters[MAX_MONSTERS];
@@ -119,7 +152,7 @@ typedef struct TaskSystem {
     ShipLog logs[MAX_LOGS];
     int logCount;
     char objective[200];
-    char communicator[320];
+    char communicator[2048];
 } TaskSystem;
 
 void Tasks_Init(TaskSystem *tasks, GameMap *map);
@@ -128,9 +161,14 @@ void Tasks_Update(TaskSystem *tasks, GameMap *map, Player *player, float deltaTi
 bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize);
 bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize);
 bool Tasks_TryCraft(TaskSystem *tasks, GameMap *map, Player *player, RecipeType recipe, char *message, size_t messageSize);
+bool Tasks_IsNearWorkbench(const Player *player);
 bool Tasks_IsBlockingActorTile(const TaskSystem *tasks, int gridX, int gridY);
 bool Tasks_GetObjectiveMarker(const TaskSystem *tasks, const Player *player, int *gridX, int *gridY);
 void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float elapsedSeconds);
+int Tasks_GetCollectedLogCount(const TaskSystem *tasks);
+const ShipLog *Tasks_GetCollectedLogAt(const TaskSystem *tasks, int index);
+bool Tasks_IsRecipeVisible(const TaskSystem *tasks, RecipeType recipe);
+bool Tasks_CanCraftRecipe(const TaskSystem *tasks, const Player *player, RecipeType recipe);
 int Tasks_GetVisibleRecipeCount(const TaskSystem *tasks);
 RecipeType Tasks_GetVisibleRecipeAt(const TaskSystem *tasks, int index);
 const char *Tasks_GetStageName(int stage);
@@ -138,8 +176,15 @@ const char *Tasks_GetPhaseName(DayPhase phase);
 const char *Tasks_GetEventName(EventType eventType);
 bool Tasks_IsCommunicatorUnlocked(const TaskSystem *tasks);
 const char *Tasks_GetCommunicatorHint(const TaskSystem *tasks);
+bool Tasks_IsEndingBranchReady(const TaskSystem *tasks);
+GameEnding Tasks_GetSelectedEndingRoute(const TaskSystem *tasks);
+bool Tasks_SelectEndingRoute(TaskSystem *tasks, GameEnding ending);
+bool Tasks_CanChooseSettlement(const TaskSystem *tasks);
+void Tasks_CommitSettlement(TaskSystem *tasks);
 GameEnding Tasks_GetEnding(const TaskSystem *tasks);
 const char *Tasks_GetEndingTitle(GameEnding ending);
 const char *Tasks_GetEndingBody(GameEnding ending);
+
+SCL_EXTERN_C_END
 
 #endif

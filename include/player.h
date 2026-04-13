@@ -2,7 +2,12 @@
 #define PLAYER_H
 
 #include <stdbool.h>
+#include "c_compat.h"
 #include "map.h"
+
+/* Public player data model plus inventory, stat, and consumable helper APIs. */
+
+SCL_EXTERN_C_BEGIN
 
 typedef enum ResourceType {
     RESOURCE_WOOD = 0,
@@ -40,23 +45,48 @@ typedef enum ConsumableFocus {
     CONSUMABLE_CALM
 } ConsumableFocus;
 
+typedef enum PlayerStatusType {
+    PLAYER_STATUS_POISONED = 0,
+    PLAYER_STATUS_OXYGEN_LEAK,
+    PLAYER_STATUS_LOW_OXYGEN,
+    PLAYER_STATUS_SUFFOCATING,
+    PLAYER_STATUS_CRITICAL_CONDITION,
+    PLAYER_STATUS_FILTERED,
+    PLAYER_STATUS_OXYGEN_RESERVE,
+    PLAYER_STATUS_CAMP_RECOVERY,
+    PLAYER_STATUS_COUNT
+} PlayerStatusType;
+
+typedef struct PlayerStatusEffect {
+    bool active;
+    int level;
+    float remainingTime;
+    float magnitude;
+} PlayerStatusEffect;
+
 typedef struct Player {
     int gridX;
     int gridY;
     int facingX;
     int facingY;
     Vector2 worldPos;
+    Vector2 renderPos;
+    Vector2 moveStartPos;
+    Vector2 moveTargetPos;
+    float health;
     float stamina;
     float pressure;
     float oxygen;
     float poison;
     float moveTimer;
     float safeRecoveryTimer;
-    float pressureDamageTimer;
     float glowStickTimer;
     float speedBoostTimer;
-    float noPressureTimer;
     float blurPulse;
+    float moveAnimElapsed;
+    float moveAnimDuration;
+    float spriteAnimTimer;
+    float maxHealthBonus;
     float maxStaminaBonus;
     float attackBonus;
     int deathCount;
@@ -71,15 +101,18 @@ typedef struct Player {
     bool hasProtectionSuit;
     bool hasSignalAmplifier;
     bool hasFieldCamp;
-    bool isDowned;
-    float downedTimer;
+    PlayerStatusEffect statusEffects[PLAYER_STATUS_COUNT];
     int resources[RESOURCE_COUNT];
 } Player;
 
 void Player_Init(Player *player);
 void Player_UpdateWorldPosition(Player *player);
+void Player_StartMoveAnimation(Player *player, Vector2 startPos, float duration);
+void Player_UpdateAnimation(Player *player, float deltaTime);
+bool Player_IsMoveAnimating(const Player *player);
 bool Player_Move(Player *player, const GameMap *map, int deltaX, int deltaY);
 float Player_GetMoveCooldown(const Player *player);
+float Player_GetMaxHealth(const Player *player);
 float Player_GetMaxStamina(const Player *player);
 float Player_GetCurrentStaminaCap(const Player *player);
 float Player_GetAttackPower(const Player *player);
@@ -87,6 +120,8 @@ float Player_GetAggroMultiplier(const Player *player);
 float Player_GetGatherMultiplier(const Player *player);
 bool Player_CanCraftAdvanced(const Player *player);
 bool Player_IsInDanger(const Player *player);
+void Player_DamageHealth(Player *player, float amount);
+void Player_RecoverHealth(Player *player, float amount);
 void Player_ConsumeStamina(Player *player, float amount);
 void Player_RecoverStamina(Player *player, float amount);
 void Player_AddPressure(Player *player, float amount);
@@ -95,12 +130,31 @@ void Player_AddOxygen(Player *player, float amount);
 void Player_DamageOxygen(Player *player, float amount);
 void Player_AddPoison(Player *player, float amount);
 void Player_ClearPoison(Player *player);
+bool Player_HasStatus(const Player *player, PlayerStatusType status);
+const PlayerStatusEffect *Player_GetStatusEffect(const Player *player, PlayerStatusType status);
+void Player_SetStatus(Player *player, PlayerStatusType status, int level, float remainingTime, float magnitude);
+void Player_DowngradeStatus(Player *player, PlayerStatusType status, int level, float remainingTime, float magnitude);
+void Player_ClearStatus(Player *player, PlayerStatusType status);
+void Player_ClearAllStatuses(Player *player);
+void Player_UpdateStatuses(Player *player, float deltaTime);
+bool Player_IsStatusNegative(PlayerStatusType status);
+int Player_GetStatusPriority(PlayerStatusType status);
+int Player_GetActiveStatusCount(const Player *player);
+int Player_CollectActiveStatuses(const Player *player, PlayerStatusType *statuses, int maxStatuses);
+const char *Player_GetStatusName(PlayerStatusType status);
+void Player_GetStatusSummary(const Player *player, PlayerStatusType status, char *buffer, int bufferSize);
+void Player_GetStatusSourceText(PlayerStatusType status, char *buffer, int bufferSize);
+void Player_GetStatusReliefText(PlayerStatusType status, char *buffer, int bufferSize);
+void Player_GetStatusTooltip(const Player *player, PlayerStatusType status, char *buffer, int bufferSize);
 void Player_AddResource(Player *player, ResourceType resource, int amount);
 bool Player_SpendResource(Player *player, ResourceType resource, int amount);
 bool Player_HasResources(const Player *player, ResourceType resource, int amount);
 bool Player_UseQuickConsumable(Player *player, ConsumableFocus focus, char *message, int messageSize);
+bool Player_UseSelectedConsumable(Player *player, ResourceType resource, char *message, int messageSize);
 const char *Player_GetResourceLabel(ResourceType resource);
 const char *Player_GetRecipeName(RecipeType recipe);
 const char *Player_GetRecipeSummary(RecipeType recipe);
+
+SCL_EXTERN_C_END
 
 #endif
