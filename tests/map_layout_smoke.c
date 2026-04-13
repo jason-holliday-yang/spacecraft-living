@@ -309,6 +309,12 @@ int main(void) {
             "deep gate objective shelf should remain walkable");
     Require(Map_IsWalkable(&map, EXTERIOR_X(114), EXTERIOR_Y(72)),
             "deep basin route should remain walkable");
+    Require(Map_GetPropTileAt(&map, SWAMP_GATE_X, EXTERIOR_Y(52)) == TILE_VOID
+                && Map_GetPropTileAt(&map, SWAMP_GATE_X + 1, EXTERIOR_Y(52)) == TILE_VOID,
+            "deep-swamp gate should no longer use a decorative full-height barrier that can be bypassed");
+    Require(Map_GetPropTileAt(&map, RUINS_GATE_X, EXTERIOR_Y(27)) == TILE_VOID
+                && Map_GetPropTileAt(&map, RUINS_GATE_X + 1, EXTERIOR_Y(27)) == TILE_VOID,
+            "ruins gate should no longer use a decorative full-height barrier that can be bypassed");
     Require(Map_GetPropTileAt(&map, ROPE_BARRIER_B_X, ROPE_BARRIER_B_Y) == TILE_BARRIER_SWAMP,
             "rope shortcut barrier should remain present before interaction");
     for (gridY = RUINS_MAIN_Y; gridY < RUINS_MAIN_Y + RUINS_MAIN_HEIGHT; ++gridY) {

@@ -200,24 +200,6 @@ void MapInternal_SeedWorldLayout(GameMap *map) {
     SetExteriorProp(map, 91, 98, TILE_ROCK);
     SetExteriorProp(map, 106, 96, TILE_ROCK);
 
-    for (row = SWAMP_GATE_TOP_Y; row < SWAMP_GATE_TOP_Y + SWAMP_GATE_HEIGHT; row++) {
-        MapInternal_SetGroundTile(map, SWAMP_GATE_X, row, TILE_DEEP_SWAMP_GROUND);
-        MapInternal_SetGroundTile(map, SWAMP_GATE_X + 1, row, TILE_DEEP_SWAMP_GROUND);
-        MapInternal_SetPropTile(map, SWAMP_GATE_X, row, TILE_BARRIER_DEEP);
-        MapInternal_SetPropTile(map, SWAMP_GATE_X + 1, row, TILE_BARRIER_DEEP);
-    }
-
-    for (row = RUINS_GATE_TOP_Y; row < RUINS_GATE_TOP_Y + RUINS_GATE_HEIGHT; row++) {
-        MapInternal_SetGroundTile(map, RUINS_GATE_X, row, TILE_RUINS_GROUND);
-        MapInternal_SetGroundTile(map, RUINS_GATE_X + 1, row, TILE_RUINS_GROUND);
-        MapInternal_SetPropTile(map, RUINS_GATE_X, row, TILE_BARRIER_RUINS);
-        MapInternal_SetPropTile(map, RUINS_GATE_X + 1, row, TILE_BARRIER_RUINS);
-        if ((row - RUINS_GATE_TOP_Y) % 3 != 1) {
-            MapInternal_SetPropTile(map, RUINS_GATE_X - 1, row, TILE_ROCK);
-            MapInternal_SetPropTile(map, RUINS_GATE_X + 2, row, TILE_ROCK);
-        }
-    }
-
     MapInternal_SetGroundTile(map, ROPE_BARRIER_A_X, ROPE_BARRIER_A_Y, TILE_SWAMP_GROUND);
     MapInternal_SetGroundTile(map, ROPE_BARRIER_B_X, ROPE_BARRIER_B_Y, TILE_SWAMP_GROUND);
     MapInternal_SetGroundTile(map, ROPE_BARRIER_C_X, ROPE_BARRIER_C_Y, TILE_SWAMP_GROUND);

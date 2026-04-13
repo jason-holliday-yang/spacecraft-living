@@ -78,7 +78,7 @@ const std::array<TaskNodeSeed, 71> kNodeSeeds = {{
     {RESOURCE_ORE, SHIP_POWER_BAY_X + 3, SHIP_POWER_BAY_Y + 3, 1, 0, false}
 }};
 
-const std::array<TaskMonsterSeed, 9> kMonsterSeeds = {{
+const std::array<TaskMonsterSeed, 8> kMonsterSeeds = {{
     {MONSTER_THORN_LARVA, EXTERIOR_X(26), EXTERIOR_Y(74), 4},
     {MONSTER_WING_BUG, EXTERIOR_X(37), EXTERIOR_Y(76), 4},
     {MONSTER_RAPTOR, EXTERIOR_X(44), EXTERIOR_Y(69), 4},
@@ -86,7 +86,6 @@ const std::array<TaskMonsterSeed, 9> kMonsterSeeds = {{
     {MONSTER_SENTINEL_JELLY, EXTERIOR_X(114), EXTERIOR_Y(98), 6},
     {MONSTER_FOG_WORM, EXTERIOR_X(121), EXTERIOR_Y(100), 6},
     {MONSTER_RELIC_GUARD, EXTERIOR_X(74), EXTERIOR_Y(18), 7},
-    {MONSTER_RELIC_GUARD, EXTERIOR_X(88), EXTERIOR_Y(13), 7},
     {MONSTER_FINAL_BOSS, EXTERIOR_X(84), EXTERIOR_Y(20), 7}
 }};
 

@@ -396,8 +396,8 @@ int main(void) {
             "purifier ring should keep at least one resource node so S4 has facility-floor rewards");
     Require(CountActiveNodesInLocation(&tasks, "Root Vault") >= 1,
             "root vault should keep at least one resource node so S5 does not land as an empty chamber");
-    Require(tasks.monsterCount == 9,
-            "combat-light balance should keep only one unique small monster per intended region plus ruins enemies");
+    Require(tasks.monsterCount == 8,
+            "combat-light balance should keep only one fixed monster per type plus the final boss");
     Require(CountMonstersOfType(&tasks, MONSTER_THORN_LARVA) == 1,
             "thorn larva should now be a unique encounter");
     Require(CountMonstersOfType(&tasks, MONSTER_WING_BUG) == 1,
@@ -410,10 +410,24 @@ int main(void) {
             "sentinel jelly should now be a unique encounter");
     Require(CountMonstersOfType(&tasks, MONSTER_FOG_WORM) == 1,
             "fog worm should now be a unique encounter");
-    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 2,
-            "ruins should retain only the two fixed relic guards");
+    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 1,
+            "ruins should now retain only one fixed relic guard");
     Require(CountMonstersOfType(&tasks, MONSTER_FINAL_BOSS) == 1,
             "final boss should remain a single encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "West Frontier") == 1,
+            "west frontier should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Survey Break") == 1,
+            "survey break should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Canopy Hollow") == 1,
+            "canopy hollow should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Vent Galleries") == 1,
+            "vent galleries should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Purifier Ring") == 1,
+            "purifier ring should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Root Vault") == 1,
+            "root vault should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Monolith Ring") == 2,
+            "ruins should now hold one relic guard plus the final boss");
 
     Player_SetStatus(&player, PLAYER_STATUS_LOW_OXYGEN, 1, 6.0f, 12.0f);
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 1, 10.0f, 8.0f);
@@ -449,8 +463,8 @@ int main(void) {
     player.gridX = EXTERIOR_X(84);
     player.gridY = EXTERIOR_Y(20);
     Tasks_Update(&tasks, &map, &player, 0.0f);
-    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 2,
-            "combat-light boss flow should keep only the two fixed relic guards even after phase changes");
+    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 1,
+            "combat-light boss flow should keep only the single fixed relic guard even after phase changes");
     RequireValidSpawnPlacements(&map, &tasks);
     tasks.stage = 1;
 
