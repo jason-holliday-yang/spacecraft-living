@@ -84,8 +84,8 @@ int main(void) {
     Require(strcmp(tasks.objective, "Recover the remaining mainline logs and finish west/south archive tasks before choosing an ending with Loxi.") == 0,
             "boss progress alone should not bypass the ship-side ending branch point");
 
-    Require(strcmp(Tasks_GetStageName(4), "Stage 4: Rising Risk") == 0,
-            "stage text lookup should still return the expected stage title");
+    Require(strcmp(Tasks_GetStageName(4), "Rising Risk") == 0,
+            "stage text lookup should return the cleaner player-facing chapter title");
     Require(strcmp(Tasks_GetEndingTitle(ENDING_PEACEFUL), "Peaceful Rescue") == 0,
             "ending title lookup should still return the expected label");
     Require(strstr(Tasks_GetEndingBody(ENDING_SETTLEMENT), "long-term home") != NULL,

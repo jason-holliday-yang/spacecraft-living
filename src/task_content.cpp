@@ -18,13 +18,13 @@ typedef struct EndingTextDef {
 } EndingTextDef;
 
 const std::array<StageTextDef, 7> kStageTextDefs = {{
-    {1, "Stage 1: Wake Up", "Gather 3 Wood + 2 Metal Scrap, then repair the oxygen console."},
-    {2, "Stage 2: First Steps", "Gather Glow Moss and Ore, craft a Glow Stick, finish oxygen repair."},
-    {3, "Stage 3: Into the Wild", "Open airlock, gather Vine/Fruit/Fungus, repair comm relay."},
-    {4, "Stage 4: Rising Risk", "Craft Laser Gun and Suit, then inspect the crash clue."},
-    {5, "Stage 5: Power Breakthrough", "Secure an Energy Core and restore the power bay."},
-    {6, "Stage 6: Final Preparation", "Collect 3 Relic Fragments and sync with Loxi terminal."},
-    {7, "Stage 7: Final Choice", "Recover the final logs, return to Loxi, and choose the ending route."}
+    {1, "Wake Up", "Gather 3 Wood + 2 Metal Scrap, then repair the oxygen console."},
+    {2, "First Steps", "Gather Glow Moss and Ore, craft a Glow Stick, finish oxygen repair."},
+    {3, "Into the Wild", "Open airlock, gather Vine/Fruit/Fungus, repair comm relay."},
+    {4, "Rising Risk", "Craft Laser Gun and Suit, then inspect the crash clue."},
+    {5, "Power Breakthrough", "Secure an Energy Core and restore the power bay."},
+    {6, "Final Preparation", "Collect 3 Relic Fragments and sync with Loxi terminal."},
+    {7, "Final Choice", "Recover the final logs, return to Loxi, and choose the ending route."}
 }};
 
 const std::array<EndingTextDef, 4> kEndingTextDefs = {{

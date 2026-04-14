@@ -26,7 +26,7 @@
 - [`design/EXPANSION_STORY_TASKS.md`](design/EXPANSION_STORY_TASKS.md)
   西线 / 南线任务链与结局反哺的当前活动剧情设计文档。
 - [`design/WEST_SOUTH_FULL_STORY.md`](design/WEST_SOUTH_FULL_STORY.md)
-  西线 / 南线完整剧情稿，覆盖 `W1-W5`、`S1-S5`、`X1-X3` 的完整叙事流程。
+  西线 / 南线完整剧情稿，覆盖五段西线调查、五段南线设施线与三段跨区联动的完整叙事流程。
 - [`design/WEST_SOUTH_RESOURCE_GAP.md`](design/WEST_SOUTH_RESOURCE_GAP.md)
   西线 / 南线补完所需新增图片与视频资源清单。
 - [`plans/BALANCE_TUNING_PLAN.md`](plans/BALANCE_TUNING_PLAN.md)
@@ -41,7 +41,7 @@
 - [`design/EXPANSION_MAP_DESIGN.md`](design/EXPANSION_MAP_DESIGN.md)
   当前西线 / 南线地图补完设计，用于固定空间职责、路线结构与主地图反哺关系。
 - [`design/EXPANSION_STORY_TASKS.md`](design/EXPANSION_STORY_TASKS.md)
-  当前西线 / 南线剧情任务设计，用于固定 `W1-W5`、`S1-S5` 与跨区联动任务。
+  当前西线 / 南线剧情任务设计，用于固定两条调查链和跨区联动任务的推进结构。
 - [`design/WEST_SOUTH_FULL_STORY.md`](design/WEST_SOUTH_FULL_STORY.md)
   西线 / 南线完整剧情正文，用于统一任务推进时的剧情事件与结局反哺语义。
 - [`design/WEST_SOUTH_RESOURCE_GAP.md`](design/WEST_SOUTH_RESOURCE_GAP.md)

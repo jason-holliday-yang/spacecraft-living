@@ -138,6 +138,7 @@
 从当前 `src/task_content.cpp`、`src/task_progress.c`、`src/task_interactions.cpp` 可以确认：
 
 - `Stage 1 - Stage 7` 的主线阶段仍然完整
+- HUD 与任务面板中的阶段标题已收束为 `Wake Up / First Steps / ... / Final Choice` 这类章节名，不再直接把 `Stage 1 - Stage 7` 暴露给玩家
 - 通讯器、日志、终局分支、信号塔、石碑、Boss 关系仍有完整链路
 - 文案已经开始强调氧气准备、过滤、防护服、野外营地等新设计关键词
 - 日志与任务链已经开始按“多数日志需通过任务/交互解锁”的新规则组织

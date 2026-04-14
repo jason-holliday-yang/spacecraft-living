@@ -19,20 +19,20 @@
 - `C`：潜行切换
 - `ESC`：暂停
 
-## 3. 阶段流程
-1. Stage 1  
+## 3. 七段主线流程
+1. Wake Up  
 采集木材和金属碎片，修好氧气控制台。
-2. Stage 2  
+2. First Steps  
 采集 Glow Moss 与 Ore，制作 Glow Stick，完成氧气修复。
-3. Stage 3  
+3. Into the Wild  
 打开东侧气闸，采集藤蔓/果实/菌类，修复通讯中继。
-4. Stage 4  
+4. Rising Risk  
 制作 Laser Gun 与 Protection Suit，调查坠毁线索。
-5. Stage 5  
+5. Power Breakthrough  
 前往沼泽深处获取 Energy Core，回基地修复电力舱。
-6. Stage 6  
+6. Final Preparation  
 在北部遗迹收集 3 个 Relic Fragment，回 Loxi 终端同步。
-7. Stage 7  
+7. Final Choice  
 完成西线 / 南线调查与终局日志回收，回到飞船与 Loxi 选择英雄、和平或定居路线；选择后再执行对应的最后一步。
 
 ## 4. 地图与解锁
