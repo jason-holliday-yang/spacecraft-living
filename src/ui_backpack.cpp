@@ -1,5 +1,6 @@
 #include "ui_inventory_internal.h"
 
+#include "localization.h"
 #include "ui_runtime_internal.h"
 
 #include <cstdio>
@@ -25,11 +26,11 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
                                  gridPanel,
                                  detailPanel,
                                  scale,
-                                 "Backpack",
+                                 Loc_PickLiteral("Backpack", "背包"),
                                  33.0f * scale,
-                                 "Press B or ESC to close.",
+                                 Loc_PickLiteral("Press B or ESC to close.", "按 B 或 ESC 关闭。"),
                                  16.5f * scale,
-                                 "Inspect supplies, check counts, and use field items from one cleaner layout.",
+                                 Loc_PickLiteral("Inspect supplies, check counts, and use field items from one cleaner layout.", "在更清晰的界面中查看补给、确认数量并使用野外物品。"),
                                  16.0f * scale,
                                  17.0f * scale);
 
@@ -60,13 +61,13 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
 
         UIRuntime_DrawPanel(slotRect, fill, outline);
         UIInventory_DrawBackpackIcon(assets, itemIndex, Rectangle{slotRect.x + 10.0f * scale, slotRect.y + 8.0f * scale, 44.0f * scale, slotRect.height - 16.0f * scale}, primary, secondary);
-        UIRuntime_DrawWrappedText(assets, entry->name, titleRect, 12.0f * scale, 13.0f * scale, owned ? Color{229, 238, 246, 255} : Color{134, 145, 160, 255});
+        UIRuntime_DrawWrappedText(assets, Loc_PickText(entry->name), titleRect, 12.0f * scale, 13.0f * scale, owned ? Color{229, 238, 246, 255} : Color{134, 145, 160, 255});
         UIRuntime_DrawText(assets, UIInventory_BackpackEntryGetCategory(entry), Vector2{slotRect.x + 62.0f * scale, slotRect.y + slotRect.height - 22.0f * scale}, 10.5f * scale, owned ? Color{166, 255, 226, 255} : Color{120, 133, 150, 255});
 
         if (entry->kind == BACKPACK_ENTRY_RESOURCE) {
             std::snprintf(buffer, sizeof(buffer), "%d", count);
         } else {
-            std::snprintf(buffer, sizeof(buffer), "%s", owned ? "OK" : "--");
+            std::snprintf(buffer, sizeof(buffer), "%s", owned ? Loc_PickLiteral("OK", "已就绪") : "--");
         }
 
         UIInventory_DrawStatusBadge(assets,
@@ -87,21 +88,21 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
         actionPanel = Rectangle{detailPanel.x + 14.0f * scale, detailPanel.y + detailPanel.height - 122.0f * scale, detailPanel.width - 28.0f * scale, 96.0f * scale};
 
         UIInventory_DrawBackpackIcon(assets, selectedItem, Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 24.0f * scale, 92.0f * scale, 92.0f * scale}, selectedEntry->primary, selectedEntry->secondary);
-        UIRuntime_DrawWrappedText(assets, selectedEntry->name, Rectangle{detailPanel.x + 128.0f * scale, detailPanel.y + 28.0f * scale, detailPanel.width - 146.0f * scale, 56.0f * scale}, 24.0f * scale, 25.0f * scale, WHITE);
+        UIRuntime_DrawWrappedText(assets, Loc_PickText(selectedEntry->name), Rectangle{detailPanel.x + 128.0f * scale, detailPanel.y + 28.0f * scale, detailPanel.width - 146.0f * scale, 56.0f * scale}, 24.0f * scale, 25.0f * scale, WHITE);
         std::snprintf(buffer, sizeof(buffer), "%s", UIInventory_BackpackEntryGetCategory(selectedEntry));
         UIRuntime_DrawText(assets, buffer, Vector2{detailPanel.x + 128.0f * scale, detailPanel.y + 82.0f * scale}, 15.0f * scale, Color{166, 255, 226, 255});
         UIInventory_GetBackpackEntryStatus(player, selectedItem, statusBuffer, sizeof(statusBuffer));
         UIRuntime_DrawWrappedText(assets, statusBuffer, Rectangle{detailPanel.x + 128.0f * scale, detailPanel.y + 104.0f * scale, detailPanel.width - 146.0f * scale, 36.0f * scale}, 14.5f * scale, 16.0f * scale, Color{255, 214, 154, 255});
         UIRuntime_DrawPanel(descriptionPanel, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
         UIRuntime_DrawPanel(actionPanel, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
-        UIRuntime_DrawText(assets, "Item Brief", Vector2{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 14.0f * scale}, 17.0f * scale, WHITE);
-        UIRuntime_DrawWrappedText(assets, selectedEntry->description, Rectangle{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 42.0f * scale, descriptionPanel.width - 28.0f * scale, descriptionPanel.height - 56.0f * scale}, 14.8f * scale, 18.0f * scale, Color{214, 226, 238, 255});
-        UIRuntime_DrawText(assets, "Field Action", Vector2{actionPanel.x + 14.0f * scale, actionPanel.y + 14.0f * scale}, 18.0f * scale, WHITE);
+        UIRuntime_DrawText(assets, Loc_PickLiteral("Item Brief", "物品简介"), Vector2{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 14.0f * scale}, 17.0f * scale, WHITE);
+        UIRuntime_DrawWrappedText(assets, Loc_PickText(selectedEntry->description), Rectangle{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 42.0f * scale, descriptionPanel.width - 28.0f * scale, descriptionPanel.height - 56.0f * scale}, 14.8f * scale, 18.0f * scale, Color{214, 226, 238, 255});
+        UIRuntime_DrawText(assets, Loc_PickLiteral("Field Action", "现场操作"), Vector2{actionPanel.x + 14.0f * scale, actionPanel.y + 14.0f * scale}, 18.0f * scale, WHITE);
         UIRuntime_DrawWrappedText(
             assets,
             UIInventory_BackpackEntryCanUseDirectly(selectedItem)
-                ? "Press F or Enter to use the selected field item now."
-                : "This selection stays in storage for crafting, route prep, or passive use.",
+                ? Loc_PickLiteral("Press F or Enter to use the selected field item now.", "按 F 或 Enter 立即使用当前选中的野外物品。")
+                : Loc_PickLiteral("This selection stays in storage for crafting, route prep, or passive use.", "该物品会保留在储备中，用于制作、路线准备或被动效果。"),
             Rectangle{actionPanel.x + 14.0f * scale, actionPanel.y + 42.0f * scale, actionPanel.width - 28.0f * scale, actionPanel.height - 54.0f * scale},
             14.5f * scale,
             18.0f * scale,

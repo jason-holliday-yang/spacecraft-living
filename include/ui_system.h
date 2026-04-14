@@ -124,6 +124,7 @@ Rectangle UI_GetSettingsSliderRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettingsDecreaseButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettingsIncreaseButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettingsCloseButtonRect(int screenWidth, int screenHeight);
+Rectangle UI_GetSettingsLanguageButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex);
 Rectangle UI_GetSettlementConfirmPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex);

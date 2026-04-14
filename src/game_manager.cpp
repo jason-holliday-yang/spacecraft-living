@@ -24,6 +24,7 @@ void Game_Init(Game *game) {
     std::memset(game, 0, sizeof(*game));
 
     SaveSystem_LoadSettings(&game->settings);
+    Loc_SetLanguage(game->settings.language);
     SaveSystem_Logout();
     Audio_Init(&game->audio);
     Audio_ApplySettings(&game->audio, &game->settings);

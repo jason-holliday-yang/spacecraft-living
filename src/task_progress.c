@@ -1,6 +1,7 @@
 #include "task_runtime_internal.h"
 
 #include "task_content.h"
+#include "localization.h"
 
 #include <stdio.h>
 
@@ -143,20 +144,49 @@ static void UpdateCommunicatorText(TaskSystem *tasks, const Player *player) {
         return;
     }
 
-    areaName = Map_GetAreaName(Map_GetAreaAt(player->gridX, player->gridY));
-    locationName = Map_GetLocationNameAt(player->gridX, player->gridY);
+    areaName = Loc_GetAreaNameText(Map_GetAreaName(Map_GetAreaAt(player->gridX, player->gridY)));
+    locationName = Loc_GetLocationNameText(Map_GetLocationNameAt(player->gridX, player->gridY));
     guidance = TasksContent_GetStageGuidance(tasks, player);
     fieldNote = TasksContent_GetFieldNote(tasks, player);
     TasksRuntime_SanitizeDisplayText(guidance, guidanceBuffer, sizeof(guidanceBuffer));
     TasksRuntime_SanitizeDisplayText(fieldNote, fieldNoteBuffer, sizeof(fieldNoteBuffer));
     snprintf(tasks->communicator,
              sizeof(tasks->communicator),
-             "Current Area: %s\nLocation: %s\nTask Brief: %s\nLoxi Tip: %s\nField Note: %s",
+             "%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s",
+             Loc_PickLiteral("Current Area", "当前区域"),
              areaName,
+             Loc_PickLiteral("Location", "位置"),
              locationName,
+             Loc_PickLiteral("Task Brief", "任务简报"),
              tasks->objective,
+             Loc_PickLiteral("Loxi Tip", "洛西提示"),
              guidanceBuffer,
+             Loc_PickLiteral("Field Note", "现场备注"),
              fieldNoteBuffer);
+}
+
+const char *Tasks_GetLogTitle(const ShipLog *log) {
+    if (log == NULL) {
+        return "";
+    }
+
+    return Loc_PickLiteral(log->titleEn, log->titleZh);
+}
+
+const char *Tasks_GetLogStoryText(const ShipLog *log) {
+    if (log == NULL) {
+        return "";
+    }
+
+    return Loc_PickLiteral(log->storyTextEn, log->storyTextZh);
+}
+
+const char *Tasks_GetLogRewardDescription(const ShipLog *log) {
+    if (log == NULL) {
+        return "";
+    }
+
+    return Loc_PickLiteral(log->rewardDescEn, log->rewardDescZh);
 }
 
 void TasksRuntime_UnlockStageIfNeeded(TaskSystem *tasks, GameMap *map, int newStage) {
@@ -195,7 +225,14 @@ void TasksRuntime_GrantLogReward(TaskSystem *tasks, Player *player, ShipLog *log
         }
     }
 
-    snprintf(message, messageSize, "Recovered %s.\nOpen the Ship Log Archive with L to read it.\nReward: %s", log->title, log->rewardDesc);
+    snprintf(message,
+             messageSize,
+             "%s %s.\n%s\n%s: %s",
+             Loc_PickLiteral("Recovered", "已回收"),
+             Tasks_GetLogTitle(log),
+             Loc_PickLiteral("Open the Ship Log Archive with L to read it.", "按 L 打开飞船日志档案查看详情。"),
+             Loc_PickLiteral("Reward", "奖励"),
+             Tasks_GetLogRewardDescription(log));
     Tasks_UpdateObjective(tasks, player);
 }
 

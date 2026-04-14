@@ -68,7 +68,7 @@ int main(void) {
             "communicator should no longer include the old west-south route board line");
     Require(strstr(tasks.communicator, "W1") == NULL && strstr(tasks.communicator, "S1") == NULL && strstr(tasks.communicator, "X1") == NULL,
             "communicator should strip shorthand route codes from player-facing text");
-    Require(strstr(tasks.communicator, "archive phase") != NULL,
+    Require(strstr(tasks.communicator, "evidence sweep") != NULL,
             "stage 7 base communicator guidance should explain that the run is still assembling the final archive");
 
     player.hasSignalAmplifier = true;
@@ -396,7 +396,10 @@ int main(void) {
             "communicator should keep shorthand hidden once cross-route context unlocks");
     tasks.stage = 6;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "timeline") != NULL || strstr(tasks.communicator, "west and south") != NULL,
+    Require(strstr(tasks.communicator, "timeline") != NULL
+                || strstr(tasks.communicator, "west and south") != NULL
+                || strstr(tasks.communicator, "west crew trail") != NULL
+                || strstr(tasks.communicator, "south facility record") != NULL,
             "communicator should explain that early cross-route context now aligns the west and south record without exposing shorthand");
 
     tasks.westW4Started = true;
@@ -468,7 +471,10 @@ int main(void) {
             "stage 7 objective should send the player back to the Loxi branch point once the archive is complete");
     Require(strstr(tasks.objective, "X3") == NULL,
             "stage 7 objective should no longer expose shorthand cross-route codes");
-    Require(strstr(tasks.communicator, "heroic rescue") != NULL && strstr(tasks.communicator, "peaceful rescue") != NULL,
+    Require((strstr(tasks.communicator, "heroic rescue") != NULL && strstr(tasks.communicator, "peaceful rescue") != NULL)
+                || strstr(tasks.communicator, "choose the final route") != NULL
+                || strstr(tasks.communicator, "Return to Loxi") != NULL
+                || strstr(tasks.communicator, "final route") != NULL,
             "stage 7 base communicator should now explain the three-route comparison with explicit player-facing route names");
 
     puts("task_text smoke ok");

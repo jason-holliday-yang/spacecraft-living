@@ -25,6 +25,7 @@ static bool GameSettings_FromLegacyData(GameSettings *settings, const SettingsFi
         settings->masterVolume = 1.0f;
     }
     settings->sfxEnabled = data->sfxEnabled != 0;
+    settings->language = GAME_LANGUAGE_EN;
     settings->lastUsername[0] = '\0';
     return true;
 }
@@ -50,6 +51,7 @@ bool SaveInternal_EncodeSettingsBuffer(const GameSettings *settings, uint8_t *bu
     SaveWriter_WriteBytes(&writer, SETTINGS_MAGIC_CURRENT, 8);
     SaveWriter_WriteFloat(&writer, masterVolume);
     SaveWriter_WriteUInt8(&writer, settings->sfxEnabled ? 1u : 0u);
+    SaveWriter_WriteUInt8(&writer, (uint8_t)Loc_NormalizeLanguage((int)settings->language));
     SaveWriter_WriteBytes(&writer, settings->lastUsername, SAVE_ACCOUNT_NAME_MAX);
 
     if (writer.failed) {
@@ -81,6 +83,7 @@ bool SaveInternal_DecodeSettingsBuffer(GameSettings *settings, const uint8_t *bu
     if (std::memcmp(magic, SETTINGS_MAGIC_CURRENT, 7) == 0) {
         settings->masterVolume = SaveReader_ReadFloat(&reader);
         settings->sfxEnabled = SaveReader_ReadUInt8(&reader) != 0;
+        settings->language = Loc_NormalizeLanguage((int)SaveReader_ReadUInt8(&reader));
         SaveReader_ReadBytes(&reader, settings->lastUsername, SAVE_ACCOUNT_NAME_MAX);
         if (reader.failed || reader.offset != fileSize || !SaveCodec_IsFiniteFloat(settings->masterVolume)) {
             return false;
@@ -104,6 +107,7 @@ bool SaveInternal_DecodeSettingsBuffer(GameSettings *settings, const uint8_t *bu
         SaveReader_ReadBytes(&legacyReader, magic, sizeof(magic));
         settings->masterVolume = SaveReader_ReadFloat(&legacyReader);
         settings->sfxEnabled = SaveReader_ReadUInt8(&legacyReader) != 0;
+        settings->language = GAME_LANGUAGE_EN;
         if (legacyReader.failed || legacyReader.offset != fileSize || !SaveCodec_IsFiniteFloat(settings->masterVolume)) {
             return false;
         }

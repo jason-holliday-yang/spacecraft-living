@@ -21,6 +21,10 @@ The current maintenance/balance iteration also needs to protect two newer constr
 - world layout must stay legible as `north mainline / east risk / west-south boundary reserve`
 - new features should land as smaller modules, not as a return to oversized catch-all files
 
+The current text/localization iteration also needs to protect one more constraint:
+
+- English remains the source text, but localized gameplay copy should keep `English + Simplified Chinese` together in the same definition whenever practical
+
 ## Module Responsibilities
 
 ### `src/main.c`
@@ -65,7 +69,16 @@ The current maintenance/balance iteration also needs to protect two newer constr
 ### `src/game_overlay_frontend.cpp`
 
 - main menu, opening cutscene, and story-scene overlay input flow
-- pause menu, save-panel, settings slider, settlement confirm, and ending-screen handling
+- pause menu, save-panel, settings slider, language switcher, settlement confirm, and ending-screen handling
+
+### `src/localization.cpp`
+
+- runtime language state
+- localized UI lookup plus `Loc_PickLiteral` helpers
+- `LocalizedText` / co-located EN+ZH authored copy for long-lived data tables
+- `Loc_Translate(...)` fallback bridge for legacy runtime strings that still enter the HUD/task-message pipeline as English source text
+- translated area/location display names for presentation surfaces
+- shared UI-font sample text used to load a Chinese-capable font atlas
 
 ### `src/game_overlay_gameplay.cpp`
 
@@ -244,8 +257,13 @@ The current maintenance/balance iteration also needs to protect two newer constr
 
 ### `src/task_content.cpp`
 
-- static content tables for stage text, node seeds, monster seeds, monster specs, log rewards, and event cycle
-- current data-side source of truth for many progression-facing tuning values
+- localized stage text and ending text
+- progression-facing copy that should stay close to the systems that use it
+
+### `src/task_content_data.cpp`
+
+- authored node seeds, monster seeds, ship-log seeds, log rewards, and event rotation
+- ship-log text now keeps English and Simplified Chinese adjacent so future edits stay in one place
 
 ### `src/task_presentation.cpp`
 

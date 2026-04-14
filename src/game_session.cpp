@@ -147,7 +147,7 @@ static void EnterGameplayFromOpening(Game *game) {
     game->openingCutsceneElapsed = 0.0f;
     Game_CloseStoryScene(game);
     Audio_SetScene(&game->audio, AUDIO_SCENE_BASE);
-    Game_PostMessage(game, "Start in the lower oxygen bay: restore the oxygen console. The terminal bay can sync Loxi when you need the link.", 4.2f);
+    Game_PostMessage(game, Loc_PickLiteral("Start in the lower oxygen bay: restore the oxygen console. The terminal bay can sync Loxi when you need the link.", "从下层氧气舱开始：先修复氧气控制台。需要时可以去终端舱与洛西同步。"), 4.2f);
 }
 
 void Game_ResetGameplayWorld(Game *game) {
@@ -277,13 +277,13 @@ void Game_HandleDeathRecovery(Game *game) {
 
     remainingLives = DEATH_FAILURE_THRESHOLD - game->player.deathCount;
     if (usedCampRecovery && remainingLives <= 1) {
-        message = "Emergency recovery returned you to the field camp. Progress is intact, but one more collapse ends the run.";
+        message = Loc_PickLiteral("Emergency recovery returned you to the field camp. Progress is intact, but one more collapse ends the run.", "紧急回收把你送回了野外营地。进度仍在，但再倒下一次就会结束本次生存。");
     } else if (usedCampRecovery) {
-        message = "Emergency recovery returned you to the field camp. Progress is intact, but repeated collapses will end the run.";
+        message = Loc_PickLiteral("Emergency recovery returned you to the field camp. Progress is intact, but repeated collapses will end the run.", "紧急回收把你送回了野外营地。进度仍在，但持续崩溃会终结本次生存。");
     } else if (remainingLives <= 1) {
-        message = "Emergency recovery returned you to base. Progress is intact, but one more collapse ends the run.";
+        message = Loc_PickLiteral("Emergency recovery returned you to base. Progress is intact, but one more collapse ends the run.", "紧急回收把你送回了基地。进度仍在，但再倒下一次就会结束本次生存。");
     } else {
-        message = "Emergency recovery returned you to base. Progress is intact, but repeated collapses will end the run.";
+        message = Loc_PickLiteral("Emergency recovery returned you to base. Progress is intact, but repeated collapses will end the run.", "紧急回收把你送回了基地。进度仍在，但持续崩溃会终结本次生存。");
     }
     Game_PostMessage(game, message, 4.2f);
 }

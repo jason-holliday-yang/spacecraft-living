@@ -1,4 +1,5 @@
 #include "save_system.h"
+#include "localization.h"
 #include "persistence_platform.h"
 #include "save_internal.h"
 
@@ -23,6 +24,8 @@ constexpr size_t kMinUsernameLength = 3;
 constexpr size_t kMinPasswordLength = 4;
 
 void WriteAuthMessage(char *buffer, size_t bufferSize, const char *message) {
+    const char *displayMessage;
+
     if (buffer == NULL || bufferSize == 0) {
         return;
     }
@@ -32,7 +35,8 @@ void WriteAuthMessage(char *buffer, size_t bufferSize, const char *message) {
         return;
     }
 
-    std::snprintf(buffer, bufferSize, "%s", message);
+    displayMessage = Loc_Translate(message);
+    std::snprintf(buffer, bufferSize, "%s", displayMessage);
 }
 
 std::string TrimWhitespace(const char *value) {
@@ -297,8 +301,11 @@ bool DeleteAccountByKey(const std::string &accountKey, char *message, size_t mes
 
     {
         char successMessage[SAVE_AUTH_MESSAGE_MAX];
+        const char *format;
 
-        std::snprintf(successMessage, sizeof(successMessage), "Account %s deleted. All saves under it were removed.", displayName.c_str());
+        format = Loc_PickLiteral("Account %s deleted. All saves under it were removed.",
+                                 "账号 %s 已删除，其下所有存档也已移除。");
+        std::snprintf(successMessage, sizeof(successMessage), format, displayName.c_str());
         WriteAuthMessage(message, messageSize, successMessage);
     }
     return true;
@@ -313,6 +320,7 @@ void SaveSystem_SetDefaultSettings(GameSettings *settings) {
 
     settings->masterVolume = 0.80f;
     settings->sfxEnabled = true;
+    settings->language = GAME_LANGUAGE_EN;
     settings->lastUsername[0] = '\0';
 }
 
@@ -407,8 +415,10 @@ bool SaveSystem_Login(const char *username, const char *password, char *message,
 
     {
         char successMessage[SAVE_AUTH_MESSAGE_MAX];
+        const char *format;
 
-        std::snprintf(successMessage, sizeof(successMessage), "Logged in as %s.", record->displayName.c_str());
+        format = Loc_PickLiteral("Logged in as %s.", "已登录账号：%s。");
+        std::snprintf(successMessage, sizeof(successMessage), format, record->displayName.c_str());
         WriteAuthMessage(message, messageSize, successMessage);
     }
     return true;
@@ -452,8 +462,11 @@ bool SaveSystem_Register(const char *username, const char *password, char *messa
 
     {
         char successMessage[SAVE_AUTH_MESSAGE_MAX];
+        const char *format;
 
-        std::snprintf(successMessage, sizeof(successMessage), "Account %s created and signed in.", newRecord.displayName.c_str());
+        format = Loc_PickLiteral("Account %s created and signed in.",
+                                 "账号 %s 已创建并登录。");
+        std::snprintf(successMessage, sizeof(successMessage), format, newRecord.displayName.c_str());
         WriteAuthMessage(message, messageSize, successMessage);
     }
     return true;

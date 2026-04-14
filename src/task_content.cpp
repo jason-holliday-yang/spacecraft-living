@@ -2,36 +2,37 @@
 
 #include <array>
 #include <cstring>
+#include <string>
 
 namespace {
 
 typedef struct StageTextDef {
     int stage;
-    const char *stageName;
-    const char *defaultObjective;
+    LocalizedText stageName;
+    LocalizedText defaultObjective;
 } StageTextDef;
 
 typedef struct EndingTextDef {
     GameEnding ending;
-    const char *title;
-    const char *body;
+    LocalizedText title;
+    LocalizedText body;
 } EndingTextDef;
 
 const std::array<StageTextDef, 7> kStageTextDefs = {{
-    {1, "Wake Up", "Gather 3 Wood + 2 Metal Scrap, then repair the oxygen console."},
-    {2, "First Steps", "Gather Glow Moss and Ore, craft a Glow Stick, finish oxygen repair."},
-    {3, "Into the Wild", "Open airlock, gather Vine/Fruit/Fungus, repair comm relay."},
-    {4, "Rising Risk", "Craft Laser Gun and Suit, then inspect the crash clue."},
-    {5, "Power Breakthrough", "Secure an Energy Core and restore the power bay."},
-    {6, "Final Preparation", "Collect 3 Relic Fragments and sync with Loxi terminal."},
-    {7, "Final Choice", "Recover the final logs, return to Loxi, and choose the ending route."}
+    {1, {"Wake Up", "苏醒"}, {"Gather 3 Wood + 2 Metal Scrap, then repair the oxygen console.", "收集 3 份木材和 2 份金属残片，然后修好氧气控制台。"}},
+    {2, {"First Steps", "迈出第一步"}, {"Gather Glow Moss and Ore, craft a Glow Stick, finish oxygen repair.", "收集发光苔和矿石，制作荧光棒，完成氧气修复。"}},
+    {3, {"Into the Wild", "走向荒野"}, {"Open airlock, gather Vine/Fruit/Fungus, repair comm relay.", "打开气闸，收集藤蔓 / 果实 / 菌株，修复通讯中继。"}},
+    {4, {"Rising Risk", "风险升级"}, {"Craft Laser Gun and Suit, then inspect the crash clue.", "制作激光枪和防护服，然后调查坠毁线索。"}},
+    {5, {"Power Breakthrough", "动力突破"}, {"Secure an Energy Core and restore the power bay.", "取得能源核心并恢复动力舱。"}},
+    {6, {"Final Preparation", "最终准备"}, {"Collect 3 Relic Fragments and sync with Loxi terminal.", "收集 3 枚遗迹碎片，并在洛西终端同步。"}},
+    {7, {"Final Choice", "最终抉择"}, {"Recover the final logs, return to Loxi, and choose the ending route.", "找回最后的日志，回到洛西处，选择最终结局路线。"}}
 }};
 
 const std::array<EndingTextDef, 4> kEndingTextDefs = {{
-    {ENDING_HEROIC, "Heroic Rescue", "You defeated the final threat and manually activated the Signal Tower. Loxi confirmed the rescue beacon was sent."},
-    {ENDING_PEACEFUL, "Peaceful Rescue", "You avoided the final battle and stabilized the tower with the Signal Amplifier, leaving the alien ecosystem undisturbed."},
-    {ENDING_SETTLEMENT, "Alien Settlement", "You gave up on uncertain rescue and transformed the ship base into a long-term home."},
-    {ENDING_FAILURE, "Failed Survival", "Repeated collapses and failing life-support left the expedition unsustainable. The ship could no longer keep you alive on this world."}
+    {ENDING_HEROIC, {"Heroic Rescue", "强行救援"}, {"You defeated the final threat and manually activated the Signal Tower. Loxi confirmed the rescue beacon was sent.", "你击败了最后的威胁，并手动启动了信号塔。洛西确认求救信标已经发出。"}},
+    {ENDING_PEACEFUL, {"Peaceful Rescue", "和平救援"}, {"You avoided the final battle and stabilized the tower with the Signal Amplifier, leaving the alien ecosystem undisturbed.", "你避开了最终战斗，用信号放大器稳定了塔楼，没有进一步扰动异星生态。"}},
+    {ENDING_SETTLEMENT, {"Alien Settlement", "异星定居"}, {"You gave up on uncertain rescue and transformed the ship base into a long-term home.", "你放弃了不确定的救援，把飞船基地改造成了可以长期生活的家园。"}},
+    {ENDING_FAILURE, {"Failed Survival", "生存失败"}, {"Repeated collapses and failing life-support left the expedition unsustainable. The ship could no longer keep you alive on this world.", "反复崩溃与失效的生命维持系统让这次远征再也无法持续。飞船已经无法继续让你在这颗星球上活下去。"}}
 }};
 
 bool IsTowerPlateau(const Player *player) {
@@ -94,60 +95,60 @@ const char *TasksContent_GetStageObjective(const TaskSystem *tasks, const Player
     const StageTextDef *stageText;
 
     if (tasks == NULL) {
-        return "Follow Loxi and keep exploring.";
+        return Loc_Translate("Follow Loxi and keep exploring.");
     }
 
     stageText = FindStageTextDef(tasks->stage);
     if (tasks->stage == 6) {
         if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
             if (IsCrossX2Ready(tasks)) {
-                return "Sync fragments at Loxi and review its rewritten route comparison for rescue, stabilization, and settlement.";
+                return Loc_Translate("Sync fragments at Loxi and review its rewritten ending picture for rescue, stabilization, and settlement.");
             }
             if (IsCrossX1Ready(tasks)) {
-                return "Sync fragments at Loxi and let it align the west crew trail with the south facility record.";
+                return Loc_Translate("Sync fragments at Loxi and let it align the west crew trail with the south facility record.");
             }
-            return "Sync fragments at Loxi terminal.";
+            return Loc_Translate("Sync fragments at Loxi terminal.");
         }
         if (IsCrossX2Ready(tasks)) {
-            return "Collect 3 Relic Fragments and bring them to Loxi so it can compare force, stabilization, and settlement with full system context.";
+            return Loc_Translate("Collect 3 Relic Fragments and bring them to Loxi so it can compare force, stabilization, and settlement with full system context.");
         }
         if (IsCrossX1Ready(tasks)) {
-            return "Collect 3 Relic Fragments and bring them to Loxi so it can align the west and south evidence into one timeline.";
+            return Loc_Translate("Collect 3 Relic Fragments and bring them to Loxi so it can align the west and south evidence into one timeline.");
         }
     }
     if (tasks->stage == 7) {
         if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
-            return "Return to Loxi and choose the final route.";
+            return Loc_Translate("Return to Loxi and choose the final route.");
         }
         if (tasks->selectedEndingRoute == ENDING_HEROIC) {
             if (tasks->bossDefeated) {
-                return "Heroic route chosen. Reach the Signal Tower and launch the rescue beacon.";
+                return Loc_Translate("Heroic route chosen. Reach the Signal Tower and launch the rescue beacon.");
             }
             if (tasks->monolithsLit >= 3) {
-                return "Heroic route chosen. The ring is complete. Defeat the guardian, then reach the Signal Tower.";
+                return Loc_Translate("Heroic route chosen. The ring is complete. Defeat the guardian, then reach the Signal Tower.");
             }
             if (tasks->monolithsLit > 0) {
-                return "Heroic route chosen. Light remaining monoliths or defeat the guardian, then reach the Signal Tower.";
+                return Loc_Translate("Heroic route chosen. Light remaining monoliths or defeat the guardian, then reach the Signal Tower.");
             }
-            return "Heroic route chosen. Light monoliths or defeat the guardian, then reach the Signal Tower.";
+            return Loc_Translate("Heroic route chosen. Light monoliths or defeat the guardian, then reach the Signal Tower.");
         }
         if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
             if (player != NULL && player->hasSignalAmplifier) {
-                return "Peaceful route chosen. Carry the Signal Amplifier to the Signal Tower.";
+                return Loc_Translate("Peaceful route chosen. Carry the Signal Amplifier to the Signal Tower.");
             }
-            return "Peaceful route chosen. Craft the Signal Amplifier, then carry it to the Signal Tower.";
+            return Loc_Translate("Peaceful route chosen. Craft the Signal Amplifier, then carry it to the Signal Tower.");
         }
         if (!Tasks_IsEndingBranchReady(tasks)) {
-            return "Recover the remaining mainline logs and finish west/south archive tasks before choosing an ending with Loxi.";
+            return Loc_Translate("Recover the remaining mainline logs and finish west/south archive tasks before choosing an ending with Loxi.");
         }
-        return "Return to Loxi and choose the final route.";
+        return Loc_Translate("Return to Loxi and choose the final route.");
     }
 
     if (stageText != NULL) {
-        return stageText->defaultObjective;
+        return Loc_PickText(stageText->defaultObjective);
     }
 
-    return "Follow Loxi and keep exploring.";
+    return Loc_Translate("Follow Loxi and keep exploring.");
 }
 
 const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player *player) {
@@ -155,257 +156,257 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
     const char *locationName;
 
     if (tasks == NULL) {
-        return "Recover vitals and move to the next objective.";
+        return Loc_Translate("Recover vitals and move to the next objective.");
     }
 
     area = player != NULL ? Map_GetAreaAt(player->gridX, player->gridY) : MAP_AREA_UNKNOWN;
     locationName = player != NULL ? Map_GetLocationNameAt(player->gridX, player->gridY) : "Unknown Area";
     if (std::strcmp(locationName, "West Frontier") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "West Frontier locked. Restore comm relay first.";
+            return Loc_Translate("West Frontier locked. Restore comm relay first.");
         }
         if (tasks->westW5Completed) {
-            return "West investigation complete.";
+            return Loc_Translate("West investigation complete.");
         }
         if (tasks->westW5Started) {
-            return "Finish the Last Camp pass and return to base.";
+            return Loc_Translate("Finish the Last Camp investigation and return to base.");
         }
         if (tasks->westW4Completed) {
-            return "Echo Basin archive complete. Start the Last Camp pass.";
+            return Loc_Translate("Echo Basin archive complete. Start the Last Camp investigation.");
         }
         if (tasks->westW4Started) {
-            return "Finish the Echo Basin pass and return to base.";
+            return Loc_Translate("Finish the Echo Basin investigation and return to base.");
         }
         if (tasks->westW3Completed) {
-            return "Canopy Hollow archive complete. Start the Echo Basin pass.";
+            return Loc_Translate("Canopy Hollow archive complete. Start the Echo Basin investigation.");
         }
         if (tasks->westW3Started) {
-            return "Finish the Canopy Hollow pass and return to base.";
+            return Loc_Translate("Finish the Canopy Hollow investigation and return to base.");
         }
         if (tasks->westW2Completed) {
-            return "Survey Break archive complete. Start the Canopy Hollow pass.";
+            return Loc_Translate("Survey Break archive complete. Start the Canopy Hollow investigation.");
         }
         if (tasks->westW2Started) {
-            return "Finish the Survey Break pass and return to base.";
+            return Loc_Translate("Finish the Survey Break investigation and return to base.");
         }
         if (tasks->westW1Completed) {
-            return "West Frontier archive complete. Start Survey Break.";
+            return Loc_Translate("West Frontier archive complete. Start Survey Break.");
         }
         if (tasks->westW1Started) {
-            return "Finish the West Frontier pass and return to base.";
+            return Loc_Translate("Finish the West Frontier investigation and return to base.");
         }
-        return "The west investigation is open. Complete the first West Frontier pass and report to base.";
+        return Loc_Translate("The west investigation is open. Complete the first West Frontier investigation and report to base.");
     }
     if (std::strcmp(locationName, "Survey Break") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Survey Break locked. Restore comm relay first.";
+            return Loc_Translate("Survey Break locked. Restore comm relay first.");
         }
         if (tasks->westW3Completed) {
-            return "West route archived through Echo Basin.";
+            return Loc_Translate("West route archived through Echo Basin.");
         }
         if (tasks->westW3Started) {
-            return "The Canopy Hollow pass is active. Complete it and return.";
+            return Loc_Translate("The Canopy Hollow investigation is active. Complete it and return.");
         }
         if (tasks->westW2Completed) {
-            return "Survey Break archive complete. Proceed to Canopy Hollow.";
+            return Loc_Translate("Survey Break archive complete. Proceed to Canopy Hollow.");
         }
         if (tasks->westW2Started) {
-            return "Finish the Survey Break objectives and return to base.";
+            return Loc_Translate("Finish the Survey Break objectives and return to base.");
         }
         if (tasks->westW1Completed) {
-            return "The Survey Break pass is active here. Complete it and return.";
+            return Loc_Translate("The Survey Break investigation is active here. Complete it and return.");
         }
-        return "Complete the West Frontier pass first.";
+        return Loc_Translate("Complete the West Frontier investigation first.");
     }
     if (std::strcmp(locationName, "Canopy Hollow") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Canopy Hollow locked. Restore comm relay first.";
+            return Loc_Translate("Canopy Hollow locked. Restore comm relay first.");
         }
         if (tasks->westW5Completed) {
-            return "West route fully archived.";
+            return Loc_Translate("West route fully archived.");
         }
         if (tasks->westW5Started) {
-            return "The Last Camp pass is active. Complete it and return.";
+            return Loc_Translate("The Last Camp investigation is active. Complete it and return.");
         }
         if (tasks->westW4Completed) {
-            return "Echo Basin archive complete. Proceed to Last Camp.";
+            return Loc_Translate("Echo Basin archive complete. Proceed to Last Camp.");
         }
         if (tasks->westW4Started) {
-            return "The Echo Basin pass is active. Complete it and return.";
+            return Loc_Translate("The Echo Basin investigation is active. Complete it and return.");
         }
         if (tasks->westW3Completed) {
-            return "Canopy Hollow archive complete. Proceed to Echo Basin.";
+            return Loc_Translate("Canopy Hollow archive complete. Proceed to Echo Basin.");
         }
         if (tasks->westW3Started) {
-            return "Finish the Canopy Hollow pass here and return to base.";
+            return Loc_Translate("Finish the Canopy Hollow investigation here and return to base.");
         }
         if (tasks->westW2Completed) {
-            return "The Canopy Hollow pass is active here. Complete it and return.";
+            return Loc_Translate("The Canopy Hollow investigation is active here. Complete it and return.");
         }
-        return "Complete the Survey Break pass first.";
+        return Loc_Translate("Complete the Survey Break investigation first.");
     }
     if (std::strcmp(locationName, "Echo Basin") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Echo Basin locked. Restore comm relay first.";
+            return Loc_Translate("Echo Basin locked. Restore comm relay first.");
         }
         if (tasks->westW5Completed) {
-            return "West route fully archived.";
+            return Loc_Translate("West route fully archived.");
         }
         if (tasks->westW5Started) {
-            return "The Last Camp pass is active. Complete it and return.";
+            return Loc_Translate("The Last Camp investigation is active. Complete it and return.");
         }
         if (tasks->westW4Completed) {
-            return "Echo Basin archive complete. Proceed to Last Camp.";
+            return Loc_Translate("Echo Basin archive complete. Proceed to Last Camp.");
         }
         if (tasks->westW4Started) {
-            return "Finish the Echo Basin pass here and return to base.";
+            return Loc_Translate("Finish the Echo Basin investigation here and return to base.");
         }
         if (tasks->westW3Completed) {
-            return "The Echo Basin pass is active here. Complete it and return.";
+            return Loc_Translate("The Echo Basin investigation is active here. Complete it and return.");
         }
-        return "Complete the Canopy Hollow pass first.";
+        return Loc_Translate("Complete the Canopy Hollow investigation first.");
     }
     if (std::strcmp(locationName, "Last Camp") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Last Camp locked. Restore comm relay first.";
+            return Loc_Translate("Last Camp locked. Restore comm relay first.");
         }
         if (tasks->westW5Completed) {
-            return "Last Camp archive complete.";
+            return Loc_Translate("Last Camp archive complete.");
         }
         if (tasks->westW5Started) {
-            return "Finish the Last Camp pass here and return to base.";
+            return Loc_Translate("Finish the Last Camp investigation here and return to base.");
         }
         if (tasks->westW4Completed) {
-            return "The Last Camp pass is active here. Complete it and return.";
+            return Loc_Translate("The Last Camp investigation is active here. Complete it and return.");
         }
-        return "Complete the Echo Basin pass first.";
+        return Loc_Translate("Complete the Echo Basin investigation first.");
     }
     if (std::strcmp(locationName, "South Collapse") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "South Collapse locked. Restore power bay first.";
+            return Loc_Translate("South Collapse locked. Restore power bay first.");
         }
         if (tasks->southS5Completed) {
-            return "South investigation complete.";
+            return Loc_Translate("South investigation complete.");
         }
         if (tasks->southS5Started) {
-            return "Finish the Root Vault pass and return to base.";
+            return Loc_Translate("Finish the Root Vault investigation and return to base.");
         }
         if (tasks->southS4Completed) {
-            return "Purifier Ring archive complete. Start the Root Vault pass.";
+            return Loc_Translate("Purifier Ring archive complete. Start the Root Vault investigation.");
         }
         if (tasks->southS4Started) {
-            return "Finish the Purifier Ring pass and return to base.";
+            return Loc_Translate("Finish the Purifier Ring investigation and return to base.");
         }
         if (tasks->southS3Completed) {
-            return "Service Shaft archive complete. Start the Purifier Ring pass.";
+            return Loc_Translate("Service Shaft archive complete. Start the Purifier Ring investigation.");
         }
         if (tasks->southS3Started) {
-            return "Finish the Service Shaft pass and return to base.";
+            return Loc_Translate("Finish the Service Shaft investigation and return to base.");
         }
         if (tasks->southS2Completed) {
-            return "Vent Galleries archive complete. Start the Service Shaft pass.";
+            return Loc_Translate("Vent Galleries archive complete. Start the Service Shaft investigation.");
         }
         if (tasks->southS2Started) {
-            return "Finish the Vent Galleries pass and return to base.";
+            return Loc_Translate("Finish the Vent Galleries investigation and return to base.");
         }
         if (tasks->southS1Completed) {
-            return "South Collapse archive complete. Start Vent Galleries.";
+            return Loc_Translate("South Collapse archive complete. Start Vent Galleries.");
         }
         if (tasks->southS1Started) {
-            return "Finish the South Collapse pass and return to base.";
+            return Loc_Translate("Finish the South Collapse investigation and return to base.");
         }
-        return "The south investigation is open. Complete the first South Collapse pass and report to base.";
+        return Loc_Translate("The south investigation is open. Complete the first South Collapse investigation and report to base.");
     }
     if (std::strcmp(locationName, "Vent Galleries") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Vent Galleries locked. Restore power bay first.";
+            return Loc_Translate("Vent Galleries locked. Restore power bay first.");
         }
         if (tasks->southS3Completed) {
-            return "South route archived through Service Shafts.";
+            return Loc_Translate("South route archived through Service Shafts.");
         }
         if (tasks->southS3Started) {
-            return "The Service Shaft pass is active. Complete it and return.";
+            return Loc_Translate("The Service Shaft investigation is active. Complete it and return.");
         }
         if (tasks->southS2Completed) {
-            return "Vent Galleries archive complete. Proceed to Service Shafts.";
+            return Loc_Translate("Vent Galleries archive complete. Proceed to Service Shafts.");
         }
         if (tasks->southS2Started) {
-            return "Finish the Vent Galleries pass here and return to base.";
+            return Loc_Translate("Finish the Vent Galleries investigation here and return to base.");
         }
         if (tasks->southS1Completed) {
-            return "The Vent Galleries pass is active here. Complete it and return.";
+            return Loc_Translate("The Vent Galleries investigation is active here. Complete it and return.");
         }
-        return "Complete the South Collapse pass first.";
+        return Loc_Translate("Complete the South Collapse investigation first.");
     }
     if (std::strcmp(locationName, "Service Shafts") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Service Shafts locked. Restore power bay first.";
+            return Loc_Translate("Service Shafts locked. Restore power bay first.");
         }
         if (tasks->southS5Completed) {
-            return "South route fully archived.";
+            return Loc_Translate("South route fully archived.");
         }
         if (tasks->southS5Started) {
-            return "The Root Vault pass is active. Complete it and return.";
+            return Loc_Translate("The Root Vault investigation is active. Complete it and return.");
         }
         if (tasks->southS4Completed) {
-            return "Purifier Ring archive complete. Proceed to Root Vault.";
+            return Loc_Translate("Purifier Ring archive complete. Proceed to Root Vault.");
         }
         if (tasks->southS4Started) {
-            return "The Purifier Ring pass is active. Complete it and return.";
+            return Loc_Translate("The Purifier Ring investigation is active. Complete it and return.");
         }
         if (tasks->southS3Completed) {
-            return "Service Shaft archive complete. Proceed to Purifier Ring.";
+            return Loc_Translate("Service Shaft archive complete. Proceed to Purifier Ring.");
         }
         if (tasks->southS3Started) {
-            return "Finish the Service Shaft pass here and return to base.";
+            return Loc_Translate("Finish the Service Shaft investigation here and return to base.");
         }
         if (tasks->southS2Completed) {
-            return "The Service Shaft pass is active here. Complete it and return.";
+            return Loc_Translate("The Service Shaft investigation is active here. Complete it and return.");
         }
-        return "Complete the Vent Galleries pass first.";
+        return Loc_Translate("Complete the Vent Galleries investigation first.");
     }
     if (std::strcmp(locationName, "Purifier Ring") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Purifier Ring locked. Restore power bay first.";
+            return Loc_Translate("Purifier Ring locked. Restore power bay first.");
         }
         if (tasks->southS5Completed) {
-            return "South route fully archived.";
+            return Loc_Translate("South route fully archived.");
         }
         if (tasks->southS5Started) {
-            return "The Root Vault pass is active. Complete it and return.";
+            return Loc_Translate("The Root Vault investigation is active. Complete it and return.");
         }
         if (tasks->southS4Completed) {
-            return "Purifier Ring archive complete. Proceed to Root Vault.";
+            return Loc_Translate("Purifier Ring archive complete. Proceed to Root Vault.");
         }
         if (tasks->southS4Started) {
-            return "Finish the Purifier Ring pass here and return to base.";
+            return Loc_Translate("Finish the Purifier Ring investigation here and return to base.");
         }
         if (tasks->southS3Completed) {
-            return "The Purifier Ring pass is active here. Complete it and return.";
+            return Loc_Translate("The Purifier Ring investigation is active here. Complete it and return.");
         }
-        return "Complete the Service Shaft pass first.";
+        return Loc_Translate("Complete the Service Shaft investigation first.");
     }
     if (std::strcmp(locationName, "Root Vault") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Root Vault locked. Restore power bay first.";
+            return Loc_Translate("Root Vault locked. Restore power bay first.");
         }
         if (tasks->southS5Completed) {
-            return "Root Vault archive complete.";
+            return Loc_Translate("Root Vault archive complete.");
         }
         if (tasks->southS5Started) {
-            return "Finish the Root Vault pass here and return to base.";
+            return Loc_Translate("Finish the Root Vault investigation here and return to base.");
         }
         if (tasks->southS4Completed) {
-            return "The Root Vault pass is active here. Complete it and return.";
+            return Loc_Translate("The Root Vault investigation is active here. Complete it and return.");
         }
-        return "Complete the Purifier Ring pass first.";
+        return Loc_Translate("Complete the Purifier Ring investigation first.");
     }
 
     switch (tasks->stage) {
         case 1:
-            return "Gather Wood and Scrap, then repair oxygen console.";
+            return Loc_Translate("Gather Wood and Scrap, then repair oxygen console.");
         case 2:
-            return "Gather Glow Moss and Ore, craft Glow Stick, finish repair.";
+            return Loc_Translate("Gather Glow Moss and Ore, craft Glow Stick, finish repair.");
         case 3:
             return area == MAP_AREA_BASE
                 ? "Use east airlock and start comm relay repair."
@@ -419,89 +420,89 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
         case 5:
             if (area == MAP_AREA_BASE) {
                 if (player != NULL && player->resources[RESOURCE_ENERGY_CORE] > 0) {
-                    return "Install Energy Core in power bay.";
+                    return Loc_Translate("Install Energy Core in power bay.");
                 }
-                return "Prepare gear, then head east for Energy Core.";
+                return Loc_Translate("Prepare gear, then head east for Energy Core.");
             }
             if (area == MAP_AREA_SWAMP_DEEP) {
-                return "Secure Energy Core in deep swamp and return safely. Use Rope and Camp as your return fallback.";
+                return Loc_Translate("Secure Energy Core in deep swamp and return safely. Use Rope and Camp as your return fallback.");
             }
-            return "Use Rope/Camp and oxygen items for east route runs.";
+            return Loc_Translate("Use Rope/Camp and oxygen items for east route runs.");
         case 6:
             if (area == MAP_AREA_BASE) {
                 if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
                     if (IsCrossX2Ready(tasks)) {
-                        return "Fragments ready. Loxi can now rewrite the route comparison around one failing maintenance lattice.";
+                        return Loc_Translate("Fragments ready. Loxi can now rewrite the ending picture around one failing maintenance lattice.");
                     }
                     if (IsCrossX1Ready(tasks)) {
-                        return "Fragments ready. Loxi can now align the west crew trail with the south facility record.";
+                        return Loc_Translate("Fragments ready. Loxi can now align the west crew trail with the south facility record.");
                     }
-                    return "Sync fragments at Loxi terminal.";
+                    return Loc_Translate("Sync fragments at Loxi terminal.");
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Late-route analysis is unlocked. Gather 3 fragments so Loxi can finish its rewritten route comparison.";
+                    return Loc_Translate("Late-route analysis is unlocked. Gather 3 fragments so Loxi can finish its rewritten ending picture.");
                 }
                 if (IsCrossX1Ready(tasks)) {
-                    return "Shared route evidence is unlocked. Gather 3 fragments so Loxi can join the west and south record.";
+                    return Loc_Translate("Shared evidence is unlocked. Gather 3 fragments so Loxi can join the west and south record.");
                 }
-                return "Collect 3 Relic Fragments in north ruins.";
+                return Loc_Translate("Collect 3 Relic Fragments in north ruins.");
             }
             if (area == MAP_AREA_RUINS) {
                 if (IsCrossX2Ready(tasks)) {
-                    return "Ruins prep now supports Loxi's rewritten route comparison. Finish the fragment set and return.";
+                    return Loc_Translate("Ruins prep now supports Loxi's rewritten ending picture. Finish the fragment set and return.");
                 }
-                return "Collect fragments in ruins and return to base.";
+                return Loc_Translate("Collect fragments in ruins and return to base.");
             }
-            return "Gather fragments, then sync with Loxi.";
+            return Loc_Translate("Gather fragments, then sync with Loxi.");
         case 7:
             if (area == MAP_AREA_BASE) {
                 if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
-                    return "Full archive context is assembled. Loxi can now frame heroic rescue, peaceful rescue, or settlement as deliberate answers to the same truth.";
+                    return Loc_Translate("Full archive context is assembled. Loxi can now frame heroic rescue, peaceful rescue, or settlement as deliberate answers to the same truth.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                     if (tasks->bossDefeated) {
-                        return "Heroic route chosen. Head to the Signal Tower.";
+                        return Loc_Translate("Heroic route chosen. Head to the Signal Tower.");
                     }
-                    return "Heroic route chosen. Finish monolith prep if needed, then defeat the guardian.";
+                    return Loc_Translate("Heroic route chosen. Finish monolith prep if needed, then defeat the guardian.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
                     if (player != NULL && player->hasSignalAmplifier) {
-                        return "Peaceful route chosen. Take the Signal Amplifier to the tower.";
+                        return Loc_Translate("Peaceful route chosen. Take the Signal Amplifier to the tower.");
                     }
-                    return "Peaceful route chosen. Craft the Signal Amplifier before the tower run.";
+                    return Loc_Translate("Peaceful route chosen. Craft the Signal Amplifier before the tower run.");
                 }
                 if (IsCrossX3Ready(tasks)) {
-                    return "West crew testimony and south system truth now agree on what the final choice means. Finish the main archive and return here.";
+                    return Loc_Translate("West crew testimony and south system truth now agree on what the final choice means. Finish the main archive and return here.");
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Loxi has rewritten the late-route comparison around one failing maintenance lattice. Finish the main archive before the branch opens.";
+                    return Loc_Translate("Loxi has rewritten the late-game comparison around one failing maintenance lattice. Finish the main archive before the branch opens.");
                 }
                 if (IsCrossX1Ready(tasks)) {
-                    return "Crew traces and facility handovers now align into one timeline. Keep recovering the main archive.";
+                    return Loc_Translate("Crew traces and facility handovers now align into one timeline. Keep recovering the main archive.");
                 }
-                return "Final stage is now an archive phase: recover every remaining mainline log, then choose your ending here.";
+                return Loc_Translate("Final stage is now an evidence sweep: recover every remaining mainline log, then choose your ending here.");
             }
             if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                 if (tasks->bossDefeated) {
-                    return "The tower is ready for the chosen heroic ending.";
+                    return Loc_Translate("The tower is ready for the chosen heroic ending.");
                 }
                 if (tasks->monolithsLit >= 3) {
-                    return "Heroic route selected. The guardian is weakened.";
+                    return Loc_Translate("Heroic route selected. The guardian is weakened.");
                 }
-                return "Heroic route selected. Finish monolith prep or hunt the guardian.";
+                return Loc_Translate("Heroic route selected. Finish monolith prep or hunt the guardian.");
             }
             if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
                 if (player != NULL && player->hasSignalAmplifier) {
-                    return "Peaceful route selected. Bring the Signal Amplifier to the tower.";
+                    return Loc_Translate("Peaceful route selected. Bring the Signal Amplifier to the tower.");
                 }
-                return "Peaceful route selected. Craft the Signal Amplifier first.";
+                return Loc_Translate("Peaceful route selected. Craft the Signal Amplifier first.");
             }
             if (Tasks_IsEndingBranchReady(tasks)) {
-                return "The main archive is complete. Return to Loxi to choose the ending route before pushing farther.";
+                return Loc_Translate("The main archive is complete. Return to Loxi to choose the ending route before pushing farther.");
             }
-            return "Recover the remaining mainline logs and finish archive tasks before the final branch opens.";
+            return Loc_Translate("Recover the remaining mainline logs and finish archive tasks before the final branch opens.");
         default:
-            return "Recover vitals and follow current objective.";
+            return Loc_Translate("Recover vitals and follow current objective.");
     }
 }
 
@@ -510,392 +511,392 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
     const char *locationName;
 
     if (tasks == NULL || player == NULL) {
-        return "Watch oxygen, health, and retreat route.";
+        return Loc_Translate("Watch oxygen, health, and retreat route.");
     }
 
     if (player->oxygen < 30.0f) {
-        return "Low oxygen. Retreat or recover now.";
+        return Loc_Translate("Low oxygen. Retreat or recover now.");
     }
 
     if (player->poison >= 40.0f) {
-        return "High poison. Use Calm Mushroom or retreat.";
+        return Loc_Translate("High poison. Use Calm Mushroom or retreat.");
     }
 
     if (Player_HasStatus(player, PLAYER_STATUS_OXYGEN_LEAK)) {
-        return "Oxygen leak active. Repair suit soon.";
+        return Loc_Translate("Oxygen leak active. Repair suit soon.");
     }
 
     if (!Player_CanCraftAdvanced(player)) {
-        return "Vitals unstable for advanced crafting.";
+        return Loc_Translate("Vitals unstable for advanced crafting.");
     }
 
     area = Map_GetAreaAt(player->gridX, player->gridY);
     locationName = Map_GetLocationNameAt(player->gridX, player->gridY);
     if (std::strcmp(locationName, "West Frontier") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "West route locked until comm relay restore.";
+            return Loc_Translate("West route stays closed until the comm relay is restored.");
         }
         if (tasks->westW5Completed) {
-            return "West investigation complete.";
+            return Loc_Translate("West investigation complete.");
         }
         if (tasks->westW5Started) {
-            return "Last Camp pass in progress. Finish and return.";
+            return Loc_Translate("Last Camp investigation in progress. Finish and return.");
         }
         if (tasks->westW4Completed) {
-            return "Echo Basin archive complete. Move to Last Camp.";
+            return Loc_Translate("Echo Basin archive complete. Move to Last Camp.");
         }
         if (tasks->westW4Started) {
-            return "Echo Basin pass in progress. Finish and return.";
+            return Loc_Translate("Echo Basin investigation in progress. Finish and return.");
         }
         if (tasks->westW3Completed) {
-            return "Canopy Hollow archive complete. Move to Echo Basin.";
+            return Loc_Translate("Canopy Hollow archive complete. Move to Echo Basin.");
         }
         if (tasks->westW3Started) {
-            return "Canopy Hollow pass in progress. Finish and return.";
+            return Loc_Translate("Canopy Hollow investigation in progress. Finish and return.");
         }
         if (tasks->westW2Completed) {
-            return "Survey Break archive complete. Move to Canopy Hollow.";
+            return Loc_Translate("Survey Break archive complete. Move to Canopy Hollow.");
         }
         if (tasks->westW2Started) {
-            return "Survey Break pass in progress. Finish and return.";
+            return Loc_Translate("Survey Break investigation in progress. Finish and return.");
         }
         if (tasks->westW1Completed) {
-            return "West Frontier archive complete. Start Survey Break.";
+            return Loc_Translate("West Frontier archive complete. Start Survey Break.");
         }
-        return "West Frontier pass in progress. Complete and return.";
+        return Loc_Translate("West Frontier investigation in progress. Complete and return.");
     }
     if (std::strcmp(locationName, "Survey Break") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Survey Break locked until comm relay restore.";
+            return Loc_Translate("Survey Break stays closed until the comm relay is restored.");
         }
         if (tasks->westW3Completed) {
-            return "West route archived through Echo Basin.";
+            return Loc_Translate("West route archived through Echo Basin.");
         }
         if (tasks->westW3Started) {
-            return "The Canopy Hollow pass is active. Finish it and return.";
+            return Loc_Translate("The Canopy Hollow investigation is active. Finish it and return.");
         }
         if (tasks->westW2Completed) {
-            return "Survey Break archive complete. Proceed to Canopy Hollow.";
+            return Loc_Translate("Survey Break archive complete. Proceed to Canopy Hollow.");
         }
         if (tasks->westW2Started) {
-            return "Survey Break pass in progress.";
+            return Loc_Translate("Survey Break investigation in progress.");
         }
         if (tasks->westW1Completed) {
-            return "The Survey Break pass is active here after the West Frontier archive is filed.";
+            return Loc_Translate("The Survey Break investigation is active here after the West Frontier archive is filed.");
         }
-        return "Complete the West Frontier pass first.";
+        return Loc_Translate("Complete the West Frontier investigation first.");
     }
     if (std::strcmp(locationName, "Canopy Hollow") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Canopy Hollow locked until comm relay restore.";
+            return Loc_Translate("Canopy Hollow stays closed until the comm relay is restored.");
         }
         if (tasks->westW5Completed) {
-            return "West route fully archived.";
+            return Loc_Translate("West route fully archived.");
         }
         if (tasks->westW5Started) {
-            return "The Last Camp pass is active. Finish it and return.";
+            return Loc_Translate("The Last Camp investigation is active. Finish it and return.");
         }
         if (tasks->westW4Completed) {
-            return "Canopy Hollow archive complete. Move to Last Camp.";
+            return Loc_Translate("Canopy Hollow archive complete. Move to Last Camp.");
         }
         if (tasks->westW4Started) {
-            return "The Echo Basin pass is active. Finish it and return.";
+            return Loc_Translate("The Echo Basin investigation is active. Finish it and return.");
         }
         if (tasks->westW3Completed) {
-            return "Canopy Hollow archive complete. Proceed to Echo Basin.";
+            return Loc_Translate("Canopy Hollow archive complete. Proceed to Echo Basin.");
         }
         if (tasks->westW3Started) {
-            return "Canopy Hollow pass in progress.";
+            return Loc_Translate("Canopy Hollow investigation in progress.");
         }
         if (tasks->westW2Completed) {
-            return "The Canopy Hollow pass is active here after the Survey Break archive is filed.";
+            return Loc_Translate("The Canopy Hollow investigation is active here after the Survey Break archive is filed.");
         }
-        return "Complete the Survey Break pass first.";
+        return Loc_Translate("Complete the Survey Break investigation first.");
     }
     if (std::strcmp(locationName, "Echo Basin") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Echo Basin locked until comm relay restore.";
+            return Loc_Translate("Echo Basin stays closed until the comm relay is restored.");
         }
         if (tasks->westW5Completed) {
-            return "West route fully archived.";
+            return Loc_Translate("West route fully archived.");
         }
         if (tasks->westW5Started) {
-            return "The Last Camp pass is active. Finish it and return.";
+            return Loc_Translate("The Last Camp investigation is active. Finish it and return.");
         }
         if (tasks->westW4Completed) {
-            return "Echo Basin archive complete. Proceed to Last Camp.";
+            return Loc_Translate("Echo Basin archive complete. Proceed to Last Camp.");
         }
         if (tasks->westW4Started) {
-            return "Echo Basin pass in progress.";
+            return Loc_Translate("Echo Basin investigation in progress.");
         }
         if (tasks->westW3Completed) {
-            return "The Echo Basin pass is active here after the Canopy Hollow archive is filed.";
+            return Loc_Translate("The Echo Basin investigation is active here after the Canopy Hollow archive is filed.");
         }
-        return "Complete the Canopy Hollow pass first.";
+        return Loc_Translate("Complete the Canopy Hollow investigation first.");
     }
     if (std::strcmp(locationName, "Last Camp") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return "Last Camp locked until comm relay restore.";
+            return Loc_Translate("Last Camp stays closed until the comm relay is restored.");
         }
         if (tasks->westW5Completed) {
-            return "Last Camp archive complete.";
+            return Loc_Translate("Last Camp archive complete.");
         }
         if (tasks->westW5Started) {
-            return "Last Camp pass in progress.";
+            return Loc_Translate("Last Camp investigation in progress.");
         }
         if (tasks->westW4Completed) {
-            return "The Last Camp pass is active here after the Echo Basin archive is filed.";
+            return Loc_Translate("The Last Camp investigation is active here after the Echo Basin archive is filed.");
         }
-        return "Complete the Echo Basin pass first.";
+        return Loc_Translate("Complete the Echo Basin investigation first.");
     }
     if (std::strcmp(locationName, "South Collapse") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "South route locked until power bay restore.";
+            return Loc_Translate("South route stays closed until the Power Bay is restored.");
         }
         if (tasks->southS5Completed) {
-            return "South investigation complete.";
+            return Loc_Translate("South investigation complete.");
         }
         if (tasks->southS5Started) {
-            return "Root Vault pass in progress. Finish and return.";
+            return Loc_Translate("Root Vault investigation in progress. Finish and return.");
         }
         if (tasks->southS4Completed) {
-            return "Purifier Ring archive complete. Move to Root Vault.";
+            return Loc_Translate("Purifier Ring archive complete. Move to Root Vault.");
         }
         if (tasks->southS4Started) {
-            return "Purifier Ring pass in progress. Finish and return.";
+            return Loc_Translate("Purifier Ring investigation in progress. Finish and return.");
         }
         if (tasks->southS3Completed) {
-            return "Service Shaft archive complete. Move to Purifier Ring.";
+            return Loc_Translate("Service Shaft archive complete. Move to Purifier Ring.");
         }
         if (tasks->southS3Started) {
-            return "Service Shaft pass in progress. Finish and return.";
+            return Loc_Translate("Service Shaft investigation in progress. Finish and return.");
         }
         if (tasks->southS2Completed) {
-            return "Vent Galleries archive complete. Move to Service Shafts.";
+            return Loc_Translate("Vent Galleries archive complete. Move to Service Shafts.");
         }
         if (tasks->southS2Started) {
-            return "Vent Galleries pass in progress. Finish and return.";
+            return Loc_Translate("Vent Galleries investigation in progress. Finish and return.");
         }
         if (tasks->southS1Completed) {
-            return "South Collapse archive complete. Start Vent Galleries.";
+            return Loc_Translate("South Collapse archive complete. Start Vent Galleries.");
         }
-        return "South Collapse pass in progress. Complete and return.";
+        return Loc_Translate("South Collapse investigation in progress. Complete and return.");
     }
     if (std::strcmp(locationName, "Vent Galleries") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Vent Galleries locked until power bay restore.";
+            return Loc_Translate("Vent Galleries stay closed until the Power Bay is restored.");
         }
         if (tasks->southS3Completed) {
-            return "South route archived through Service Shafts.";
+            return Loc_Translate("South route archived through Service Shafts.");
         }
         if (tasks->southS3Started) {
-            return "The Service Shaft pass is active. Finish it and return.";
+            return Loc_Translate("The Service Shaft investigation is active. Finish it and return.");
         }
         if (tasks->southS2Completed) {
-            return "Vent Galleries archive complete. Proceed to Service Shafts.";
+            return Loc_Translate("Vent Galleries archive complete. Proceed to Service Shafts.");
         }
         if (tasks->southS2Started) {
-            return "Vent Galleries pass in progress.";
+            return Loc_Translate("Vent Galleries investigation in progress.");
         }
         if (tasks->southS1Completed) {
-            return "The Vent Galleries pass is active here after the South Collapse archive is filed.";
+            return Loc_Translate("The Vent Galleries investigation is active here after the South Collapse archive is filed.");
         }
-        return "Complete the South Collapse pass first.";
+        return Loc_Translate("Complete the South Collapse investigation first.");
     }
     if (std::strcmp(locationName, "Service Shafts") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Service Shafts locked until power bay restore.";
+            return Loc_Translate("Service Shafts stay closed until the Power Bay is restored.");
         }
         if (tasks->southS5Completed) {
-            return "South route fully archived.";
+            return Loc_Translate("South route fully archived.");
         }
         if (tasks->southS5Started) {
-            return "The Root Vault pass is active. Finish it and return.";
+            return Loc_Translate("The Root Vault investigation is active. Finish it and return.");
         }
         if (tasks->southS4Completed) {
-            return "Service Shaft archive complete. Move to Root Vault.";
+            return Loc_Translate("Service Shaft archive complete. Move to Root Vault.");
         }
         if (tasks->southS4Started) {
-            return "The Purifier Ring pass is active. Finish it and return.";
+            return Loc_Translate("The Purifier Ring investigation is active. Finish it and return.");
         }
         if (tasks->southS3Completed) {
-            return "Service Shaft archive complete. Proceed to Purifier Ring.";
+            return Loc_Translate("Service Shaft archive complete. Proceed to Purifier Ring.");
         }
         if (tasks->southS3Started) {
-            return "Service Shaft pass in progress.";
+            return Loc_Translate("Service Shaft investigation in progress.");
         }
         if (tasks->southS2Completed) {
-            return "The Service Shaft pass is active here after the Vent Galleries archive is filed.";
+            return Loc_Translate("The Service Shaft investigation is active here after the Vent Galleries archive is filed.");
         }
-        return "Complete the Vent Galleries pass first.";
+        return Loc_Translate("Complete the Vent Galleries investigation first.");
     }
     if (std::strcmp(locationName, "Purifier Ring") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Purifier Ring locked until power bay restore.";
+            return Loc_Translate("Purifier Ring stays closed until the Power Bay is restored.");
         }
         if (tasks->southS5Completed) {
-            return "South route fully archived.";
+            return Loc_Translate("South route fully archived.");
         }
         if (tasks->southS5Started) {
-            return "The Root Vault pass is active. Finish it and return.";
+            return Loc_Translate("The Root Vault investigation is active. Finish it and return.");
         }
         if (tasks->southS4Completed) {
-            return "Purifier Ring archive complete. Proceed to Root Vault.";
+            return Loc_Translate("Purifier Ring archive complete. Proceed to Root Vault.");
         }
         if (tasks->southS4Started) {
-            return "Purifier Ring pass in progress.";
+            return Loc_Translate("Purifier Ring investigation in progress.");
         }
         if (tasks->southS3Completed) {
-            return "The Purifier Ring pass is active here after the Service Shaft archive is filed.";
+            return Loc_Translate("The Purifier Ring investigation is active here after the Service Shaft archive is filed.");
         }
-        return "Complete the Service Shaft pass first.";
+        return Loc_Translate("Complete the Service Shaft investigation first.");
     }
     if (std::strcmp(locationName, "Root Vault") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return "Root Vault locked until power bay restore.";
+            return Loc_Translate("Root Vault stays closed until the Power Bay is restored.");
         }
         if (tasks->southS5Completed) {
-            return "Root Vault archive complete.";
+            return Loc_Translate("Root Vault archive complete.");
         }
         if (tasks->southS5Started) {
-            return "Root Vault pass in progress.";
+            return Loc_Translate("Root Vault investigation in progress.");
         }
         if (tasks->southS4Completed) {
-            return "The Root Vault pass is active here after the Purifier Ring archive is filed.";
+            return Loc_Translate("The Root Vault investigation is active here after the Purifier Ring archive is filed.");
         }
-        return "Complete the Purifier Ring pass first.";
+        return Loc_Translate("Complete the Purifier Ring investigation first.");
     }
 
     switch (area) {
         case MAP_AREA_BASE:
             if (tasks->stage == 3) {
-                return "Base is your relay-run hub. Prepare and return safely.";
+                return Loc_Translate("Base is your relay-run hub. Prepare and return safely.");
             }
             if (tasks->stage == 4) {
                 if (!player->hasLaserGun || !player->hasProtectionSuit) {
-                    return "Craft Laser Gun and Protection Suit before heading out.";
+                    return Loc_Translate("Craft Laser Gun and Protection Suit before heading out.");
                 }
-                return "Gear ready. Inspect crash clue.";
+                return Loc_Translate("Gear ready. Inspect crash clue.");
             }
             if (tasks->stage == 5) {
                 if (player->resources[RESOURCE_ENERGY_CORE] > 0) {
-                    return "Install Energy Core in power bay.";
+                    return Loc_Translate("Install Energy Core in power bay.");
                 }
-                return "Prepare Rope/Camp/Suit before deep swamp run.";
+                return Loc_Translate("Prepare Rope/Camp/Suit before deep swamp run.");
             }
             if (tasks->stage == 6) {
                 if (player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
                     if (IsCrossX2Ready(tasks)) {
-                        return "Fragments can now let Loxi compare rescue, repair, and settlement with full system context.";
+                        return Loc_Translate("Fragments can now let Loxi compare rescue, repair, and settlement with full system context.");
                     }
                     if (IsCrossX1Ready(tasks)) {
-                        return "Fragments can now let Loxi align west crew traces with south facility handovers.";
+                        return Loc_Translate("Fragments can now let Loxi align west crew traces with south facility handovers.");
                     }
-                    return "Return fragments to Loxi terminal.";
+                    return Loc_Translate("Return fragments to Loxi terminal.");
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Finish fragment runs so Loxi can complete its maintenance-lattice route comparison.";
+                    return Loc_Translate("Finish fragment runs so Loxi can complete its maintenance-lattice ending picture.");
                 }
                 if (IsCrossX1Ready(tasks)) {
-                    return "Finish fragment runs so Loxi can lock the west/south timeline together.";
+                    return Loc_Translate("Finish fragment runs so Loxi can lock the west/south timeline together.");
                 }
-                return "Collect 3 Relic Fragments in north ruins.";
+                return Loc_Translate("Collect 3 Relic Fragments in north ruins.");
             }
             if (tasks->stage == 7) {
                 if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
-                    return "All mainline logs recovered. Return to Loxi and choose how to answer the full archive truth.";
+                    return Loc_Translate("All mainline logs recovered. Return to Loxi and choose how to answer the full archive truth.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                     if (tasks->bossDefeated) {
-                        return "Heroic route locked. Finish at the Signal Tower.";
+                        return Loc_Translate("Heroic route chosen. Finish at the Signal Tower.");
                     }
-                    return "Heroic route locked. Push the guardian when ready.";
+                    return Loc_Translate("Heroic route chosen. Push the guardian when ready.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
                     if (player->hasSignalAmplifier) {
-                        return "Peaceful route locked. Carry the amplifier to the tower.";
+                        return Loc_Translate("Peaceful route chosen. Carry the amplifier to the tower.");
                     }
-                    return "Peaceful route locked. Craft the amplifier before leaving base.";
+                    return Loc_Translate("Peaceful route chosen. Craft the amplifier before leaving base.");
                 }
                 if (IsCrossX3Ready(tasks)) {
-                    return "Archive almost complete. One final sweep should let Loxi frame the ending choice with full context.";
+                    return Loc_Translate("Archive almost complete. One final sweep should let Loxi frame the ending choice with full context.");
                 }
                 if (IsCrossX2Ready(tasks)) {
-                    return "Main archive is now the last blocker before Loxi's rewritten route comparison becomes a real choice.";
+                    return Loc_Translate("Main archive is now the last blocker before Loxi's rewritten ending picture becomes a real choice.");
                 }
                 if (IsCrossX1Ready(tasks)) {
-                    return "Aligned crew and facility evidence is ready. Keep bringing back mainline proof.";
+                    return Loc_Translate("Aligned crew and facility evidence is ready. Keep bringing back mainline proof.");
                 }
-                return "Final stage archive phase: collect truth first, choose an ending second.";
+                return Loc_Translate("Final stage evidence sweep: collect truth first, choose an ending second.");
             }
-            return "Base is the safest place to recover, craft, and sync.";
+            return Loc_Translate("Base is the safest place to recover, craft, and sync.");
         case MAP_AREA_FOREST:
             if (player->crouching) {
-                return "Crouching in forest reduces detection.";
+                return Loc_Translate("Crouching in forest reduces detection.");
             }
-            return "Use Crouch in forest for stealth.";
+            return Loc_Translate("Use Crouch in forest for stealth.");
         case MAP_AREA_SWAMP_OUTER:
             if (std::strcmp(locationName, "Outer Swamp Rim") == 0) {
-                return "Outer Swamp Rim is safer; practice short runs and returns.";
+                return Loc_Translate("Outer Swamp Rim is safer; practice short runs and returns.");
             }
             if (std::strcmp(locationName, "Flooded Detour") == 0) {
-                return "Flooded Detour is longer. Rope and Camp help return.";
+                return Loc_Translate("Flooded Detour is longer. Rope and Camp help return.");
             }
             if (player->hasRope && player->hasFieldCamp) {
-                return "Use Rope shortcuts and Field Camp fallback.";
+                return Loc_Translate("Use Rope shortcuts and Field Camp fallback.");
             }
             if (player->hasRope) {
-                return "Rope reduces route length and oxygen pressure.";
+                return Loc_Translate("Rope reduces route length and oxygen pressure.");
             }
             if (player->hasFieldCamp) {
-                return "Field Camp gives a safe fallback point.";
+                return Loc_Translate("Field Camp gives a safe fallback point.");
             }
-            return "Outer swamp drains oxygen steadily. Plan return route.";
+            return Loc_Translate("Outer swamp drains oxygen steadily. Plan return route.");
         case MAP_AREA_SWAMP_DEEP:
             if (std::strcmp(locationName, "Deep Gate") == 0) {
-                return "Deep Gate is a good turn-back checkpoint.";
+                return Loc_Translate("Deep Gate is a good turn-back checkpoint.");
             }
             if (std::strcmp(locationName, "Deep Basin") == 0) {
-                return "Deep Basin is high risk. Keep suit and oxygen support ready.";
+                return Loc_Translate("Deep Basin is high risk. Keep suit and oxygen support ready.");
             }
             if (player->hasProtectionSuit) {
-                return "Protection Suit helps, but deep swamp is still dangerous.";
+                return Loc_Translate("Protection Suit helps, but deep swamp is still dangerous.");
             }
-            return "Deep swamp needs Protection Suit and poison control.";
+            return Loc_Translate("Deep swamp needs Protection Suit and poison control.");
         case MAP_AREA_RUINS:
             if (tasks->stage >= 7) {
                 if (std::strcmp(locationName, "Signal Tower Plateau") == 0) {
                     if (tasks->selectedEndingRoute == ENDING_PEACEFUL && player->hasSignalAmplifier) {
-                        return "Peaceful route chosen. Push for tower stabilization.";
+                        return Loc_Translate("Peaceful route chosen. Push for tower stabilization.");
                     }
                     if (tasks->selectedEndingRoute == ENDING_HEROIC && tasks->monolithsLit >= 3) {
-                        return "Heroic route chosen. This is the best timing for the tower push after the guardian falls.";
+                        return Loc_Translate("Heroic route chosen. This is the best timing for the tower push after the guardian falls.");
                     }
                     if (tasks->selectedEndingRoute == ENDING_NONE) {
-                        return "Do not commit here blind. Return to Loxi once the archive is complete.";
+                        return Loc_Translate("Do not commit here blind. Return to Loxi once the archive is complete.");
                     }
-                    return "Plateau is dangerous. Follow the chosen route's prep before committing.";
+                    return Loc_Translate("Plateau is dangerous. Follow the chosen route's prep before committing.");
                 }
                 if (std::strcmp(locationName, "Monolith Ring") == 0) {
                     if (tasks->monolithsLit >= 3) {
-                        return "Monolith ring complete.";
+                        return Loc_Translate("Monolith ring complete.");
                     }
                     if (tasks->monolithsLit > 0) {
-                        return "Light remaining monoliths.";
+                        return Loc_Translate("Light remaining monoliths.");
                     }
-                    return "Start lighting monoliths to weaken guardian.";
+                    return Loc_Translate("Start lighting monoliths to weaken guardian.");
                 }
             }
             if (std::strcmp(locationName, "Ruins Approach") == 0) {
-                return "Ruins Approach: prepare and decide push depth.";
+                return Loc_Translate("Ruins Approach: prepare and decide push depth.");
             }
             if (IsTowerPlateau(player)) {
-                return "Tower area: keep oxygen margin and retreat plan.";
+                return Loc_Translate("Tower area: keep oxygen margin and retreat plan.");
             }
-            return "Ruins have high oxygen pressure. Use short planned runs.";
+            return Loc_Translate("Ruins have high oxygen pressure. Use short planned runs.");
         case MAP_AREA_UNKNOWN:
         default:
-            return "Watch oxygen, health, and retreat route.";
+            return Loc_Translate("Watch oxygen, health, and retreat route.");
     }
 }
 
@@ -904,41 +905,41 @@ const char *TasksContent_GetStageNameText(int stage) {
 
     stageText = FindStageTextDef(stage);
     if (stageText == NULL) {
-        return "Unknown Stage";
+        return Loc_Translate("Unknown Stage");
     }
 
-    return stageText->stageName;
+    return Loc_PickText(stageText->stageName);
 }
 
 const char *TasksContent_GetPhaseNameText(DayPhase phase) {
     switch (phase) {
         case DAY_PHASE_DAY:
-            return "Day";
+            return Loc_Translate("Day");
         case DAY_PHASE_DUSK:
-            return "Dusk";
+            return Loc_Translate("Dusk");
         case DAY_PHASE_NIGHT:
-            return "Night";
+            return Loc_Translate("Night");
         default:
-            return "Unknown";
+            return Loc_Translate("Unknown");
     }
 }
 
 const char *TasksContent_GetEventNameText(EventType eventType) {
     switch (eventType) {
         case EVENT_HARVEST:
-            return "Resource Surge";
+            return Loc_Translate("Resource Surge");
         case EVENT_CALM_BEASTS:
-            return "Quiet Creatures";
+            return Loc_Translate("Quiet Creatures");
         case EVENT_CLEAR_SKY:
-            return "Clear Skies";
+            return Loc_Translate("Clear Skies");
         case EVENT_SPORE_STORM:
-            return "Spore Storm";
+            return Loc_Translate("Spore Storm");
         case EVENT_MONSTER_FRENZY:
-            return "Monster Frenzy";
+            return Loc_Translate("Monster Frenzy");
         case EVENT_DEVICE_FAULT:
-            return "Device Fault";
+            return Loc_Translate("Device Fault");
         default:
-            return "None";
+            return Loc_Translate("None");
     }
 }
 
@@ -947,10 +948,10 @@ const char *TasksContent_GetEndingTitleText(GameEnding ending) {
 
     endingText = FindEndingTextDef(ending);
     if (endingText == NULL) {
-        return "";
+        return Loc_Translate("");
     }
 
-    return endingText->title;
+    return Loc_PickText(endingText->title);
 }
 
 const char *TasksContent_GetEndingBodyText(GameEnding ending) {
@@ -958,8 +959,37 @@ const char *TasksContent_GetEndingBodyText(GameEnding ending) {
 
     endingText = FindEndingTextDef(ending);
     if (endingText == NULL) {
-        return "";
+        return Loc_Translate("");
     }
 
-    return endingText->body;
+    return Loc_PickText(endingText->body);
+}
+
+const char *TasksContent_GetUIFontSampleText(void) {
+    static std::string sample;
+
+    if (sample.empty()) {
+        for (const StageTextDef &entry : kStageTextDefs) {
+            sample.append(entry.stageName.english);
+            sample.push_back(' ');
+            sample.append(entry.stageName.simplifiedChinese);
+            sample.push_back(' ');
+            sample.append(entry.defaultObjective.english);
+            sample.push_back(' ');
+            sample.append(entry.defaultObjective.simplifiedChinese);
+            sample.push_back(' ');
+        }
+        for (const EndingTextDef &entry : kEndingTextDefs) {
+            sample.append(entry.title.english);
+            sample.push_back(' ');
+            sample.append(entry.title.simplifiedChinese);
+            sample.push_back(' ');
+            sample.append(entry.body.english);
+            sample.push_back(' ');
+            sample.append(entry.body.simplifiedChinese);
+            sample.push_back(' ');
+        }
+    }
+
+    return sample.c_str();
 }

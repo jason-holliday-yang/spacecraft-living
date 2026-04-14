@@ -1,6 +1,7 @@
 #include "assets_internal.h"
 
 #include "config.h"
+#include "localization.h"
 #include "resource_path.h"
 
 #include <cmath>
@@ -16,26 +17,41 @@ static int MaxInt(int a, int b) {
 
 Font AssetsInternal_LoadUIFont(void) {
     const char *fontPaths[] = {
-        "/System/Library/Fonts/SFNS.ttf",
+        "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
         "/System/Library/Fonts/HelveticaNeue.ttc",
         "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/System/Library/Fonts/Avenir Next.ttc"
+        "/System/Library/Fonts/Avenir Next.ttc",
+        "/System/Library/Fonts/SFNS.ttf"
     };
     const int fontBaseSize = 42;
+    int codepointCount;
+    int *codepoints;
     int pathIndex;
+
+    codepointCount = 0;
+    codepoints = LoadCodepoints(Loc_GetUIFontSampleText(), &codepointCount);
 
     for (pathIndex = 0; pathIndex < (int)(sizeof(fontPaths) / sizeof(fontPaths[0])); pathIndex++) {
         if (FileExists(fontPaths[pathIndex])) {
             Font font;
 
-            font = LoadFontEx(fontPaths[pathIndex], fontBaseSize, NULL, 0);
+            font = LoadFontEx(fontPaths[pathIndex], fontBaseSize, codepoints, codepointCount);
             if (font.texture.id != 0) {
                 SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+                if (codepoints != NULL) {
+                    UnloadCodepoints(codepoints);
+                }
                 return font;
             }
         }
     }
 
+    if (codepoints != NULL) {
+        UnloadCodepoints(codepoints);
+    }
     return Font{};
 }
 

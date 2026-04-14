@@ -40,35 +40,48 @@
 
 以下文件都会被当前代码主动尝试加载。
 
+叙事图片命名现统一采用：
+
+- `intro_<两位序号>_<场景 slug>.png`
+- `main_<两位序号>_<场景 slug>.png`
+- `log_<两位序号>_<日志标题 slug>.png`
+- `ending_<两位序号>_<结局标题 slug>.png`
+
+统一约束：
+
+- slug 使用稳定英文短语，优先取剧情卡标题 / 日志标题，而不是临时实现备注
+- 文件名保持 ASCII、小写、下划线分词
+- 如果已接线资源需要改名，必须同一轮按 `先改文档 -> 再改代码 -> 最后改文件名` 执行，避免运行时断链
+
 ### 开场分镜（5）
 
-- `cutscenes/intro_01_signal.png`
-- `cutscenes/intro_02_crash.png`
-- `cutscenes/intro_03_wakeup.png`
-- `cutscenes/intro_04_planet.png`
-- `cutscenes/intro_05_loxi.png`
+- `cutscenes/intro_01_unmarked_call.png`
+- `cutscenes/intro_02_orbit_collapse.png`
+- `cutscenes/intro_03_barely_alive.png`
+- `cutscenes/intro_04_world_watches_back.png`
+- `cutscenes/intro_05_stay_alive_first.png`
 
 ### 主线剧情图（13）
 
-- `story/main/main_01_oxygen_patch.png`
-- `story/main/main_02_oxygen_restored.png`
-- `story/main/main_03_loxi_sync.png`
-- `story/main/main_04_airlock_open.png`
-- `story/main/main_05_comm_relay.png`
-- `story/main/main_06_crash_clue.png`
-- `story/main/main_07_energy_restored.png`
-- `story/main/main_08_loxi_analysis.png`
-- `story/main/main_09_monolith_awaken.png`
-- `story/main/main_10_monolith_solved.png`
-- `story/main/main_11_boss_fall.png`
-- `story/main/main_12_signal_tower_heroic.png`
-- `story/main/main_13_signal_tower_peaceful.png`
+- `story/main/main_01_air_for_one_more_day.png`
+- `story/main/main_02_breathing_room_restored.png`
+- `story/main/main_03_voice_in_the_wreck.png`
+- `story/main/main_04_world_outside_opens.png`
+- `story/main/main_05_signal_answers_back.png`
+- `story/main/main_06_not_an_accident.png`
+- `story/main/main_07_base_wakes_up.png`
+- `story/main/main_08_pattern_is_alien.png`
+- `story/main/main_09_ruins_notice_you.png`
+- `story/main/main_10_sequence_holds.png`
+- `story/main/main_11_last_barrier_breaks.png`
+- `story/main/main_12_beacon_through_force.png`
+- `story/main/main_13_beacon_through_understanding.png`
 
 ### 日志剧情图（3）
 
-- `story/logs/log_01_the_crash.png`
-- `story/logs/log_02_missing_crew.png`
-- `story/logs/log_03_alien_ecology.png`
+- `story/logs/log_01_impact_protocol.png`
+- `story/logs/log_02_split_roster.png`
+- `story/logs/log_03_pattern_not_wilderness.png`
 
 说明：
 
@@ -78,8 +91,8 @@
 
 ### 结局图（4）
 
-- `story/endings/ending_01_settlement.png`
-- `story/endings/ending_02_failure.png`
+- `story/endings/ending_01_alien_settlement.png`
+- `story/endings/ending_02_failed_survival.png`
 - `story/endings/ending_03_heroic_rescue.png`
 - `story/endings/ending_04_peaceful_rescue.png`
 
@@ -183,44 +196,44 @@
 
 当前主线剧情图对应的运行时触发点如下：
 
-- `main_01_oxygen_patch.png`
+- `main_01_air_for_one_more_day.png`
   第一次修复氧气控制台
-- `main_02_oxygen_restored.png`
+- `main_02_breathing_room_restored.png`
   氧气系统完全恢复
-- `main_03_loxi_sync.png`
+- `main_03_voice_in_the_wreck.png`
   第一次同步 Loxi 终端 / 解锁通讯器
-- `main_04_airlock_open.png`
+- `main_04_world_outside_opens.png`
   气闸开启，正式离开基地
-- `main_05_comm_relay.png`
+- `main_05_signal_answers_back.png`
   通讯中继修复
-- `main_06_crash_clue.png`
+- `main_06_not_an_accident.png`
   坠毁线索调查完成
-- `main_07_energy_restored.png`
+- `main_07_base_wakes_up.png`
   能源修复完成
-- `main_08_loxi_analysis.png`
+- `main_08_pattern_is_alien.png`
   交付遗迹碎片并完成 Loxi 分析
-- `main_09_monolith_awaken.png`
+- `main_09_ruins_notice_you.png`
   首次激活石碑
-- `main_10_monolith_solved.png`
+- `main_10_sequence_holds.png`
   三石碑全部点亮
-- `main_11_boss_fall.png`
+- `main_11_last_barrier_breaks.png`
   最终 Boss 倒下
-- `main_12_signal_tower_heroic.png`
+- `main_12_beacon_through_force.png`
   英雄救援路线启动信号塔
-- `main_13_signal_tower_peaceful.png`
+- `main_13_beacon_through_understanding.png`
   和平救援路线启动信号塔
 
 日志与结局图对应关系如下：
 
-- `log_01_the_crash.png`
-  第一份日志《The Crash》
-- `log_02_missing_crew.png`
-  第二份日志《Missing Crew》
-- `log_03_alien_ecology.png`
-  第三份日志《Alien Ecology》
-- `ending_01_settlement.png`
+- `log_01_impact_protocol.png`
+  第一份日志《Impact Protocol》
+- `log_02_split_roster.png`
+  第二份日志《Split Roster》
+- `log_03_pattern_not_wilderness.png`
+  第三份日志《Pattern, Not Wilderness》
+- `ending_01_alien_settlement.png`
   定居结局
-- `ending_02_failure.png`
+- `ending_02_failed_survival.png`
   失败结局
 - `ending_03_heroic_rescue.png`
   英雄救援结局

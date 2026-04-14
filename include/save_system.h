@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "c_compat.h"
+#include "localization.h"
 #include "task_system.h"
 
 /* Public save/settings schemas, slot metadata, and persistence entry points. */
@@ -20,6 +21,7 @@ SCL_EXTERN_C_BEGIN
 typedef struct GameSettings {
     float masterVolume;
     bool sfxEnabled;
+    GameLanguage language;
     char lastUsername[SAVE_ACCOUNT_NAME_MAX];
 } GameSettings;
 

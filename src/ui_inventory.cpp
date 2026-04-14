@@ -1,5 +1,6 @@
 #include "ui_inventory_internal.h"
 
+#include "localization.h"
 #include "ui_runtime_internal.h"
 
 #include <cstdio>
@@ -81,12 +82,12 @@ void UIInventory_GetRecipeStatusText(const TaskSystem *tasks, const Player *play
     const RecipeCatalogEntry *entry;
 
     if (!Tasks_GetVisibleRecipeCount(tasks)) {
-        std::snprintf(buffer, bufferSize, "No recipes available");
+        std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("No recipes available", "暂无可用配方"));
         return;
     }
 
     if (UIInventory_IsRecipeCraftable(tasks, player, recipe)) {
-        std::snprintf(buffer, bufferSize, "Ready to craft");
+        std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Ready to craft", "可立即制作"));
         return;
     }
 
@@ -94,12 +95,12 @@ void UIInventory_GetRecipeStatusText(const TaskSystem *tasks, const Player *play
     if (entry != NULL && (entry->requiresWorkbench || entry->requiresLowStress)
         && (!Tasks_IsNearWorkbench(player) || !Player_CanCraftAdvanced(player))) {
         if (!Tasks_IsNearWorkbench(player)) {
-            std::snprintf(buffer, bufferSize, "Move next to the workbench");
+            std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Move next to the workbench", "请靠近工作台"));
         } else {
-            std::snprintf(buffer, bufferSize, "Stabilize health, oxygen, and anomalies");
+            std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Stabilize health, oxygen, and anomalies", "请先稳定生命、氧气与异常状态"));
         }
         return;
     }
 
-    std::snprintf(buffer, bufferSize, "Missing materials");
+    std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Missing materials", "材料不足"));
 }

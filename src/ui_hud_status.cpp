@@ -1,3 +1,4 @@
+#include "localization.h"
 #include "ui_runtime_internal.h"
 
 #include <cstdio>
@@ -149,12 +150,12 @@ bool UIRuntime_DrawHudStatusBar(const AssetBundle *assets,
     }
 
     UIRuntime_DrawPanel(rect, Color{8, 18, 30, 210}, Color{112, 168, 210, 65});
-    UIRuntime_DrawText(assets, "Status Bar", Vector2{rect.x + 12.0f, rect.y + 7.0f}, 14.0f, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Status Bar", "状态栏"), Vector2{rect.x + 12.0f, rect.y + 7.0f}, 14.0f, WHITE);
 
     activeCount = Player_CollectActiveStatuses(player, activeStatuses, PLAYER_STATUS_COUNT);
     if (activeCount <= 0) {
         UIRuntime_DrawText(assets,
-                           "Stable",
+                           Loc_PickLiteral("Stable", "稳定"),
                            Vector2{rect.x + 14.0f, rect.y + rect.height - 20.0f},
                            14.0f,
                            Color{170, 198, 220, 255});

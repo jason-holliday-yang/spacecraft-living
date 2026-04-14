@@ -1,5 +1,6 @@
 #include "ui_system.h"
 
+#include "localization.h"
 #include "task_runtime_internal.h"
 #include "ui_runtime_internal.h"
 
@@ -35,87 +36,89 @@ const char *GetLogCategoryLabel(const ShipLog *log) {
         return "";
     }
 
-    return log->category == SHIP_LOG_MAINLINE ? "Main Archive" : "Supplemental Archive";
+    return log->category == SHIP_LOG_MAINLINE
+        ? Loc_PickLiteral("Main Archive", "主线档案")
+        : Loc_PickLiteral("Supplemental Archive", "补充档案");
 }
 
 const char *GetWestRouteArchiveStatus(const TaskSystem *tasks) {
     if (tasks == nullptr) {
-        return "Unknown";
+        return Loc_PickLiteral("Unknown", "未知");
     }
     if (tasks->westW5Completed) {
-        return "Archived";
+        return Loc_PickLiteral("Archived", "已归档");
     }
     if (tasks->westW5Started) {
-        return "Final pass active";
+        return Loc_PickLiteral("Final lead active", "最终线索进行中");
     }
     if (tasks->westW4Completed) {
-        return "Last Camp ready";
+        return Loc_PickLiteral("Last Camp ready", "最后营地就绪");
     }
     if (tasks->westW4Started) {
-        return "Echo Basin active";
+        return Loc_PickLiteral("Echo Basin underway", "回声盆地进行中");
     }
     if (tasks->westW3Completed) {
-        return "Echo Basin archived";
+        return Loc_PickLiteral("Echo Basin archived", "回声盆地已归档");
     }
     if (tasks->westW3Started) {
-        return "Canopy active";
+        return Loc_PickLiteral("Canopy Hollow underway", "林冠洼地进行中");
     }
     if (tasks->westW2Completed) {
-        return "Canopy archived";
+        return Loc_PickLiteral("Canopy archived", "林冠线已归档");
     }
     if (tasks->westW2Started) {
-        return "Survey active";
+        return Loc_PickLiteral("Survey Break underway", "勘测断点进行中");
     }
     if (tasks->westW1Completed) {
-        return "Survey archived";
+        return Loc_PickLiteral("Survey archived", "勘测记录已归档");
     }
     if (tasks->westW1Started) {
-        return "Frontier active";
+        return Loc_PickLiteral("West Frontier underway", "西部前线进行中");
     }
     if (tasks->stage >= 4 && tasks->commRepairLevel >= 1) {
-        return "Ready";
+        return Loc_PickLiteral("Ready", "已就绪");
     }
-    return "Locked";
+    return Loc_PickLiteral("Locked", "未解锁");
 }
 
 const char *GetSouthRouteArchiveStatus(const TaskSystem *tasks) {
     if (tasks == nullptr) {
-        return "Unknown";
+        return Loc_PickLiteral("Unknown", "未知");
     }
     if (tasks->southS5Completed) {
-        return "Archived";
+        return Loc_PickLiteral("Archived", "已归档");
     }
     if (tasks->southS5Started) {
-        return "Final pass active";
+        return Loc_PickLiteral("Final lead active", "最终线索进行中");
     }
     if (tasks->southS4Completed) {
-        return "Root Vault ready";
+        return Loc_PickLiteral("Root Vault ready", "根脉核心就绪");
     }
     if (tasks->southS4Started) {
-        return "Ring active";
+        return Loc_PickLiteral("Purifier Ring underway", "净化环区进行中");
     }
     if (tasks->southS3Completed) {
-        return "Ring archived";
+        return Loc_PickLiteral("Ring archived", "环区记录已归档");
     }
     if (tasks->southS3Started) {
-        return "Shaft active";
+        return Loc_PickLiteral("Service Shafts underway", "维护井道进行中");
     }
     if (tasks->southS2Completed) {
-        return "Shaft archived";
+        return Loc_PickLiteral("Shaft archived", "井道记录已归档");
     }
     if (tasks->southS2Started) {
-        return "Vent active";
+        return Loc_PickLiteral("Vent Galleries underway", "通风廊道进行中");
     }
     if (tasks->southS1Completed) {
-        return "Vent archived";
+        return Loc_PickLiteral("Vent archived", "通风记录已归档");
     }
     if (tasks->southS1Started) {
-        return "Threshold active";
+        return Loc_PickLiteral("South Collapse underway", "南部塌陷区进行中");
     }
     if (tasks->stage >= 5 && tasks->energyRepairLevel >= 1) {
-        return "Ready";
+        return Loc_PickLiteral("Ready", "已就绪");
     }
-    return "Locked";
+    return Loc_PickLiteral("Locked", "未解锁");
 }
 
 const char *GetWestRouteArchiveNote(const TaskSystem *tasks) {
@@ -123,39 +126,39 @@ const char *GetWestRouteArchiveNote(const TaskSystem *tasks) {
         return "";
     }
     if (tasks->westW5Completed) {
-        return "Last Camp testimony is archived. The full west investigation now supports your final ending choice.";
+        return Loc_PickLiteral("Last Camp testimony is archived. The full west investigation now supports your final ending choice.", "最后营地证词已归档，完整的西线调查如今会影响你最终的结局选择。");
     }
     if (tasks->westW5Started) {
-        return "The Last Camp testimony is in reach. Return to base after the final west pass to file the complete record.";
+        return Loc_PickLiteral("The Last Camp testimony is within reach. Bring it back to base after the last west investigation so the record can be closed.", "最后营地证词已近在眼前。完成最后一段西线调查后把它带回基地，才能正式封存这条记录。");
     }
     if (tasks->westW4Completed) {
-        return "Echo Basin findings are archived. The west route now points toward the final record at Last Camp.";
+        return Loc_PickLiteral("Echo Basin findings are archived. The west route now points toward the final record at Last Camp.", "回声盆地记录已归档，西线路线现在指向最后营地的最终记录。");
     }
     if (tasks->westW4Started) {
-        return "Echo Basin reconstruction is active. Return to base after finishing the basin pass.";
+        return Loc_PickLiteral("Echo Basin reconstruction is underway. Return to base after finishing the basin investigation.", "回声盆地重建记录正在推进，完成盆地调查后请返回基地。");
     }
     if (tasks->westW3Completed) {
-        return "Canopy Hollow is archived. The west trail now has enough evidence to connect people, route choice, and intent.";
+        return Loc_PickLiteral("Canopy Hollow is archived. The west trail now has enough evidence to connect people, route choice, and intent.", "林冠洼地已归档，西线如今已有足够证据串起人员、路线选择与背后意图。");
     }
     if (tasks->westW3Started) {
-        return "Canopy Hollow evidence is active. Bring the handoff record back to base once the pass is complete.";
+        return Loc_PickLiteral("Canopy Hollow evidence is active. Bring the handoff record back to base once the investigation is complete.", "林冠洼地的证据线正在展开，调查结束后请把交接记录带回基地。");
     }
     if (tasks->westW2Completed) {
-        return "Survey Break anchor notes are archived. The route now points deeper into Canopy Hollow.";
+        return Loc_PickLiteral("Survey Break anchor notes are archived. The route now points deeper into Canopy Hollow.", "勘测断点锚点笔记已归档，路线现在更深入地指向林冠洼地。");
     }
     if (tasks->westW2Started) {
-        return "Survey Break is active. Return to base after restoring the anchor notes.";
+        return Loc_PickLiteral("Survey Break is active. Return to base after restoring the anchor notes.", "勘测断点调查正在进行，恢复锚点笔记后请返回基地。");
     }
     if (tasks->westW1Completed) {
-        return "The frontier signal fragment is archived. Re-enter the west trail to continue at Survey Break.";
+        return Loc_PickLiteral("The frontier signal fragment is archived. Re-enter the west trail to continue at Survey Break.", "前线信号碎片已归档，重新进入西线即可继续前往勘测断点。");
     }
     if (tasks->westW1Started) {
-        return "The west investigation has begun. Recover the opening signal fragment, then return to base to archive it.";
+        return Loc_PickLiteral("The west investigation has begun. Recover the opening signal fragment, then return to base to archive it.", "西线调查已经开始。先取回开端的信号碎片，再回基地完成归档。");
     }
     if (tasks->stage >= 4 && tasks->commRepairLevel >= 1) {
-        return "Comms are restored. Enter West Frontier to begin the west investigation.";
+        return Loc_PickLiteral("Comms are restored. Enter West Frontier to begin the west investigation.", "通讯已恢复。进入西部前线，开始西线调查。");
     }
-    return "Restore the comm relay first to unlock the west investigation.";
+    return Loc_PickLiteral("Restore the comm relay first to unlock the west investigation.", "先修复通讯中继，才能解锁西线调查。");
 }
 
 const char *GetSouthRouteArchiveNote(const TaskSystem *tasks) {
@@ -163,58 +166,58 @@ const char *GetSouthRouteArchiveNote(const TaskSystem *tasks) {
         return "";
     }
     if (tasks->southS5Completed) {
-        return "Root Vault findings are archived. The full south facility chain now supports your final ending choice.";
+        return Loc_PickLiteral("Root Vault findings are archived. The full south facility chain now supports your final ending choice.", "根脉核心记录已归档，完整的南方设施线如今也会影响你的最终结局选择。");
     }
     if (tasks->southS5Started) {
-        return "The Root Vault dossier is in reach. Return to base after the final south pass to file it.";
+        return Loc_PickLiteral("The Root Vault dossier is within reach. Bring it back to base after the last south investigation.", "根脉核心档案已近在眼前，完成最后一段南线调查后请把它带回基地。");
     }
     if (tasks->southS4Completed) {
-        return "Purifier Ring controls are archived. The south route now points toward the Root Vault core record.";
+        return Loc_PickLiteral("Purifier Ring controls are archived. The south route now points toward the Root Vault core record.", "净化环控制记录已归档，南线如今指向根脉核心的关键档案。");
     }
     if (tasks->southS4Started) {
-        return "Purifier Ring work is active. Return to base after stabilizing the ring controls.";
+        return Loc_PickLiteral("Purifier Ring work is active. Return to base after stabilizing the ring controls.", "净化环调查正在进行，稳定控制环后请返回基地。");
     }
     if (tasks->southS3Completed) {
-        return "Service Shaft sync data is archived. The south route now clearly links ship systems to the buried facility network.";
+        return Loc_PickLiteral("Service Shaft sync data is archived. The south route now clearly links ship systems to the buried facility network.", "维护井道同步记录已归档，南线如今清楚串起了飞船系统与地下设施网络。");
     }
     if (tasks->southS3Started) {
-        return "Service Shaft recovery is active. Bring the sync record back to base once the pass is complete.";
+        return Loc_PickLiteral("Service Shaft recovery is active. Bring the sync record back to base once the investigation is complete.", "维护井道回收任务正在进行，调查完成后请把同步记录带回基地。");
     }
     if (tasks->southS2Completed) {
-        return "Vent calibration notes are archived. The route now points deeper into the Service Shafts.";
+        return Loc_PickLiteral("Vent calibration notes are archived. The route now points deeper into the Service Shafts.", "通风校准记录已归档，路线现在更深入地指向维护井道。");
     }
     if (tasks->southS2Started) {
-        return "Vent Galleries are active. Return to base after restoring the calibration handover.";
+        return Loc_PickLiteral("Vent Galleries are active. Return to base after restoring the handover record.", "通风廊道调查正在进行，恢复交接记录后请返回基地。");
     }
     if (tasks->southS1Completed) {
-        return "The South Collapse outage memo is archived. Re-enter the facility edge to continue into the vents.";
+        return Loc_PickLiteral("The South Collapse outage memo is archived. Re-enter the facility edge to continue into the vents.", "南部塌陷区停摆备忘已归档，重新进入设施边缘即可继续深入通风区域。");
     }
     if (tasks->southS1Started) {
-        return "The south facility investigation has begun. Recover the outage memo, then return to base to archive it.";
+        return Loc_PickLiteral("The south facility investigation has begun. Recover the outage memo, then return to base to archive it.", "南方设施调查已经开始。先取回停摆备忘，再回基地完成归档。");
     }
     if (tasks->stage >= 5 && tasks->energyRepairLevel >= 1) {
-        return "Power is restored. Enter South Collapse to begin the south facility investigation.";
+        return Loc_PickLiteral("Power is restored. Enter South Collapse to begin the south facility investigation.", "电力已恢复。进入南部塌陷区，开始南方设施调查。");
     }
-    return "Restore the Power Bay first to unlock the south facility investigation.";
+    return Loc_PickLiteral("Restore the Power Bay first to unlock the south facility investigation.", "先恢复动力舱，才能解锁南方设施调查。");
 }
 
 const char *GetCrossRouteArchiveStatus(const TaskSystem *tasks) {
     if (tasks == nullptr) {
-        return "Unknown";
+        return Loc_PickLiteral("Unknown", "未知");
     }
     if (tasks->westW5Completed && tasks->southS5Completed) {
-        return "Decision ready";
+        return Loc_PickLiteral("Choice ready", "抉择已就绪");
     }
     if (tasks->westW4Completed && tasks->southS4Completed) {
-        return "Strategy ready";
+        return Loc_PickLiteral("Meaning clear", "意义已清晰");
     }
     if (tasks->westW3Completed && tasks->southS2Completed) {
-        return "Insight ready";
+        return Loc_PickLiteral("Linked", "已串联");
     }
     if (tasks->westW3Completed || tasks->southS2Completed) {
-        return "Partial";
+        return Loc_PickLiteral("Partial", "部分完成");
     }
-    return "Locked";
+    return Loc_PickLiteral("Locked", "未解锁");
 }
 
 const char *GetCrossRouteArchiveNote(const TaskSystem *tasks) {
@@ -222,18 +225,18 @@ const char *GetCrossRouteArchiveNote(const TaskSystem *tasks) {
         return "";
     }
     if (tasks->westW5Completed && tasks->southS5Completed) {
-        return "Both route conclusions are ready. Your ending choice now carries the full crew and facility context.";
+        return Loc_PickLiteral("Both route conclusions are ready. Your ending choice now carries the full crew and facility context.", "两条路线的结论都已就位，你的结局选择如今拥有完整的船员与设施背景。");
     }
     if (tasks->westW4Completed && tasks->southS4Completed) {
-        return "Loxi can now synthesize both investigations into a final strategy comparison for the endgame.";
+        return Loc_PickLiteral("Loxi can now synthesize both investigations into a final strategy comparison for the endgame.", "洛西现在可以把两条调查线整合成终局策略对照。");
     }
     if (tasks->westW3Completed && tasks->southS2Completed) {
-        return "Crew trails and facility records now form one chain. The truth is no longer split across regions.";
+        return Loc_PickLiteral("Crew trails and facility records now form one chain. The truth is no longer split across regions.", "船员轨迹与设施记录已经连成一条链，真相不再分散在不同区域。");
     }
     if (tasks->westW3Completed || tasks->southS2Completed) {
-        return "The shared truth is only partial. Push both west and south investigations a little farther.";
+        return Loc_PickLiteral("The shared truth is only partial. Push both west and south investigations a little farther.", "共通真相仍然只是片段，请继续推进西线与南线调查。");
     }
-    return "Shared insight is locked. Advance the west and south investigations to connect the evidence.";
+    return Loc_PickLiteral("Shared insight is still locked. Push both investigations farther so the evidence can meet in the middle.", "共通线索尚未解锁，请继续推进两条调查线，让证据在中段汇合。");
 }
 
 }  // namespace
@@ -302,23 +305,23 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{5, 9, 16, 190});
     UIRuntime_DrawPanel(panel, Color{8, 18, 30, 245}, Color{99, 233, 195, 75});
 
-    UIRuntime_DrawText(assets, "Ship Log Archive", Vector2{panel.x + 30.0f * scale, panel.y + 22.0f * scale}, 33.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Ship Log Archive", "飞船日志档案"), Vector2{panel.x + 30.0f * scale, panel.y + 22.0f * scale}, 33.0f * scale, WHITE);
     UIRuntime_DrawText(
         assets,
-        "Press ESC or L to close",
+        Loc_PickLiteral("Press ESC or L to close", "按 ESC 或 L 关闭"),
         Vector2{
-            panel.x + panel.width - UIRuntime_MeasureText(assets, "Press ESC or L to close", 17.5f * scale).x - 30.0f * scale,
+            panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("Press ESC or L to close", "按 ESC 或 L 关闭"), 17.5f * scale).x - 30.0f * scale,
             panel.y + 28.0f * scale,
         },
         17.5f * scale,
         Color{182, 199, 214, 255}
     );
-    std::snprintf(buffer, sizeof(buffer), "Collected %d / %d", collectedCount, tasks->logCount);
+    std::snprintf(buffer, sizeof(buffer), "%s %d / %d", Loc_PickLiteral("Collected", "已收集"), collectedCount, tasks->logCount);
     UIRuntime_DrawText(assets, buffer, Vector2{panel.x + 30.0f * scale, panel.y + 60.0f * scale}, 17.0f * scale, Color{194, 224, 255, 255});
-    std::snprintf(buffer, sizeof(buffer), "Main Archive %d / %d   Supplemental %d / %d", mainCollectedCount, mainTotalCount, supplementalCollectedCount, supplementalTotalCount);
+    std::snprintf(buffer, sizeof(buffer), "%s %d / %d   %s %d / %d", Loc_PickLiteral("Main Archive", "主线档案"), mainCollectedCount, mainTotalCount, Loc_PickLiteral("Supplemental", "补充档案"), supplementalCollectedCount, supplementalTotalCount);
     UIRuntime_DrawText(assets, buffer, Vector2{panel.x + 230.0f * scale, panel.y + 60.0f * scale}, 15.0f * scale, Color{169, 207, 231, 255});
     UIRuntime_DrawPanel(listPanel, Color{14, 26, 42, 220}, Color{255, 255, 255, 22});
-    UIRuntime_DrawText(assets, "Entries", Vector2{listPanel.x + 16.0f * scale, listPanel.y + 14.0f * scale}, 22.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Entries", "条目"), Vector2{listPanel.x + 16.0f * scale, listPanel.y + 14.0f * scale}, 22.0f * scale, WHITE);
 
     for (int entryIndex = 0; entryIndex < collectedCount; ++entryIndex) {
         const ShipLog *entry = Tasks_GetCollectedLogAt(tasks, entryIndex);
@@ -330,7 +333,7 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
             selected ? Color{18, 42, 62, 240} : Color{11, 20, 32, 220},
             selected ? Color{255, 214, 154, 190} : Color{105, 168, 222, 50}
         );
-        std::snprintf(buffer, sizeof(buffer), "Log %02d", entryIndex + 1);
+        std::snprintf(buffer, sizeof(buffer), "%s %02d", Loc_PickLiteral("Log", "日志"), entryIndex + 1);
         UIRuntime_DrawText(
             assets,
             buffer,
@@ -350,7 +353,7 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
         if (entry != nullptr) {
             UIRuntime_DrawWrappedText(
                 assets,
-                entry->title,
+                Tasks_GetLogTitle(entry),
                 Rectangle{
                     entryRect.x + 12.0f * scale,
                     entryRect.y + 24.0f * scale,
@@ -365,23 +368,24 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     }
 
     if (log != nullptr) {
-        UIRuntime_DrawWrappedText(assets, log->title, Rectangle{contentPanel.x, contentPanel.y, contentPanel.width, 28.0f * scale}, 22.0f * scale, 22.0f * scale, Color{166, 255, 226, 255});
+        UIRuntime_DrawWrappedText(assets, Tasks_GetLogTitle(log), Rectangle{contentPanel.x, contentPanel.y, contentPanel.width, 28.0f * scale}, 22.0f * scale, 22.0f * scale, Color{166, 255, 226, 255});
         std::snprintf(locationBuffer,
                       sizeof(locationBuffer),
-                      "%s  |  Location: %s",
+                      "%s  |  %s: %s",
                       GetLogCategoryLabel(log),
-                      Map_GetLocationNameAt(log->gridX, log->gridY));
+                      Loc_PickLiteral("Location", "位置"),
+                      Loc_GetLocationNameText(Map_GetLocationNameAt(log->gridX, log->gridY)));
         UIRuntime_DrawText(assets, locationBuffer, Vector2{contentPanel.x, contentPanel.y + 40.0f * scale}, 16.0f * scale, Color{194, 224, 255, 255});
         UIRuntime_DrawPanel(textPanel, Color{14, 26, 42, 220}, Color{255, 255, 255, 22});
-        UIRuntime_DrawWrappedText(assets, log->storyText, storyRect, 17.0f * scale, 22.0f * scale, Color{220, 235, 248, 255});
+        UIRuntime_DrawWrappedText(assets, Tasks_GetLogStoryText(log), storyRect, 17.0f * scale, 22.0f * scale, Color{220, 235, 248, 255});
 
-        if (log->rewardDesc[0] != '\0') {
-            UIRuntime_DrawWrappedText(assets, log->rewardDesc, rewardRect, 15.0f * scale, 18.0f * scale, Color{255, 220, 150, 255});
+        if (Tasks_GetLogRewardDescription(log)[0] != '\0') {
+            UIRuntime_DrawWrappedText(assets, Tasks_GetLogRewardDescription(log), rewardRect, 15.0f * scale, 18.0f * scale, Color{255, 220, 150, 255});
         }
     } else {
         UIRuntime_DrawText(
             assets,
-            "No collected log selected",
+            Loc_PickLiteral("No collected log selected", "未选择已收集日志"),
             Vector2{contentPanel.x, contentPanel.y + contentPanel.height * 0.5f},
             20.0f * scale,
             Color{180, 180, 180, 255}
@@ -389,18 +393,18 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     }
 
     UIRuntime_DrawPanel(routePanel, Color{13, 24, 40, 220}, Color{115, 175, 214, 52});
-    UIRuntime_DrawText(assets, "Expedition Summary", Vector2{routePanel.x + 16.0f * scale, routePanel.y + 10.0f * scale}, 20.0f * scale, Color{201, 228, 250, 255});
-    std::snprintf(routeBuffer, sizeof(routeBuffer), "West Frontier  %s", GetWestRouteArchiveStatus(tasks));
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Expedition Summary", "远征总览"), Vector2{routePanel.x + 16.0f * scale, routePanel.y + 10.0f * scale}, 20.0f * scale, Color{201, 228, 250, 255});
+    std::snprintf(routeBuffer, sizeof(routeBuffer), "%s  %s", Loc_GetLocationNameText("West Frontier"), GetWestRouteArchiveStatus(tasks));
     TasksRuntime_SanitizeDisplayText(routeBuffer, sanitizedBuffer, sizeof(sanitizedBuffer));
     UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 38.0f * scale}, 15.0f * scale, Color{184, 214, 240, 255});
     TasksRuntime_SanitizeDisplayText(GetWestRouteArchiveNote(tasks), sanitizedNote, sizeof(sanitizedNote));
     UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 188.0f * scale, routePanel.y + 34.0f * scale, routePanel.width - 204.0f * scale, 22.0f * scale}, 13.0f * scale, 14.0f * scale, Color{172, 194, 214, 255});
-    std::snprintf(routeBuffer, sizeof(routeBuffer), "South Collapse  %s", GetSouthRouteArchiveStatus(tasks));
+    std::snprintf(routeBuffer, sizeof(routeBuffer), "%s  %s", Loc_GetLocationNameText("South Collapse"), GetSouthRouteArchiveStatus(tasks));
     TasksRuntime_SanitizeDisplayText(routeBuffer, sanitizedBuffer, sizeof(sanitizedBuffer));
     UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 68.0f * scale}, 15.0f * scale, Color{184, 214, 240, 255});
     TasksRuntime_SanitizeDisplayText(GetSouthRouteArchiveNote(tasks), sanitizedNote, sizeof(sanitizedNote));
     UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 188.0f * scale, routePanel.y + 64.0f * scale, routePanel.width - 204.0f * scale, 22.0f * scale}, 13.0f * scale, 14.0f * scale, Color{172, 194, 214, 255});
-    std::snprintf(routeBuffer, sizeof(routeBuffer), "Cross Chain  %s", GetCrossRouteArchiveStatus(tasks));
+    std::snprintf(routeBuffer, sizeof(routeBuffer), "%s  %s", Loc_PickLiteral("Shared Truth", "共通真相"), GetCrossRouteArchiveStatus(tasks));
     TasksRuntime_SanitizeDisplayText(routeBuffer, sanitizedBuffer, sizeof(sanitizedBuffer));
     UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 98.0f * scale}, 15.0f * scale, Color{188, 225, 196, 255});
     TasksRuntime_SanitizeDisplayText(GetCrossRouteArchiveNote(tasks), sanitizedNote, sizeof(sanitizedNote));

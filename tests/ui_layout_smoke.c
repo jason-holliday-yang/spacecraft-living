@@ -26,6 +26,8 @@ static void VerifySettingsLayout(int screenWidth, int screenHeight) {
     Rectangle decreaseButton;
     Rectangle increaseButton;
     Rectangle closeButton;
+    Rectangle languageEnglishButton;
+    Rectangle languageChineseButton;
     Rectangle exitButton;
 
     overlay = UI_GetStandardOverlayRect(screenWidth, screenHeight);
@@ -33,6 +35,8 @@ static void VerifySettingsLayout(int screenWidth, int screenHeight) {
     decreaseButton = UI_GetSettingsDecreaseButtonRect(screenWidth, screenHeight);
     increaseButton = UI_GetSettingsIncreaseButtonRect(screenWidth, screenHeight);
     closeButton = UI_GetSettingsCloseButtonRect(screenWidth, screenHeight);
+    languageEnglishButton = UI_GetSettingsLanguageButtonRect(screenWidth, screenHeight, 0);
+    languageChineseButton = UI_GetSettingsLanguageButtonRect(screenWidth, screenHeight, 1);
     exitButton = UI_GetMainMenuButtonRect(screenWidth, screenHeight, MAIN_MENU_BUTTON_EXIT);
 
     Require(overlay.width > 0.0f && overlay.height > 0.0f, "settings overlay should have a positive size");
@@ -40,10 +44,15 @@ static void VerifySettingsLayout(int screenWidth, int screenHeight) {
     Require(RectContainsRect(overlay, decreaseButton), "settings decrease button should stay inside the overlay");
     Require(RectContainsRect(overlay, increaseButton), "settings increase button should stay inside the overlay");
     Require(RectContainsRect(overlay, closeButton), "settings close button should stay inside the overlay");
+    Require(RectContainsRect(overlay, languageEnglishButton), "settings english language button should stay inside the overlay");
+    Require(RectContainsRect(overlay, languageChineseButton), "settings chinese language button should stay inside the overlay");
     Require(!CheckCollisionRecs(closeButton, slider), "settings close button should not overlap the slider");
     Require(!CheckCollisionRecs(closeButton, decreaseButton), "settings close button should not overlap the decrease button");
     Require(!CheckCollisionRecs(closeButton, increaseButton), "settings close button should not overlap the increase button");
+    Require(!CheckCollisionRecs(closeButton, languageEnglishButton), "settings close button should not overlap the english language button");
+    Require(!CheckCollisionRecs(closeButton, languageChineseButton), "settings close button should not overlap the chinese language button");
     Require(!CheckCollisionRecs(closeButton, exitButton), "settings close button should not overlap the main menu exit button");
+    Require(!CheckCollisionRecs(languageEnglishButton, languageChineseButton), "settings language buttons should not overlap");
 }
 
 static void VerifyPauseMenuLayout(int screenWidth, int screenHeight) {

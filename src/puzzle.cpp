@@ -1,5 +1,7 @@
 #include "puzzle.h"
 
+#include "localization.h"
+
 #include <cstdio>
 
 void Puzzle_Init(MonolithPuzzle *puzzle) {
@@ -20,13 +22,15 @@ void Puzzle_Init(MonolithPuzzle *puzzle) {
     snprintf(
         puzzle->hint,
         sizeof(puzzle->hint),
-        "The ancient monoliths resonate in a specific sequence. "
-        "Observe their positions and the whispers of the stars.");
+        "%s",
+        Loc_PickLiteral("The ancient monoliths resonate in a specific sequence. Observe their positions and the whispers of the stars.",
+                        "古老石碑会按照特定顺序共鸣。观察它们的位置，以及群星留下的低语。"));
 
     snprintf(
         puzzle->solutionClue,
         sizeof(puzzle->solutionClue),
-        "A-B-C: East, North, South");
+        "%s",
+        Loc_PickLiteral("A-B-C: East, North, South", "A-B-C：东、北、南"));
 }
 
 bool Puzzle_TryActivate(MonolithPuzzle *puzzle, int monolithIndex) {
@@ -69,7 +73,7 @@ void Puzzle_GetHint(const MonolithPuzzle *puzzle, char *buffer, size_t bufferSiz
     }
 
     if (puzzle->solved) {
-        snprintf(buffer, bufferSize, "The monoliths are fully activated and humming with power.");
+        snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("The monoliths are fully activated and humming with power.", "石碑已经全部激活，正持续低鸣着力量。"));
         return;
     }
 
@@ -77,9 +81,12 @@ void Puzzle_GetHint(const MonolithPuzzle *puzzle, char *buffer, size_t bufferSiz
         snprintf(
             buffer,
             bufferSize,
-            "You have activated %d monolith(s). The sequence feels %s.",
+            "%s %d %s。%s %s。",
+            Loc_PickLiteral("You have activated", "你已经激活了"),
             puzzle->currentStep,
-            (puzzle->currentStep == 1) ? "incomplete" : "almost complete");
+            Loc_PickLiteral("monolith(s)", "座石碑"),
+            Loc_PickLiteral("The sequence feels", "当前序列看起来"),
+            (puzzle->currentStep == 1) ? Loc_PickLiteral("incomplete", "仍不完整") : Loc_PickLiteral("almost complete", "已经接近完成"));
         return;
     }
 
@@ -99,22 +106,22 @@ void Puzzle_Reset(MonolithPuzzle *puzzle) {
 
 const char *Puzzle_GetStatusName(const MonolithPuzzle *puzzle) {
     if (!puzzle) {
-        return "Unknown";
+        return Loc_PickLiteral("Unknown", "未知");
     }
 
     if (puzzle->solved) {
-        return "Solved";
+        return Loc_PickLiteral("Solved", "已解开");
     }
 
     if (puzzle->active) {
         if (puzzle->currentStep == 0) {
-            return "Active - Awaiting Input";
+            return Loc_PickLiteral("Active - Awaiting Input", "激活中 - 等待输入");
         } else if (puzzle->currentStep < MAX_PUZZLE_STEPS) {
-            return "Active - In Progress";
+            return Loc_PickLiteral("Active - In Progress", "激活中 - 进行中");
         } else {
-            return Puzzle_CheckSolved(puzzle) ? "Solved" : "Failed - Resetting";
+            return Puzzle_CheckSolved(puzzle) ? Loc_PickLiteral("Solved", "已解开") : Loc_PickLiteral("Failed - Resetting", "失败 - 正在重置");
         }
     }
 
-    return "Inactive";
+    return Loc_PickLiteral("Inactive", "未激活");
 }

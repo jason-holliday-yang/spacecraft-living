@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include "c_compat.h"
 #include "assets.h"
+#include "localization.h"
 #include "player.h"
 #include "puzzle.h"
 
@@ -100,9 +101,12 @@ typedef struct ShipLog {
     int gridY;
     ShipLogCategory category;
     int rewardKind;
-    char title[64];
-    char storyText[512];
-    char rewardDesc[128];
+    char titleEn[64];
+    char titleZh[64];
+    char storyTextEn[512];
+    char storyTextZh[512];
+    char rewardDescEn[128];
+    char rewardDescZh[128];
 } ShipLog;
 
 typedef struct TaskSystem {
@@ -167,6 +171,9 @@ bool Tasks_GetObjectiveMarker(const TaskSystem *tasks, const Player *player, int
 void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float elapsedSeconds);
 int Tasks_GetCollectedLogCount(const TaskSystem *tasks);
 const ShipLog *Tasks_GetCollectedLogAt(const TaskSystem *tasks, int index);
+const char *Tasks_GetLogTitle(const ShipLog *log);
+const char *Tasks_GetLogStoryText(const ShipLog *log);
+const char *Tasks_GetLogRewardDescription(const ShipLog *log);
 bool Tasks_IsRecipeVisible(const TaskSystem *tasks, RecipeType recipe);
 bool Tasks_CanCraftRecipe(const TaskSystem *tasks, const Player *player, RecipeType recipe);
 int Tasks_GetVisibleRecipeCount(const TaskSystem *tasks);

@@ -356,6 +356,7 @@ int main(void) {
     SaveSystem_SetDefaultSettings(&settings);
     settings.masterVolume = 0.37f;
     settings.sfxEnabled = false;
+    settings.language = GAME_LANGUAGE_ZH_CN;
     snprintf(settings.lastUsername, sizeof(settings.lastUsername), "%s", "alpha");
     memset(&loadedSettings, 0, sizeof(loadedSettings));
     memset(&loaded, 0, sizeof(loaded));
@@ -365,6 +366,7 @@ int main(void) {
     Require(SaveSystem_LoadSettings(&loadedSettings), "settings load should succeed");
     Require(loadedSettings.masterVolume > 0.36f && loadedSettings.masterVolume < 0.38f, "settings volume should round-trip");
     Require(!loadedSettings.sfxEnabled, "settings sfx flag should round-trip");
+    Require(loadedSettings.language == GAME_LANGUAGE_ZH_CN, "settings language should round-trip");
     Require(strcmp(loadedSettings.lastUsername, "alpha") == 0, "settings should remember the last username");
 
     WriteLegacySettingsV2(1.25f, true);
@@ -372,6 +374,7 @@ int main(void) {
     Require(SaveSystem_LoadSettings(&loadedSettings), "legacy settings load should succeed");
     Require(loadedSettings.masterVolume == 1.0f, "legacy settings volume should clamp");
     Require(loadedSettings.sfxEnabled, "legacy settings sfx flag should load");
+    Require(loadedSettings.language == GAME_LANGUAGE_EN, "legacy settings should default language to english");
     Require(loadedSettings.lastUsername[0] == '\0', "legacy settings should default remembered username to empty");
 
     Require(SaveSystem_SaveGame(0, &saved), "save should succeed");

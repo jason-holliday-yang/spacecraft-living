@@ -5,6 +5,7 @@
 
 #include "c_compat.h"
 #include "config.h"
+#include "localization.h"
 #include "player.h"
 
 /* Public recipe catalog lookup helpers shared by gameplay and UI layers. */
@@ -20,10 +21,10 @@ typedef struct RecipeIngredient {
 
 typedef struct RecipeCatalogEntry {
     RecipeType recipe;
-    const char *name;
-    const char *summary;
-    const char *detailDescription;
-    const char *ingredientText;
+    LocalizedText name;
+    LocalizedText summary;
+    LocalizedText detailDescription;
+    LocalizedText ingredientText;
     int unlockStage;
     bool requiresWorkbench;
     bool requiresLowStress;

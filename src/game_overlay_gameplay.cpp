@@ -117,7 +117,7 @@ static bool TryUseSelectedBackpackItem(Game *game, char *message, size_t message
             resource = RESOURCE_CALM_MUSHROOM;
             break;
         default:
-            std::snprintf(message, messageSize, "The selected item cannot be used directly from the backpack.");
+            std::snprintf(message, messageSize, "%s", Loc_PickLiteral("The selected item cannot be used directly from the backpack.", "当前选中的物品无法直接从背包使用。"));
             return false;
     }
 

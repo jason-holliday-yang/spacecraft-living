@@ -99,7 +99,9 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         Puzzle_GetHint(&tasks->monolithPuzzle, hint, sizeof(hint));
         std::snprintf(message,
                       messageSize,
-                      "The monolith hums to life. Solve the sequence to strengthen your boss damage, soften the tower approach, and let the ring explain how the guardian and Signal Tower are tied together before the final choice. %s",
+                      "%s %s",
+                      Loc_PickLiteral("The monolith hums to life. Solve the sequence to strengthen your boss damage, soften the tower approach, and let the ring explain how the guardian and Signal Tower are tied together before the final choice.",
+                                      "石碑开始低鸣。解开这段顺序能强化你对最终首领的伤害、减轻塔楼路径的压力，并让石碑环在最终抉择前解释守卫与信号塔之间的联系。"),
                       hint);
         return true;
     }
@@ -133,15 +135,18 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         tasks->monolithPuzzle.solved = true;
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  "All three monoliths resonate in harmony! Your attacks against the final boss now deal 30% more damage, the tower route loses part of its oxygen-leak strain, and the ring has made the heroic path fully legible. This is the cleanest heroic timing you have had so far.");
+                                  Loc_PickLiteral("All three monoliths resonate in harmony! Your attacks against the final boss now deal 30% more damage, the tower route loses part of its oxygen-leak strain, and the ring has made the heroic path fully legible. This is the cleanest heroic timing you have had so far.",
+                                                  "三座石碑已经完全共鸣！你对最终首领的攻击现在会额外造成 30% 伤害，塔楼路线的漏氧压力也有所减轻，而石碑环终于让强行救援路线变得清晰可读。这是你目前最理想的一次强攻时机。"));
     } else if (tasks->monolithsLit == 1) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  "The first monolith locks into resonance. The guardian's grip weakens slightly, the tower climb leaks a little less oxygen, and the ruins are starting to explain what the ring is really doing. 2 silent stones remain.");
+                                  Loc_PickLiteral("The first monolith locks into resonance. The guardian's grip weakens slightly, the tower climb leaks a little less oxygen, and the ruins are starting to explain what the ring is really doing. 2 silent stones remain.",
+                                                  "第一座石碑已锁定共鸣。守卫的压制略有减弱，攀塔过程中的漏氧也稍微缓和，遗迹开始解释石碑环真正的作用。还剩 2 座沉默石碑。"));
     } else {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  "The second monolith joins the resonance. The guardian weakens further, the tower climb steadies again, and only 1 silent stone remains before the ring fully turns the heroic route into a clear execution path.");
+                                  Loc_PickLiteral("The second monolith joins the resonance. The guardian weakens further, the tower climb steadies again, and only 1 silent stone remains before the ring fully turns the heroic route into a clear execution path.",
+                                                  "第二座石碑加入了共鸣。守卫进一步削弱，攀塔路线也再次稳定下来；只要再点亮 1 座沉默石碑，石碑环就会把强行救援路线彻底转变为清晰的执行路径。"));
     }
 
     Tasks_UpdateObjective(tasks, player);

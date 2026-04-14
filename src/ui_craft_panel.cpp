@@ -33,9 +33,9 @@ void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, con
                                  scale,
                                  LOC_UI_CRAFT_TITLE,
                                  33.0f * scale,
-                                 "Press F or Enter to craft. ESC closes.",
+                                 Loc_PickLiteral("Press F or Enter to craft. ESC closes.", "按 F 或 Enter 制作，按 ESC 关闭。"),
                                  16.0f * scale,
-                                 "Select recipe and craft.",
+                                 Loc_PickLiteral("Select recipe and craft.", "选择配方并制作。"),
                                  15.5f * scale,
                                  17.0f * scale);
 
@@ -66,7 +66,7 @@ void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, con
         UIRuntime_DrawWrappedText(assets, Player_GetRecipeSummary(recipe), Rectangle{slotRect.x + 78.0f * scale, slotRect.y + 40.0f * scale, slotRect.width - 154.0f * scale, 40.0f * scale}, 13.0f * scale, 16.0f * scale, Color{208, 221, 232, 255});
         UIInventory_DrawStatusBadge(assets,
                                     Rectangle{slotRect.x + slotRect.width - 78.0f * scale, slotRect.y + 10.0f * scale, 62.0f * scale, 20.0f * scale},
-                                    craftable ? "READY" : "LOCKED",
+                                    craftable ? Loc_PickLiteral("READY", "可做") : Loc_PickLiteral("LOCKED", "未就绪"),
                                     10.5f * scale,
                                     craftable ? Color{24, 60, 54, 235} : Color{34, 33, 40, 220},
                                     craftable ? Color{94, 230, 196, 120} : Color{112, 126, 148, 70},
@@ -85,21 +85,25 @@ void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, con
         UIRuntime_DrawWrappedText(assets, Player_GetRecipeName(recipe), Rectangle{detailPanel.x + 126.0f * scale, detailPanel.y + 24.0f * scale, detailPanel.width - 144.0f * scale, 52.0f * scale}, 23.0f * scale, 24.0f * scale, WHITE);
         UIRuntime_DrawWrappedText(assets, statusBuffer, Rectangle{detailPanel.x + 126.0f * scale, detailPanel.y + 74.0f * scale, detailPanel.width - 144.0f * scale, 34.0f * scale}, 15.5f * scale, 17.0f * scale, Color{166, 255, 226, 255});
         UIRuntime_DrawWrappedText(assets,
-                                  entry != NULL ? entry->detailDescription : "",
+                                  entry != NULL ? Loc_PickText(entry->detailDescription) : "",
                                   Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 136.0f * scale, detailPanel.width - 36.0f * scale, 104.0f * scale},
                                   15.5f * scale,
                                   18.0f * scale,
                                   Color{214, 226, 238, 255});
-        std::snprintf(buffer, sizeof(buffer), "Needs: %s", entry != NULL ? entry->ingredientText : "");
+        std::snprintf(buffer,
+                      sizeof(buffer),
+                      "%s: %s",
+                      Loc_PickLiteral("Needs", "需求"),
+                      entry != NULL ? Loc_PickText(entry->ingredientText) : "");
         UIRuntime_DrawWrappedText(assets, buffer, Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 258.0f * scale, detailPanel.width - 36.0f * scale, 48.0f * scale}, 15.2f * scale, 18.0f * scale, Color{255, 220, 150, 255});
         if (entry != NULL && (entry->requiresWorkbench || entry->requiresLowStress)) {
-            UIRuntime_DrawWrappedText(assets, "Advanced build: workbench + stable vitals required.", Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
+            UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Advanced build: workbench + stable vitals required.", "高级制作：需要工作台并保持生命体征稳定。"), Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
         } else {
-            UIRuntime_DrawWrappedText(assets, "Number keys for quick craft. F/Enter crafts selected.", Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
+            UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Number keys for quick craft. F/Enter crafts selected.", "可用数字键快速制作，按 F/Enter 制作当前选中项。"), Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
         }
-        UIRuntime_DrawButton(assets, buttonRect, "Craft Selected", true);
+        UIRuntime_DrawButton(assets, buttonRect, Loc_PickLiteral("Craft Selected", "制作当前配方"), true);
     } else {
-        UIRuntime_DrawText(assets, "No recipes available.", Vector2{detailPanel.x + 24.0f * scale, detailPanel.y + 26.0f * scale}, 24.0f * scale, Color{196, 214, 230, 255});
-        UIRuntime_DrawWrappedText(assets, "Progress objectives to unlock more recipes.", Rectangle{detailPanel.x + 24.0f * scale, detailPanel.y + 62.0f * scale, detailPanel.width - 48.0f * scale, 84.0f * scale}, 15.5f * scale, 18.0f * scale, Color{188, 204, 220, 255});
+        UIRuntime_DrawText(assets, Loc_PickLiteral("No recipes available.", "暂无可用配方。"), Vector2{detailPanel.x + 24.0f * scale, detailPanel.y + 26.0f * scale}, 24.0f * scale, Color{196, 214, 230, 255});
+        UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Progress objectives to unlock more recipes.", "推进目标可解锁更多配方。"), Rectangle{detailPanel.x + 24.0f * scale, detailPanel.y + 62.0f * scale, detailPanel.width - 48.0f * scale, 84.0f * scale}, 15.5f * scale, 18.0f * scale, Color{188, 204, 220, 255});
     }
 }

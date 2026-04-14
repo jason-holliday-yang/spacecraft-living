@@ -40,9 +40,9 @@ static void AddLog(TaskSystem *tasks,
                    int gridY,
                    ShipLogCategory category,
                    int rewardKind,
-                   const char *title,
-                   const char *story,
-                   const char *rewardDesc,
+                   LocalizedText title,
+                   LocalizedText story,
+                   LocalizedText rewardDesc,
                    const GameMap *map) {
     ShipLog *log;
     int resolvedX;
@@ -62,9 +62,12 @@ static void AddLog(TaskSystem *tasks,
     log->category = category;
     log->rewardKind = rewardKind;
 
-    snprintf(log->title, sizeof(log->title), "%s", title ? title : "Unknown Log");
-    snprintf(log->storyText, sizeof(log->storyText), "%s", story ? story : "");
-    snprintf(log->rewardDesc, sizeof(log->rewardDesc), "%s", rewardDesc ? rewardDesc : "");
+    snprintf(log->titleEn, sizeof(log->titleEn), "%s", title.english != NULL ? title.english : "Unknown Log");
+    snprintf(log->titleZh, sizeof(log->titleZh), "%s", title.simplifiedChinese != NULL ? title.simplifiedChinese : log->titleEn);
+    snprintf(log->storyTextEn, sizeof(log->storyTextEn), "%s", story.english != NULL ? story.english : "");
+    snprintf(log->storyTextZh, sizeof(log->storyTextZh), "%s", story.simplifiedChinese != NULL ? story.simplifiedChinese : log->storyTextEn);
+    snprintf(log->rewardDescEn, sizeof(log->rewardDescEn), "%s", rewardDesc.english != NULL ? rewardDesc.english : "");
+    snprintf(log->rewardDescZh, sizeof(log->rewardDescZh), "%s", rewardDesc.simplifiedChinese != NULL ? rewardDesc.simplifiedChinese : log->rewardDescEn);
 }
 
 void Tasks_Init(TaskSystem *tasks, GameMap *map) {

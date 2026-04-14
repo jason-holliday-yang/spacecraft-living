@@ -15,6 +15,7 @@
 3. [`plans/NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
 4. [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md)
 5. [`plans/BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
+6. [`engineering/ARCHITECTURE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/engineering/ARCHITECTURE.md)
 
 ## 任务扩展阅读（按需）
 
@@ -42,4 +43,3 @@
 
 - [`archive/2026-04-11/README.md`](/Users/jason/Documents/SpaceCraftLivng/docs/archive/2026-04-11/README.md)
 - [`archive/`](/Users/jason/Documents/SpaceCraftLivng/docs/archive/)
-

@@ -389,6 +389,26 @@ Rectangle UI_GetSettingsCloseButtonRect(int screenWidth, int screenHeight) {
     };
 }
 
+Rectangle UI_GetSettingsLanguageButtonRect(int screenWidth, int screenHeight, int buttonIndex) {
+    float scale;
+    Rectangle panel;
+    float width;
+    float gap;
+    float x;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
+    width = 180.0f * scale;
+    gap = 16.0f * scale;
+    x = panel.x + panel.width - 34.0f * scale - width * 2.0f - gap;
+    return Rectangle{
+        x + buttonIndex * (width + gap),
+        panel.y + 442.0f * scale,
+        width,
+        48.0f * scale
+    };
+}
+
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex) {
     float scale;
     Rectangle shortcutsPanel;

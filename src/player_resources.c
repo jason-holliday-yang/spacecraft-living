@@ -1,5 +1,6 @@
 #include "player.h"
 
+#include "localization.h"
 #include "recipe_catalog.h"
 
 #include <stddef.h>
@@ -32,40 +33,40 @@ bool Player_HasResources(const Player *player, ResourceType resource, int amount
 const char *Player_GetResourceLabel(ResourceType resource) {
     switch (resource) {
         case RESOURCE_WOOD:
-            return "Wood";
+            return Loc_PickLiteral("Wood", "木材");
         case RESOURCE_ORE:
-            return "Ore";
+            return Loc_PickLiteral("Ore", "矿石");
         case RESOURCE_METAL_SCRAP:
-            return "Metal Scrap";
+            return Loc_PickLiteral("Metal Scrap", "金属残片");
         case RESOURCE_FRUIT:
-            return "Plant Fruit";
+            return Loc_PickLiteral("Plant Fruit", "植物果实");
         case RESOURCE_SPECIAL_FUNGUS:
-            return "Special Fungus";
+            return Loc_PickLiteral("Special Fungus", "特殊菌株");
         case RESOURCE_ENERGY_CORE:
-            return "Energy Core";
+            return Loc_PickLiteral("Energy Core", "能源核心");
         case RESOURCE_GLOW_MOSS:
-            return "Glow Moss";
+            return Loc_PickLiteral("Glow Moss", "发光苔");
         case RESOURCE_ALIEN_VINE:
-            return "Alien Vine";
+            return Loc_PickLiteral("Alien Vine", "异星藤蔓");
         case RESOURCE_SHELL_FRUIT:
-            return "Shell Fruit";
+            return Loc_PickLiteral("Shell Fruit", "壳果");
         case RESOURCE_JUNK_METAL:
-            return "Junk Metal";
+            return Loc_PickLiteral("Junk Metal", "废旧金属");
         case RESOURCE_ENERGY_CRYSTAL:
-            return "Energy Crystal";
+            return Loc_PickLiteral("Energy Crystal", "能量晶体");
         case RESOURCE_CALM_MUSHROOM:
-            return "Calming Mushroom";
+            return Loc_PickLiteral("Calming Mushroom", "宁神蘑菇");
         case RESOURCE_PROTECTIVE_FIBER:
-            return "Protective Fiber";
+            return Loc_PickLiteral("Protective Fiber", "防护纤维");
         case RESOURCE_RELIC_FRAGMENT:
-            return "Relic Fragment";
+            return Loc_PickLiteral("Relic Fragment", "遗迹碎片");
         case RESOURCE_BOSS_SCALE:
-            return "Boss Scale";
+            return Loc_PickLiteral("Boss Scale", "首领鳞片");
         case RESOURCE_ALIEN_SLIME:
-            return "Alien Slime";
+            return Loc_PickLiteral("Alien Slime", "异星黏液");
         case RESOURCE_COUNT:
         default:
-            return "Unknown Resource";
+            return Loc_PickLiteral("Unknown Resource", "未知资源");
     }
 }
 
@@ -74,10 +75,10 @@ const char *Player_GetRecipeName(RecipeType recipe) {
 
     entry = RecipeCatalog_Get(recipe);
     if (entry == NULL) {
-        return "Unknown Recipe";
+        return Loc_PickLiteral("Unknown Recipe", "未知配方");
     }
 
-    return entry->name;
+    return Loc_PickText(entry->name);
 }
 
 const char *Player_GetRecipeSummary(RecipeType recipe) {
@@ -88,5 +89,5 @@ const char *Player_GetRecipeSummary(RecipeType recipe) {
         return "";
     }
 
-    return entry->summary;
+    return Loc_PickText(entry->summary);
 }

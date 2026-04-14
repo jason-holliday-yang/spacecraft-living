@@ -1,5 +1,6 @@
 #include "ui_system.h"
 
+#include "localization.h"
 #include "ui_runtime_internal.h"
 
 #include <cmath>
@@ -194,18 +195,18 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
 
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{5, 9, 16, 198});
     UIRuntime_DrawPanel(panel, Color{8, 18, 30, 245}, Color{124, 166, 214, 75});
-    UIRuntime_DrawText(assets, "Area Map", Vector2{panel.x + 28.0f * scale, panel.y + 24.0f * scale}, 34.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Area Map", "区域地图"), Vector2{panel.x + 28.0f * scale, panel.y + 24.0f * scale}, 34.0f * scale, WHITE);
     UIRuntime_DrawText(
         assets,
-        "Press M or ESC to close.",
+        Loc_PickLiteral("Press M or ESC to close.", "按 M 或 ESC 关闭。"),
         Vector2{
-            panel.x + panel.width - UIRuntime_MeasureText(assets, "Press M or ESC to close.", 17.0f * scale).x - 28.0f * scale,
+            panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("Press M or ESC to close.", "按 M 或 ESC 关闭。"), 17.0f * scale).x - 28.0f * scale,
             panel.y + 30.0f * scale,
         },
         17.0f * scale,
         Color{182, 199, 214, 255}
     );
-    UIRuntime_DrawWrappedText(assets, "Explore, track objectives, and plan return routes.", Rectangle{panel.x + 28.0f * scale, panel.y + 66.0f * scale, panel.width - 56.0f * scale, 42.0f * scale}, 15.5f * scale, 16.0f * scale, Color{194, 224, 255, 255});
+    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Explore, track objectives, and plan return routes.", "探索地图、追踪目标，并规划返程路线。"), Rectangle{panel.x + 28.0f * scale, panel.y + 66.0f * scale, panel.width - 56.0f * scale, 42.0f * scale}, 15.5f * scale, 16.0f * scale, Color{194, 224, 255, 255});
     UIRuntime_DrawPanel(mapPanel, Color{11, 20, 32, 235}, Color{255, 255, 255, 22});
     UIRuntime_DrawPanel(infoPanel, Color{14, 26, 42, 220}, Color{255, 255, 255, 22});
 
@@ -259,37 +260,37 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
                   static_cast<int>(cellSize),
                   Color{88, 255, 180, 255});
 
-    UIRuntime_DrawText(assets, "Ruins", Vector2{TileScreenX(EXTERIOR_X(49)), TileScreenY(EXTERIOR_Y(4))}, 14.0f * scale, Color{226, 233, 240, 245});
-    UIRuntime_DrawText(assets, "Signal Tower Plateau", Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(9))}, 11.5f * scale, Color{200, 227, 242, 225});
-    UIRuntime_DrawText(assets, "Monolith Ring", Vector2{TileScreenX(EXTERIOR_X(54)), TileScreenY(EXTERIOR_Y(15))}, 11.5f * scale, Color{200, 227, 242, 225});
-    UIRuntime_DrawText(assets, "Ruins Approach", Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(24))}, 11.5f * scale, Color{200, 227, 242, 225});
-    UIRuntime_DrawText(assets, "Ship Base", Vector2{TileScreenX(56), TileScreenY(49)}, 14.0f * scale, Color{196, 226, 250, 245});
-    UIRuntime_DrawText(assets, "Spore Swamp", Vector2{TileScreenX(EXTERIOR_X(98)), TileScreenY(EXTERIOR_Y(45))}, 14.0f * scale, Color{214, 227, 164, 245});
-    UIRuntime_DrawText(assets, "Outer Swamp Rim", Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(36))}, 11.5f * scale, Color{224, 235, 176, 220});
-    UIRuntime_DrawText(assets, "Flooded Detour", Vector2{TileScreenX(EXTERIOR_X(101)), TileScreenY(EXTERIOR_Y(63))}, 11.5f * scale, Color{214, 228, 180, 210});
-    UIRuntime_DrawText(assets, "Deep Gate", Vector2{TileScreenX(EXTERIOR_X(108)), TileScreenY(EXTERIOR_Y(40))}, 11.5f * scale, Color{236, 212, 132, 220});
-    UIRuntime_DrawText(assets, "Deep Basin", Vector2{TileScreenX(EXTERIOR_X(109)), TileScreenY(EXTERIOR_Y(71))}, 11.5f * scale, Color{224, 212, 136, 220});
-    UIRuntime_DrawText(assets, "Echo Wilds", Vector2{TileScreenX(EXTERIOR_X(18)), TileScreenY(EXTERIOR_Y(54))}, 13.0f * scale, Color{208, 196, 184, 220});
-    UIRuntime_DrawText(assets, "West Frontier", Vector2{TileScreenX(EXTERIOR_X(16)), TileScreenY(EXTERIOR_Y(62))}, 12.0f * scale, Color{196, 206, 220, 210});
-    UIRuntime_DrawText(assets, "Survey Break", Vector2{TileScreenX(EXTERIOR_X(35)), TileScreenY(EXTERIOR_Y(68))}, 11.5f * scale, Color{196, 206, 220, 198});
-    UIRuntime_DrawText(assets, "Canopy Hollow", Vector2{TileScreenX(EXTERIOR_X(42)), TileScreenY(EXTERIOR_Y(60))}, 11.0f * scale, Color{196, 206, 220, 188});
-    UIRuntime_DrawText(assets, "Echo Basin", Vector2{TileScreenX(EXTERIOR_X(47)), TileScreenY(EXTERIOR_Y(72))}, 10.8f * scale, Color{196, 206, 220, 180});
-    UIRuntime_DrawText(assets, "Last Camp", Vector2{TileScreenX(EXTERIOR_X(47)), TileScreenY(EXTERIOR_Y(86))}, 10.8f * scale, Color{196, 206, 220, 174});
-    UIRuntime_DrawText(assets, "Subsurface Sink", Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(95))}, 13.0f * scale, Color{214, 190, 168, 220});
-    UIRuntime_DrawText(assets, "South Collapse", Vector2{TileScreenX(EXTERIOR_X(61)), TileScreenY(EXTERIOR_Y(98))}, 12.0f * scale, Color{198, 205, 214, 210});
-    UIRuntime_DrawText(assets, "Vent Galleries", Vector2{TileScreenX(EXTERIOR_X(83)), TileScreenY(EXTERIOR_Y(98))}, 11.5f * scale, Color{198, 205, 214, 198});
-    UIRuntime_DrawText(assets, "Service Shafts", Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(98))}, 11.0f * scale, Color{198, 205, 214, 188});
-    UIRuntime_DrawText(assets, "Purifier Ring", Vector2{TileScreenX(EXTERIOR_X(104)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 180});
-    UIRuntime_DrawText(assets, "Root Vault", Vector2{TileScreenX(EXTERIOR_X(112)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 174});
+    UIRuntime_DrawText(assets, Loc_GetAreaNameText("Ruins"), Vector2{TileScreenX(EXTERIOR_X(49)), TileScreenY(EXTERIOR_Y(4))}, 14.0f * scale, Color{226, 233, 240, 245});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Signal Tower Plateau"), Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(9))}, 11.5f * scale, Color{200, 227, 242, 225});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Monolith Ring"), Vector2{TileScreenX(EXTERIOR_X(54)), TileScreenY(EXTERIOR_Y(15))}, 11.5f * scale, Color{200, 227, 242, 225});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Ruins Approach"), Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(24))}, 11.5f * scale, Color{200, 227, 242, 225});
+    UIRuntime_DrawText(assets, Loc_GetAreaNameText("Ship Base"), Vector2{TileScreenX(56), TileScreenY(49)}, 14.0f * scale, Color{196, 226, 250, 245});
+    UIRuntime_DrawText(assets, Loc_GetAreaNameText("Spore Swamp"), Vector2{TileScreenX(EXTERIOR_X(98)), TileScreenY(EXTERIOR_Y(45))}, 14.0f * scale, Color{214, 227, 164, 245});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Outer Swamp Rim"), Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(36))}, 11.5f * scale, Color{224, 235, 176, 220});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Flooded Detour"), Vector2{TileScreenX(EXTERIOR_X(101)), TileScreenY(EXTERIOR_Y(63))}, 11.5f * scale, Color{214, 228, 180, 210});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Deep Gate"), Vector2{TileScreenX(EXTERIOR_X(108)), TileScreenY(EXTERIOR_Y(40))}, 11.5f * scale, Color{236, 212, 132, 220});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Deep Basin"), Vector2{TileScreenX(EXTERIOR_X(109)), TileScreenY(EXTERIOR_Y(71))}, 11.5f * scale, Color{224, 212, 136, 220});
+    UIRuntime_DrawText(assets, Loc_GetAreaNameText("Echo Wilds"), Vector2{TileScreenX(EXTERIOR_X(18)), TileScreenY(EXTERIOR_Y(54))}, 13.0f * scale, Color{208, 196, 184, 220});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("West Frontier"), Vector2{TileScreenX(EXTERIOR_X(16)), TileScreenY(EXTERIOR_Y(62))}, 12.0f * scale, Color{196, 206, 220, 210});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Survey Break"), Vector2{TileScreenX(EXTERIOR_X(35)), TileScreenY(EXTERIOR_Y(68))}, 11.5f * scale, Color{196, 206, 220, 198});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Canopy Hollow"), Vector2{TileScreenX(EXTERIOR_X(42)), TileScreenY(EXTERIOR_Y(60))}, 11.0f * scale, Color{196, 206, 220, 188});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Echo Basin"), Vector2{TileScreenX(EXTERIOR_X(47)), TileScreenY(EXTERIOR_Y(72))}, 10.8f * scale, Color{196, 206, 220, 180});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Last Camp"), Vector2{TileScreenX(EXTERIOR_X(47)), TileScreenY(EXTERIOR_Y(86))}, 10.8f * scale, Color{196, 206, 220, 174});
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Subsurface Sink", "地下沉降带"), Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(95))}, 13.0f * scale, Color{214, 190, 168, 220});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("South Collapse"), Vector2{TileScreenX(EXTERIOR_X(61)), TileScreenY(EXTERIOR_Y(98))}, 12.0f * scale, Color{198, 205, 214, 210});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Vent Galleries"), Vector2{TileScreenX(EXTERIOR_X(83)), TileScreenY(EXTERIOR_Y(98))}, 11.5f * scale, Color{198, 205, 214, 198});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Service Shafts"), Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(98))}, 11.0f * scale, Color{198, 205, 214, 188});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Purifier Ring"), Vector2{TileScreenX(EXTERIOR_X(104)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 180});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Root Vault"), Vector2{TileScreenX(EXTERIOR_X(112)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 174});
 
-    UIRuntime_DrawText(assets, "Legend", Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 18.0f * scale}, 24.0f * scale, WHITE);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 56.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{88, 255, 180, 255}, "Player marker", scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 84.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{255, 214, 154, 255}, "Objective marker", scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 126.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{68, 98, 128, 255}, "Ship base", scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 154.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{58, 114, 78, 255}, "Crash forest", scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 182.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{92, 121, 62, 255}, "East swamp route", scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 210.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{108, 111, 122, 255}, "Ruins", scale);
-    UIRuntime_DrawText(assets, "Current Objective", Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 262.0f * scale}, 21.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Legend", "图例"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 18.0f * scale}, 24.0f * scale, WHITE);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 56.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{88, 255, 180, 255}, Loc_PickLiteral("Player marker", "玩家位置"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 84.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{255, 214, 154, 255}, Loc_PickLiteral("Objective marker", "目标位置"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 126.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{68, 98, 128, 255}, Loc_PickLiteral("Ship base", "飞船基地"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 154.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{58, 114, 78, 255}, Loc_PickLiteral("Crash forest", "坠毁森林"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 182.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{92, 121, 62, 255}, Loc_PickLiteral("East swamp route", "东侧沼泽路线"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 210.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{108, 111, 122, 255}, Loc_PickLiteral("Ruins", "遗迹"), scale);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Current Objective", "当前目标"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 262.0f * scale}, 21.0f * scale, WHITE);
     UIRuntime_DrawWrappedText(
         assets,
         tasks->objective,
@@ -304,9 +305,9 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         Color{214, 226, 238, 255}
     );
     UIRuntime_DrawPanel(Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 396.0f * scale, infoPanel.width - 36.0f * scale, 118.0f * scale}, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
-    std::snprintf(buffer, sizeof(buffer), "Position  %d, %d", player->gridX, player->gridY);
+    std::snprintf(buffer, sizeof(buffer), "%s  %d, %d", Loc_PickLiteral("Position", "坐标"), player->gridX, player->gridY);
     UIRuntime_DrawText(assets, buffer, Vector2{infoPanel.x + 32.0f * scale, infoPanel.y + 414.0f * scale}, 16.0f * scale, Color{194, 224, 255, 255});
-    std::snprintf(buffer, sizeof(buffer), "Current Area  %s", Map_GetAreaName(Map_GetAreaAt(player->gridX, player->gridY)));
+    std::snprintf(buffer, sizeof(buffer), "%s  %s", Loc_PickLiteral("Current Area", "当前区域"), Loc_GetAreaNameText(Map_GetAreaName(Map_GetAreaAt(player->gridX, player->gridY))));
     UIRuntime_DrawWrappedText(
         assets,
         buffer,
@@ -315,7 +316,7 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         18.0f * scale,
         Color{174, 226, 255, 255}
     );
-    std::snprintf(buffer, sizeof(buffer), "Location  %s", Map_GetLocationNameAt(player->gridX, player->gridY));
+    std::snprintf(buffer, sizeof(buffer), "%s  %s", Loc_PickLiteral("Location", "位置"), Loc_GetLocationNameText(Map_GetLocationNameAt(player->gridX, player->gridY)));
     UIRuntime_DrawWrappedText(
         assets,
         buffer,
@@ -325,7 +326,7 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         Color{198, 211, 224, 255}
     );
     UIRuntime_DrawWrappedText(assets,
-                              "West frontier opens after the comm relay. The southern descent opens after the power bay. Ruins prep deepens as you bring back more field evidence.",
+                              Loc_PickLiteral("West frontier opens after the comm relay. The southern descent opens after the power bay. Ruins prep deepens as you bring back more field evidence.", "通讯中继修复后会开放西部前线；动力舱恢复后会开放南侧下行路线。随着你带回更多现场证据，遗迹推进也会继续加深。"),
                               Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 498.0f * scale, infoPanel.width - 36.0f * scale, 92.0f * scale},
                               13.0f * scale,
                               14.5f * scale,

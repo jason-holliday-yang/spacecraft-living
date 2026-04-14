@@ -140,7 +140,11 @@ bool Game_LoadSavedGame(Game *game, int slotIndex) {
     Game_TrySaveSettings(game);
     positionAdjusted = Game_LoadSnapshotIntoSession(game, &snapshot);
     Game_RefreshSaveSlots(game);
-    Game_PostMessage(game, positionAdjusted ? "Saved progress loaded. Position adjusted to a safe tile." : "Saved progress loaded.", 3.2f);
+    Game_PostMessage(game,
+                     positionAdjusted
+                        ? Loc_PickLiteral("Saved progress loaded. Position adjusted to a safe tile.", "已读取存档进度，并将位置调整到安全地块。")
+                        : Loc_PickLiteral("Saved progress loaded.", "已读取存档进度。"),
+                     3.2f);
     return true;
 }
 
@@ -187,7 +191,7 @@ void Game_ActivateSelectedSaveSlot(Game *game) {
     }
 
     if (slot->exists) {
-        Game_PostMessage(game, "This slot is occupied. Delete it first, or choose an empty slot.", 3.2f);
+        Game_PostMessage(game, Loc_PickLiteral("This slot is occupied. Delete it first, or choose an empty slot.", "该槽位已被占用，请先删除存档或选择空槽位。"), 3.2f);
         return;
     }
 

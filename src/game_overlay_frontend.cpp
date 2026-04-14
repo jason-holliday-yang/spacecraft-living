@@ -60,6 +60,24 @@ static void ApplyMasterVolume(Game *game, float volume) {
     Audio_SetMasterVolumeSetting(&game->audio, clamped);
 }
 
+static void ApplyLanguage(Game *game, GameLanguage language) {
+    GameLanguage normalized;
+
+    if (game == NULL) {
+        return;
+    }
+
+    normalized = Loc_NormalizeLanguage((int)language);
+    if (game->settings.language == normalized) {
+        return;
+    }
+
+    game->settings.language = normalized;
+    game->settingsDirty = true;
+    Loc_SetLanguage(normalized);
+    Tasks_UpdateObjective(&game->tasks, &game->player);
+}
+
 static void ClearAuthMessage(Game *game) {
     if (game == NULL) {
         return;
@@ -668,6 +686,8 @@ static void UpdateSettingsOverlay(Game *game) {
     Rectangle decreaseRect;
     Rectangle increaseRect;
     Rectangle closeRect;
+    Rectangle languageEnglishRect;
+    Rectangle languageChineseRect;
     Rectangle handleRect;
     Vector2 mouse;
     float handleCenterX;
@@ -678,6 +698,8 @@ static void UpdateSettingsOverlay(Game *game) {
     decreaseRect = UI_GetSettingsDecreaseButtonRect(GetScreenWidth(), GetScreenHeight());
     increaseRect = UI_GetSettingsIncreaseButtonRect(GetScreenWidth(), GetScreenHeight());
     closeRect = UI_GetSettingsCloseButtonRect(GetScreenWidth(), GetScreenHeight());
+    languageEnglishRect = UI_GetSettingsLanguageButtonRect(GetScreenWidth(), GetScreenHeight(), 0);
+    languageChineseRect = UI_GetSettingsLanguageButtonRect(GetScreenWidth(), GetScreenHeight(), 1);
     handleCenterX = sliderRect.x + sliderRect.width * game->settings.masterVolume;
     handleRect = Rectangle{
         handleCenterX - 14.0f * scale,
@@ -698,6 +720,10 @@ static void UpdateSettingsOverlay(Game *game) {
     if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
         ApplyMasterVolume(game, game->settings.masterVolume + 0.05f);
     }
+    if (IsKeyPressed(KEY_TAB)) {
+        ApplyLanguage(game, game->settings.language == GAME_LANGUAGE_EN ? GAME_LANGUAGE_ZH_CN : GAME_LANGUAGE_EN);
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+    }
 
     mouse = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
@@ -712,6 +738,16 @@ static void UpdateSettingsOverlay(Game *game) {
         }
         if (CheckCollisionPointRec(mouse, increaseRect)) {
             ApplyMasterVolume(game, game->settings.masterVolume + 0.05f);
+            return;
+        }
+        if (CheckCollisionPointRec(mouse, languageEnglishRect)) {
+            ApplyLanguage(game, GAME_LANGUAGE_EN);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+            return;
+        }
+        if (CheckCollisionPointRec(mouse, languageChineseRect)) {
+            ApplyLanguage(game, GAME_LANGUAGE_ZH_CN);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             return;
         }
         if (CheckCollisionPointRec(mouse, sliderRect) || CheckCollisionPointRec(mouse, handleRect)) {

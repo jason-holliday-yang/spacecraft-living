@@ -1,16 +1,20 @@
 #include "game_manager_internal.h"
 
+#include "localization.h"
 #include "task_runtime_internal.h"
 
 #include <cstdio>
 #include <cstring>
 
 void Game_PostMessage(Game *game, const char *text, float duration) {
+    const char *displayText;
+
     if (game == NULL || text == NULL) {
         return;
     }
 
-    TasksRuntime_SanitizeDisplayText(text, game->hudMessage.text, sizeof(game->hudMessage.text));
+    displayText = Loc_Translate(text);
+    TasksRuntime_SanitizeDisplayText(displayText, game->hudMessage.text, sizeof(game->hudMessage.text));
     game->hudMessage.timer = duration + 2.0f;
 }
 
@@ -681,7 +685,7 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         return;
     }
     if (!x2ReadyBefore && x2ReadyNow) {
-        Game_PostMessage(game, "Base summary: Loxi can now rewrite the final route comparison using both investigations.", 3.4f);
+        Game_PostMessage(game, "Base summary: Loxi can now redraw the final choice using both investigations.", 3.4f);
         return;
     }
     if (westThirdCompletedNow) {
@@ -715,7 +719,7 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     if (missingArchiveEvidenceLabel != NULL) {
         std::snprintf(baseSummaryBuffer,
                       sizeof(baseSummaryBuffer),
-                      "Base summary: archive pass still open. Bring back the %s before Loxi can close it.",
+                      "Base summary: the record is still open. Bring back the %s before Loxi can close it.",
                       missingArchiveEvidenceLabel);
         Game_PostMessage(game, baseSummaryBuffer, 3.4f);
         return;
@@ -728,11 +732,11 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     if (detailedLocationHintsEnabled && game->tasks.stage >= 3 && game->tasks.stage <= 5 && IsTrackedEastLocation(locationName)) {
         if (std::strcmp(locationName, "Outer Swamp Rim") == 0) {
             if (game->tasks.stage == 3) {
-                Game_PostMessage(game, "Outer Swamp Rim: this is the first real out-and-back lane. Repair the relay, learn the oxygen line, then head home before east stops being a controlled lesson.", 3.2f);
+                Game_PostMessage(game, "Outer Swamp Rim: this is the first real out-and-back stretch. Repair the relay, learn the oxygen rhythm, then head home before the east stops feeling manageable.", 3.2f);
             } else if (game->tasks.stage == 4) {
                 Game_PostMessage(game, "Outer Swamp Rim: east is no longer just relay ground. Use this shelf as the safer lead-in while you finish gun-and-suit prep for the crash clue.", 3.2f);
             } else {
-                Game_PostMessage(game, "Outer Swamp Rim: this is now the last easy shelf before the qualification run. Stabilize Rope, camp, and oxygen support here before you push farther east.", 3.2f);
+                Game_PostMessage(game, "Outer Swamp Rim: this is now the last easy shelf before the real eastern push. Stabilize Rope, camp, and oxygen support here before you go farther.", 3.2f);
             }
             return;
         }
@@ -752,7 +756,7 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         }
 
         if (std::strcmp(locationName, "Deep Basin") == 0) {
-            Game_PostMessage(game, "Deep Basin: this is the full east-route commitment. Bring the Energy Core home from here so the power bay can turn east-route survival into the north-route unlock.", 3.4f);
+            Game_PostMessage(game, "Deep Basin: this is the full east-route commitment. Bring the Energy Core home from here so the power bay can turn eastern survival into a path north.", 3.4f);
             return;
         }
     }
@@ -760,72 +764,72 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     if (detailedLocationHintsEnabled && IsTrackedBoundaryLocation(locationName)) {
         if (std::strcmp(locationName, "West Frontier") == 0) {
             if (IsWestRouteAvailable(&game->tasks)) {
-                Game_PostMessage(game, "West Frontier: this is the first west investigation shelf. Capture the opening dead-signal pass here, then move toward Survey Break for the second calibration leg.", 3.3f);
+                Game_PostMessage(game, "West Frontier: this is the first west investigation shelf. Recover the opening dead-signal record here, then move toward Survey Break for the next lead.", 3.3f);
             } else {
-                Game_PostMessage(game, "West Frontier: Echo Wilds survey ground is still sealed under comm blackout. Restore the relay first, then this shelf becomes the first west-route investigation lane.", 3.3f);
+                Game_PostMessage(game, "West Frontier: Echo Wilds is still sealed under dead comms. Restore the relay first, then this shelf becomes the first west investigation route.", 3.3f);
             }
         } else if (std::strcmp(locationName, "Survey Break") == 0) {
             if (!IsWestRouteAvailable(&game->tasks)) {
-                Game_PostMessage(game, "Survey Break: this midline remains unstable under comm blackout. Restore relay control before running west-side calibration here.", 3.3f);
+                Game_PostMessage(game, "Survey Break: this middle stretch stays unstable while comms are dark. Restore relay control before working here.", 3.3f);
             } else if (game->tasks.westW3Completed) {
-                Game_PostMessage(game, "Survey Break: the Canopy Hollow archive is already filed and the full west chain is complete. This lane is now repeat-calibration support only.", 3.3f);
+                Game_PostMessage(game, "Survey Break: the Canopy Hollow archive is already filed and the full west chain is complete. This stretch now serves only as repeat support.", 3.3f);
             } else if (game->tasks.westW3Started) {
-                Game_PostMessage(game, "Survey Break: the Canopy Hollow follow-up is active. Finish the pass and return to base to archive the full west chain.", 3.3f);
+                Game_PostMessage(game, "Survey Break: the Canopy Hollow follow-up is active. Finish the investigation and return to base to archive the full west chain.", 3.3f);
             } else if (game->tasks.westW2Completed) {
-                Game_PostMessage(game, "Survey Break: the calibration pair is archived. Move into Canopy Hollow to start the next closure lane.", 3.3f);
+                Game_PostMessage(game, "Survey Break: the anchor pair is archived. Move into Canopy Hollow to start the next lead.", 3.3f);
             } else if (game->tasks.westW2Started) {
-                Game_PostMessage(game, "Survey Break: the second calibration sweep is active. Finish it here and return to base to archive the west-route extension.", 3.3f);
+                Game_PostMessage(game, "Survey Break: the second survey sweep is active. Finish it here and return to base to archive the west-route extension.", 3.3f);
             } else if (game->tasks.westW1Completed) {
-                Game_PostMessage(game, "Survey Break: the opening west archive is filed, so this lane is now the active calibration route.", 3.3f);
+                Game_PostMessage(game, "Survey Break: the opening west archive is filed, so this stretch is now the active follow-up route.", 3.3f);
             } else {
-                Game_PostMessage(game, "Survey Break: west midline data is noisy. Close the West Frontier pass first, then this route will open cleanly.", 3.3f);
+                Game_PostMessage(game, "Survey Break: west midline data is still noisy. Close the West Frontier investigation first, then this route will open cleanly.", 3.3f);
             }
         } else if (std::strcmp(locationName, "Canopy Hollow") == 0) {
             if (!IsWestRouteAvailable(&game->tasks)) {
-                Game_PostMessage(game, "Canopy Hollow: this canopy shelf remains comm-gated. Restore relay control before running the closure pass here.", 3.3f);
+                Game_PostMessage(game, "Canopy Hollow: this canopy shelf remains comm-gated. Restore relay control before running the next investigation here.", 3.3f);
             } else if (game->tasks.westW3Completed) {
-                Game_PostMessage(game, "Canopy Hollow: the closure pass is archived. The west route now stands as a completed three-leg branch.", 3.3f);
+                Game_PostMessage(game, "Canopy Hollow: this lead is archived. The west route now stands as a completed three-leg branch.", 3.3f);
             } else if (game->tasks.westW3Started) {
-                Game_PostMessage(game, "Canopy Hollow: the closure pass is active. Complete it and return to base to archive the full west-route chain.", 3.3f);
+                Game_PostMessage(game, "Canopy Hollow: this lead is active. Complete it and return to base to archive the full west-route chain.", 3.3f);
             } else if (game->tasks.westW2Completed) {
-                Game_PostMessage(game, "Canopy Hollow: Survey Break is archived, so this shelf is now the active closure lane.", 3.3f);
+                Game_PostMessage(game, "Canopy Hollow: Survey Break is archived, so this shelf is now the active next lead.", 3.3f);
             } else {
-                Game_PostMessage(game, "Canopy Hollow: this is a third-leg shelf. Close Survey Break first, then this closure lane opens cleanly.", 3.3f);
+                Game_PostMessage(game, "Canopy Hollow: this is a third-leg shelf. Close Survey Break first, then this lead opens cleanly.", 3.3f);
             }
         } else {
             if (std::strcmp(locationName, "South Collapse") == 0) {
                 if (IsSouthRouteAvailable(&game->tasks)) {
-                    Game_PostMessage(game, "South Collapse: this is the first south investigation shelf. Log the opening fracture profile here, then move toward Vent Galleries for the second calibration leg.", 3.3f);
+                    Game_PostMessage(game, "South Collapse: this is the first south investigation shelf. Record the opening fracture profile here, then move toward Vent Galleries for the next lead.", 3.3f);
                 } else {
                     Game_PostMessage(game, "South Collapse: the Subsurface Sink descent is unstable while base power is offline. Restore the Power Bay first, then this becomes the opening south-route survey lane.", 3.3f);
                 }
             } else if (std::strcmp(locationName, "Vent Galleries") == 0) {
                 if (!IsSouthRouteAvailable(&game->tasks)) {
-                    Game_PostMessage(game, "Vent Galleries: this midline remains sealed while base power is unstable. Restore the Power Bay before running vent calibration here.", 3.3f);
+                    Game_PostMessage(game, "Vent Galleries: this middle stretch remains sealed while base power is unstable. Restore the Power Bay before working here.", 3.3f);
                 } else if (game->tasks.southS3Completed) {
                     Game_PostMessage(game, "Vent Galleries: the Service Shaft archive is filed and the full south chain is complete. This lane now supports repeat validation scans.", 3.3f);
                 } else if (game->tasks.southS3Started) {
-                    Game_PostMessage(game, "Vent Galleries: the Service Shaft closure is active. Complete this pass and return to base to archive the full south chain.", 3.3f);
+                    Game_PostMessage(game, "Vent Galleries: the Service Shaft follow-up is active. Complete this investigation and return to base to archive the full south chain.", 3.3f);
                 } else if (game->tasks.southS2Completed) {
-                    Game_PostMessage(game, "Vent Galleries: the vent calibration is archived. Move into Service Shafts to begin the next closure pass.", 3.3f);
+                    Game_PostMessage(game, "Vent Galleries: the vent restoration is archived. Move into Service Shafts to begin the next lead.", 3.3f);
                 } else if (game->tasks.southS2Started) {
-                    Game_PostMessage(game, "Vent Galleries: the second south-route pass is active. Finish it and return to base to archive it cleanly.", 3.3f);
+                    Game_PostMessage(game, "Vent Galleries: the second south-route investigation is active. Finish it and return to base to archive it cleanly.", 3.3f);
                 } else if (game->tasks.southS1Completed) {
-                    Game_PostMessage(game, "Vent Galleries: the South Collapse archive is filed, so this lane is now the active vent-calibration route.", 3.3f);
+                    Game_PostMessage(game, "Vent Galleries: the South Collapse archive is filed, so this stretch is now the active south follow-up route.", 3.3f);
                 } else {
-                    Game_PostMessage(game, "Vent Galleries: southern vent telemetry is unstable. Close the South Collapse pass first, then this lane will open cleanly.", 3.3f);
+                    Game_PostMessage(game, "Vent Galleries: southern vent telemetry is unstable. Close the South Collapse investigation first, then this stretch will open cleanly.", 3.3f);
                 }
             } else {
                 if (!IsSouthRouteAvailable(&game->tasks)) {
-                    Game_PostMessage(game, "Service Shafts: this deeper shelf remains power-gated. Restore the Power Bay before running the closure pass here.", 3.3f);
+                    Game_PostMessage(game, "Service Shafts: this deeper shelf remains power-gated. Restore the Power Bay before running the next investigation here.", 3.3f);
                 } else if (game->tasks.southS3Completed) {
-                    Game_PostMessage(game, "Service Shafts: the closure pass is archived. The south route now stands as a completed three-leg branch.", 3.3f);
+                    Game_PostMessage(game, "Service Shafts: this lead is archived. The south route now stands as a completed three-leg branch.", 3.3f);
                 } else if (game->tasks.southS3Started) {
-                    Game_PostMessage(game, "Service Shafts: the closure pass is active. Complete it and return to base to archive the full south-route chain.", 3.3f);
+                    Game_PostMessage(game, "Service Shafts: this lead is active. Complete it and return to base to archive the full south-route chain.", 3.3f);
                 } else if (game->tasks.southS2Completed) {
-                    Game_PostMessage(game, "Service Shafts: Vent Galleries is archived, so this shelf is now the active closure lane.", 3.3f);
+                    Game_PostMessage(game, "Service Shafts: Vent Galleries is archived, so this shelf is now the active next lead.", 3.3f);
                 } else {
-                    Game_PostMessage(game, "Service Shafts: this is a third-leg shelf. Close Vent Galleries first, then the closure lane opens cleanly.", 3.3f);
+                    Game_PostMessage(game, "Service Shafts: this is a third-leg shelf. Close Vent Galleries first, then the next lead opens cleanly.", 3.3f);
                 }
             }
         }

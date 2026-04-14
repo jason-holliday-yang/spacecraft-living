@@ -117,11 +117,16 @@ set(SPACECRAFT_UI_LAYOUT_SOURCES
     src/ui_layout.cpp
 )
 
+set(SPACECRAFT_LOCALIZATION_SOURCES
+    src/localization.cpp
+)
+
 set(SPACECRAFT_TASK_SMOKE_SOURCES
     ${SPACECRAFT_MAP_SOURCES}
     ${SPACECRAFT_PLAYER_SOURCES}
     ${SPACECRAFT_TASK_RUNTIME_SOURCES}
     ${SPACECRAFT_TASK_CONTENT_SOURCES}
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
 )
 
 set(SPACECRAFT_GAME_SESSION_SMOKE_SOURCES
@@ -133,7 +138,7 @@ set(SPACECRAFT_GAME_SESSION_SMOKE_SOURCES
     ${SPACECRAFT_SESSION_SOURCES}
     src/game_play_story.c
     src/audio_system.cpp
-    src/localization.cpp
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
     src/minimap.cpp
     src/task_presentation.cpp
     src/resource_path.cpp
@@ -153,6 +158,7 @@ set(SPACECRAFT_ENDGAME_FLOW_SOURCES
     src/task_crafting.cpp
     src/task_content.cpp
     src/task_content_data.cpp
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
     src/puzzle.cpp
 )
 
@@ -160,6 +166,7 @@ set(SPACECRAFT_STATUS_SYSTEM_SOURCES
     ${SPACECRAFT_MAP_SOURCES}
     ${SPACECRAFT_PLAYER_SOURCES}
     src/recipe_catalog.cpp
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
 )
 
 set(SPACECRAFT_SAVE_STATUS_SOURCES
@@ -188,7 +195,7 @@ spacecraft_add_executable(SpaceCraftLiving
     src/audio_system.cpp
     src/resource_path.cpp
     ${SPACECRAFT_SAVE_SOURCES}
-    src/localization.cpp
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
     ${SPACECRAFT_MAP_SOURCES}
     ${SPACECRAFT_PLAYER_SOURCES}
     src/recipe_catalog.cpp
@@ -241,6 +248,7 @@ spacecraft_add_executable(SpaceCraftSaveSmoke
     tests/save_system_smoke.c
     ${SPACECRAFT_SAVE_SOURCES}
     ${SPACECRAFT_MAP_SOURCES}
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
 )
 
 spacecraft_add_executable(SpaceCraftMapSmoke
@@ -296,6 +304,7 @@ spacecraft_add_executable(SpaceCraftCampRecoverySmoke
 spacecraft_add_executable(SpaceCraftSaveStatusSmoke
     tests/save_status_smoke.c
     ${SPACECRAFT_SAVE_STATUS_SOURCES}
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
 )
 
 spacecraft_add_executable(SpaceCraftEndgameNewSurvivalSmoke

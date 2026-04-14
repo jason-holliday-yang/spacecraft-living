@@ -3,6 +3,7 @@
 
 #include "ui_system.h"
 
+#include "localization.h"
 #include "recipe_catalog.h"
 
 typedef enum BackpackEntryKind {
@@ -22,8 +23,8 @@ typedef enum BackpackGearId {
 typedef struct BackpackEntryDef {
     BackpackEntryKind kind;
     int itemId;
-    const char *name;
-    const char *description;
+    LocalizedText name;
+    LocalizedText description;
     Color primary;
     Color secondary;
 } BackpackEntryDef;

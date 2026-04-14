@@ -53,10 +53,16 @@
   对应 `W4` 结束后 Loxi 策略重写。
 - `story/main/main_16_last_camp_archive.png`
   对应 `W5` 最后营地档案回收。
-- `story/logs/log_04_crew_split_decision.png`
-  对应船员分流议定记录。
-- `story/logs/log_05_last_camp_manifest.png`
-  对应最后营地留守清单。
+- `story/logs/log_04_west_signal_fragment_01.png`
+  对应《Field Record: West Signal Fragment 01》。
+- `story/logs/log_05_survey_break_anchor_notes.png`
+  对应《Field Record: Survey Break Anchor Notes》。
+- `story/logs/log_06_canopy_handoff_record.png`
+  对应《Field Record: Canopy Handoff Record》。
+- `story/logs/log_07_echo_basin_topology_sketch.png`
+  对应《Field Record: Echo Basin Topology Sketch》。
+- `story/logs/log_08_last_camp_testament.png`
+  对应《Field Record: Last Camp Testament》。
 
 地图与场景补图建议：
 
@@ -78,10 +84,18 @@
   对应 `S4` 风险结构被改写。
 - `story/main/main_19_root_vault_core.png`
   对应 `S5` 根系密库核心记录下载。
-- `story/logs/log_06_purifier_ops_manual.png`
-  对应净化环维护手册。
-- `story/logs/log_07_root_vault_dossier.png`
-  对应密库核心摘要。
+- `story/logs/log_09_crash_recorder_black_box_residue.png`
+  对应《Crash Recorder: Black Box Residue》。
+- `story/logs/log_10_purifier_outage_memo.png`
+  对应《Facility Record: Purifier Outage Memo》。
+- `story/logs/log_11_vent_calibration_handover.png`
+  对应《Facility Record: Vent Calibration Handover》。
+- `story/logs/log_12_service_shaft_sync_record.png`
+  对应《Facility Record: Service Shaft Sync Record》。
+- `story/logs/log_13_purifier_ring_control_brief.png`
+  对应《Facility Record: Purifier Ring Control Brief》。
+- `story/logs/log_14_root_vault_core_dossier.png`
+  对应《Facility Record: Root Vault Core Dossier》。
 
 地图与场景补图建议：
 
@@ -141,7 +155,9 @@
 ## 5. 规格与命名约束
 
 - 文件名统一 ASCII，全部小写，单词用 `_` 分隔。
-- 图片保持与现有 `story/main`、`story/logs`、`story/endings` 命名一致。
+- 叙事图片统一使用 `story/<segment>/<segment>_<两位序号>_<scene_slug>.png`。
+- `main` / `ending` 的 `scene_slug` 优先取剧情卡标题对应的稳定英文短语；`log` 的 `scene_slug` 直接取日志标题 slug。
+- 如果是已接线资源改名，执行顺序固定为：`先改文档 -> 再改代码 -> 最后改图片文件名`。
 - 视频建议首版采用 `mp4 (H.264, 1080p, 24fps)`，时长控制在 `8s-20s`。
 - 资源文档中必须区分：`已接线`、`已规划未接线`、`已接线但缺文件`。
 
@@ -151,4 +167,3 @@
 2. 再补 `P1`（`W4-W5`、`S4-S5`）的剧情图与关键场景图。
 3. 最后补 `P2` 的跨区联动和结局反哺图。
 4. 视频资产仅入库规划，待代码接线后再转生产优先级。
-

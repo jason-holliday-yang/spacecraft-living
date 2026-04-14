@@ -5,13 +5,15 @@
 
 namespace {
 
+#define LT(en, zh) LocalizedText{en, zh}
+
 const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     {
         RECIPE_GLOW_STICK,
-        "Glow Stick",
-        "1 Wood + 1 Glow Moss. Expands night vision.",
-        "Portable light tool for dark phases and cave-like low-visibility stretches.",
-        "1 Wood, 1 Glow Moss",
+        LT("Glow Stick", "荧光棒"),
+        LT("1 Wood + 1 Glow Moss. Expands night vision.", "1 木材 + 1 发光苔。提升夜间视野。"),
+        LT("Portable light tool for dark phases and cave-like low-visibility stretches.", "便携照明工具，适合夜晚与低能见度区域。"),
+        LT("1 Wood, 1 Glow Moss", "1 木材，1 发光苔"),
         2,
         false,
         false,
@@ -24,10 +26,10 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_ROPE,
-        "Simple Rope",
-        "1 Wood + 2 Vines. Crosses swamp and solves shortcuts.",
-        "Traversal utility that converts marked swamp barriers into shortcuts.",
-        "1 Wood, 2 Alien Vines",
+        LT("Simple Rope", "简易绳索"),
+        LT("1 Wood + 2 Vines. Crosses swamp and solves shortcuts.", "1 木材 + 2 藤蔓。穿越沼泽并开启捷径。"),
+        LT("Traversal utility that converts marked swamp barriers into shortcuts.", "用于穿越地形，可把特定沼泽障碍变成捷径。"),
+        LT("1 Wood, 2 Alien Vines", "1 木材，2 异星藤蔓"),
         3,
         false,
         false,
@@ -40,10 +42,10 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_REINFORCED_METAL,
-        "Reinforced Metal",
-        "1 Junk Metal + 2 Metal Scrap. Prepares laser parts.",
-        "Workbench-forged parts that prepare the laser-gun build path.",
-        "1 Junk Metal, 2 Metal Scrap",
+        LT("Reinforced Metal", "强化金属"),
+        LT("1 Junk Metal + 2 Metal Scrap. Prepares laser parts.", "1 废旧金属 + 2 金属残片。用于准备激光部件。"),
+        LT("Workbench-forged parts that prepare the laser-gun build path.", "在工作台打造的强化部件，是制作激光枪的前置材料。"),
+        LT("1 Junk Metal, 2 Metal Scrap", "1 废旧金属，2 金属残片"),
         4,
         true,
         true,
@@ -56,10 +58,10 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_LASER_GUN,
-        "Laser Gun",
-        "1 Metal Scrap + 2 Ore. Core ranged weapon.",
-        "Core ranged weapon for high-threat zones and the guardian route.",
-        "1 Metal Scrap, 2 Ore",
+        LT("Laser Gun", "激光枪"),
+        LT("1 Metal Scrap + 2 Ore. Core ranged weapon.", "1 金属残片 + 2 矿石。核心远程武器。"),
+        LT("Core ranged weapon for high-threat zones and the guardian route.", "用于高威胁区域与守卫路线的核心远程武器。"),
+        LT("1 Metal Scrap, 2 Ore", "1 金属残片，2 矿石"),
         4,
         true,
         true,
@@ -72,10 +74,10 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_PROTECTION_SUIT,
-        "Protection Suit",
-        "1 Wood + 2 Vines + 1 Fiber. Grants filtered protection in dangerous zones.",
-        "Protective equipment that cuts hazard oxygen drain and lowers poison and leak risk.",
-        "1 Wood, 2 Vines, 1 Protective Fiber",
+        LT("Protection Suit", "防护服"),
+        LT("1 Wood + 2 Vines + 1 Fiber. Grants filtered protection in dangerous zones.", "1 木材 + 2 藤蔓 + 1 防护纤维。可在危险区域提供过滤防护。"),
+        LT("Protective equipment that cuts hazard oxygen drain and lowers poison and leak risk.", "降低危险区域的氧气消耗，并减少中毒与漏氧风险。"),
+        LT("1 Wood, 2 Vines, 1 Protective Fiber", "1 木材，2 藤蔓，1 防护纤维"),
         4,
         true,
         true,
@@ -89,10 +91,10 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_SIGNAL_AMPLIFIER,
-        "Signal Amplifier",
-        "1 Energy Core + 3 Relic Fragments. Peaceful tower activation.",
-        "Final peaceful-route device for stabilizing the tower without the boss fight.",
-        "1 Energy Core, 3 Relic Fragments",
+        LT("Signal Amplifier", "信号放大器"),
+        LT("1 Energy Core + 3 Relic Fragments. Peaceful tower activation.", "1 能源核心 + 3 遗迹碎片。用于和平方式启动塔楼。"),
+        LT("Final peaceful-route device for stabilizing the tower without the boss fight.", "和平路线的最终装置，可在不进行首领战的情况下稳定塔楼。"),
+        LT("1 Energy Core, 3 Relic Fragments", "1 能源核心，3 遗迹碎片"),
         0,
         true,
         true,
@@ -105,10 +107,10 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_FIELD_CAMP,
-        "Field Camp",
-        "5 Wood. Build an outdoor recovery stop with Camp Recovery support.",
-        "Deployable outdoor recovery point that restores part of health and oxygen during long expeditions.",
-        "5 Wood",
+        LT("Field Camp", "野外营地"),
+        LT("5 Wood. Build an outdoor recovery stop with Camp Recovery support.", "5 木材。搭建户外恢复点，并获得营地恢复支持。"),
+        LT("Deployable outdoor recovery point that restores part of health and oxygen during long expeditions.", "可部署的户外恢复点，适合长距离探索时回复部分生命与氧气。"),
+        LT("5 Wood", "5 木材"),
         BASE_CAMP_UNLOCK_STAGE,
         false,
         false,
@@ -129,6 +131,8 @@ const std::array<RecipeType, 7> kRecipeOrder = {{
     RECIPE_PROTECTION_SUIT,
     RECIPE_SIGNAL_AMPLIFIER
 }};
+
+#undef LT
 
 }  // namespace
 

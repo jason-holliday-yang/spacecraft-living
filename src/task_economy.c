@@ -128,7 +128,7 @@ bool TasksRuntime_IsShipInteriorNode(const ResourceNode *node) {
 
 void TasksRuntime_WriteMessage(char *message, size_t messageSize, const char *text) {
     if (message != NULL && messageSize > 0) {
-        TasksRuntime_SanitizeDisplayText(text, message, messageSize);
+        TasksRuntime_SanitizeDisplayText(Loc_Translate(text), message, messageSize);
     }
 }
 
@@ -243,7 +243,7 @@ bool TasksRuntime_SpendRecipeResources(TaskSystem *tasks,
         return false;
     }
     if (!RecipeCatalog_SpendResources(player, recipe)) {
-        snprintf(missingMessage, sizeof(missingMessage), "Missing materials: %s.", entry->ingredientText);
+        snprintf(missingMessage, sizeof(missingMessage), "Missing materials: %s.", Loc_PickText(entry->ingredientText));
         TasksRuntime_WriteMessage(message, messageSize, missingMessage);
         return false;
     }

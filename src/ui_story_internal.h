@@ -3,10 +3,12 @@
 
 #include "ui_system.h"
 
+#include "localization.h"
+
 typedef struct IntroSlideDef {
-    const char *eyebrow;
-    const char *title;
-    const char *body;
+    LocalizedText eyebrow;
+    LocalizedText title;
+    LocalizedText body;
     Color accent;
     Color fallbackTop;
     Color fallbackBottom;

@@ -74,7 +74,7 @@ int main(void) {
             "laser gun should use metal scrap plus ore according to the shared recipe catalog");
     Require(strcmp(Player_GetRecipeSummary(RECIPE_LASER_GUN), "1 Metal Scrap + 2 Ore. Core ranged weapon.") == 0,
             "laser gun summary should match the actual crafting resources");
-    Require(strcmp(RecipeCatalog_Get(RECIPE_LASER_GUN)->ingredientText, "1 Metal Scrap, 2 Ore") == 0,
+    Require(strcmp(RecipeCatalog_Get(RECIPE_LASER_GUN)->ingredientText.english, "1 Metal Scrap, 2 Ore") == 0,
             "laser gun ingredient text should stay aligned with the craft logic");
 
     tasks.stage = 3;

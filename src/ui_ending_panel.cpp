@@ -6,35 +6,37 @@
 
 #include <cstdio>
 
+#define LT(en, zh) LocalizedText{en, zh}
+
 static const IntroSlideDef kEndingBackdropDefs[STORY_ENDING_SCENE_COUNT] = {
     {
-        "Settlement Ending",
-        "Alien Settlement",
-        "",
+        LT("Settlement Ending", "定居结局"),
+        LT("Alien Settlement", "异星定居"),
+        LT("", ""),
         Color{255, 214, 154, 255},
         Color{34, 28, 24, 255},
         Color{10, 8, 12, 255}
     },
     {
-        "Failure Ending",
-        "Failed Survival",
-        "",
+        LT("Failure Ending", "失败结局"),
+        LT("Failed Survival", "生存失败"),
+        LT("", ""),
         Color{255, 150, 150, 255},
         Color{40, 16, 18, 255},
         Color{10, 6, 10, 255}
     },
     {
-        "Heroic Rescue",
-        "Heroic Rescue",
-        "",
+        LT("Heroic Rescue", "强行救援"),
+        LT("Heroic Rescue", "强行救援"),
+        LT("", ""),
         Color{255, 214, 154, 255},
         Color{42, 28, 22, 255},
         Color{10, 8, 12, 255}
     },
     {
-        "Peaceful Rescue",
-        "Peaceful Rescue",
-        "",
+        LT("Peaceful Rescue", "和平救援"),
+        LT("Peaceful Rescue", "和平救援"),
+        LT("", ""),
         Color{166, 255, 226, 255},
         Color{16, 42, 42, 255},
         Color{6, 12, 18, 255}
@@ -83,13 +85,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX3Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return "Full archive context: west and south findings confirm a deliberate high-cost rescue commitment.";
+                return Loc_Translate("With the full archive in hand, west and south findings confirm a deliberate high-cost rescue.");
             case ENDING_PEACEFUL:
-                return "Full archive context: west and south findings frame this as full-system stabilization through understanding.";
+                return Loc_Translate("With the full archive in hand, west and south findings frame this as full-system stabilization through understanding.");
             case ENDING_SETTLEMENT:
-                return "Full archive context: west and south findings frame settlement as intentional long-term stewardship.";
+                return Loc_Translate("With the full archive in hand, west and south findings frame settlement as deliberate long-term stewardship.");
             case ENDING_FAILURE:
-                return "Full archive context was available, but route execution still collapsed under sustained pressure.";
+                return Loc_Translate("Even with the full archive in hand, the final attempt still collapsed under sustained pressure.");
             case ENDING_NONE:
             default:
                 return "";
@@ -99,13 +101,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX2Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return "Late-route context: you chose force knowing the tower, purifier ring, and monoliths were one damaged maintenance lattice.";
+                return Loc_Translate("With the late findings revealed, you chose force knowing the tower, purifier ring, and monoliths were one damaged maintenance lattice.");
             case ENDING_PEACEFUL:
-                return "Late-route context: you chose stabilization knowing the tower and purifier controls were the same failing system.";
+                return Loc_Translate("With the late findings revealed, you chose stabilization knowing the tower and purifier controls were the same failing system.");
             case ENDING_SETTLEMENT:
-                return "Late-route context: settlement means inheriting the maintenance lattice instead of escaping it.";
+                return Loc_Translate("With the late findings revealed, settlement means inheriting the maintenance lattice instead of escaping it.");
             case ENDING_FAILURE:
-                return "Late-route context was already visible, but the damaged lattice still outlasted the run.";
+                return Loc_Translate("The late findings were already visible, but the damaged lattice still outlasted the run.");
             case ENDING_NONE:
             default:
                 return "";
@@ -115,13 +117,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX1Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return "Shared trace context: west crew handoffs and south facility records had already aligned into one survival timeline.";
+                return Loc_Translate("The shared trail was already visible: west crew handoffs and south facility records had aligned into one survival timeline.");
             case ENDING_PEACEFUL:
-                return "Shared trace context: the archive had already shown coordination mattered more than panic.";
+                return Loc_Translate("The shared trail was already visible: the archive had already shown that coordination mattered more than panic.");
             case ENDING_SETTLEMENT:
-                return "Shared trace context: the archive had already shown staying was a deliberate option, not surrender.";
+                return Loc_Translate("The shared trail was already visible: the archive had already shown that staying was a deliberate option, not surrender.");
             case ENDING_FAILURE:
-                return "Shared trace context existed, but the run still collapsed before it could be carried through.";
+                return Loc_Translate("The shared trail was already visible, but the run still collapsed before it could be carried through.");
             case ENDING_NONE:
             default:
                 return "";
@@ -130,6 +132,8 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
 
     return "";
 }
+
+#undef LT
 
 void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds) {
     char detail[256];
@@ -176,7 +180,15 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
     if (contextBuffer[0] != '\0') {
         UIRuntime_DrawWrappedText(assets, contextBuffer, contextRect, 13.5f * scale, 15.0f * scale, Color{188, 218, 236, 255});
     }
-    std::snprintf(detail, sizeof(detail), "Health %.0f  Oxygen %.0f  Total Deaths %d", player->health, player->oxygen, player->deathCount);
+    std::snprintf(detail,
+                  sizeof(detail),
+                  "%s %.0f  %s %.0f  %s %d",
+                  Loc_PickLiteral("Health", "生命"),
+                  player->health,
+                  Loc_PickLiteral("Oxygen", "氧气"),
+                  player->oxygen,
+                  Loc_PickLiteral("Total Deaths", "总死亡次数"),
+                  player->deathCount);
     UIRuntime_DrawText(assets, detail, Vector2{textPanel.x + 30.0f * scale, textPanel.y + textPanel.height - 28.0f * scale}, 15.5f * scale, Color{255, 205, 151, 255});
     UIRuntime_DrawText(assets, LOC_UI_END_EXIT, Vector2{screenWidth - UIRuntime_MeasureText(assets, LOC_UI_END_EXIT, 16.0f * scale).x - 28.0f * scale, screenHeight - 30.0f * scale}, 16.0f * scale, Color{196, 213, 225, 255});
 }

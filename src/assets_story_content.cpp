@@ -2,35 +2,35 @@
 
 void AssetsInternal_LoadNarrativeAssets(AssetBundle *assets) {
     const char *introSlidePaths[INTRO_CUTSCENE_SLIDE_COUNT] = {
-        "resources/images/cutscenes/intro_01_signal.png",
-        "resources/images/cutscenes/intro_02_crash.png",
-        "resources/images/cutscenes/intro_03_wakeup.png",
-        "resources/images/cutscenes/intro_04_planet.png",
-        "resources/images/cutscenes/intro_05_loxi.png"
+        "resources/images/cutscenes/intro_01_unmarked_call.png",
+        "resources/images/cutscenes/intro_02_orbit_collapse.png",
+        "resources/images/cutscenes/intro_03_barely_alive.png",
+        "resources/images/cutscenes/intro_04_world_watches_back.png",
+        "resources/images/cutscenes/intro_05_stay_alive_first.png"
     };
     const char *storyMainPaths[STORY_MAIN_SCENE_COUNT] = {
-        "resources/images/story/main/main_01_oxygen_patch.png",
-        "resources/images/story/main/main_02_oxygen_restored.png",
-        "resources/images/story/main/main_03_loxi_sync.png",
-        "resources/images/story/main/main_04_airlock_open.png",
-        "resources/images/story/main/main_05_comm_relay.png",
-        "resources/images/story/main/main_06_crash_clue.png",
-        "resources/images/story/main/main_07_energy_restored.png",
-        "resources/images/story/main/main_08_loxi_analysis.png",
-        "resources/images/story/main/main_09_monolith_awaken.png",
-        "resources/images/story/main/main_10_monolith_solved.png",
-        "resources/images/story/main/main_11_boss_fall.png",
-        "resources/images/story/main/main_12_signal_tower_heroic.png",
-        "resources/images/story/main/main_13_signal_tower_peaceful.png"
+        "resources/images/story/main/main_01_air_for_one_more_day.png",
+        "resources/images/story/main/main_02_breathing_room_restored.png",
+        "resources/images/story/main/main_03_voice_in_the_wreck.png",
+        "resources/images/story/main/main_04_world_outside_opens.png",
+        "resources/images/story/main/main_05_signal_answers_back.png",
+        "resources/images/story/main/main_06_not_an_accident.png",
+        "resources/images/story/main/main_07_base_wakes_up.png",
+        "resources/images/story/main/main_08_pattern_is_alien.png",
+        "resources/images/story/main/main_09_ruins_notice_you.png",
+        "resources/images/story/main/main_10_sequence_holds.png",
+        "resources/images/story/main/main_11_last_barrier_breaks.png",
+        "resources/images/story/main/main_12_beacon_through_force.png",
+        "resources/images/story/main/main_13_beacon_through_understanding.png"
     };
     const char *storyLogPaths[STORY_LOG_SCENE_COUNT] = {
-        "resources/images/story/logs/log_01_the_crash.png",
-        "resources/images/story/logs/log_02_missing_crew.png",
-        "resources/images/story/logs/log_03_alien_ecology.png"
+        "resources/images/story/logs/log_01_impact_protocol.png",
+        "resources/images/story/logs/log_02_split_roster.png",
+        "resources/images/story/logs/log_03_pattern_not_wilderness.png"
     };
     const char *storyEndingPaths[STORY_ENDING_SCENE_COUNT] = {
-        "resources/images/story/endings/ending_01_settlement.png",
-        "resources/images/story/endings/ending_02_failure.png",
+        "resources/images/story/endings/ending_01_alien_settlement.png",
+        "resources/images/story/endings/ending_02_failed_survival.png",
         "resources/images/story/endings/ending_03_heroic_rescue.png",
         "resources/images/story/endings/ending_04_peaceful_rescue.png"
     };
