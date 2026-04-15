@@ -7,22 +7,26 @@
 #include <cstdio>
 #include <cstring>
 
-static void DrawPixelTitleText(const char *text, Vector2 center, float fontSize, float scale, Color fill) {
+static void DrawPixelTitleText(const AssetBundle *assets, const char *text, Vector2 center, float fontSize, float scale, Color fill) {
     Font font;
     float spacing;
     float outlineOffset;
     float shadowOffset;
     Vector2 textSize;
     Vector2 position;
+    bool useDefaultFont;
 
-    font = GetFontDefault();
+    useDefaultFont = assets == NULL || !assets->uiFontLoaded;
+    font = useDefaultFont ? GetFontDefault() : assets->uiFont;
     if (font.texture.id == 0) {
         return;
     }
 
-    SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+    if (useDefaultFont) {
+        SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+    }
 
-    spacing = std::floor(fontSize * 0.12f);
+    spacing = useDefaultFont ? std::floor(fontSize * 0.12f) : fontSize * 0.05f;
     outlineOffset = std::round(3.0f * scale);
     shadowOffset = std::round(7.0f * scale);
     textSize = MeasureTextEx(font, text, fontSize, spacing);
@@ -272,7 +276,7 @@ void UI_DrawMainMenu(const AssetBundle *assets,
     UIRuntime_DrawBackdrop(screenWidth, screenHeight, elapsedSeconds);
     DrawCircleGradient((int)(screenWidth * 0.5f - 210.0f * scale), (int)(184.0f * scale), 156.0f * scale, Color{65, 164, 214, 56}, Color{65, 164, 214, 0});
     DrawCircleGradient((int)(screenWidth * 0.5f + 210.0f * scale), (int)(188.0f * scale), 156.0f * scale, Color{110, 227, 196, 44}, Color{110, 227, 196, 0});
-    DrawPixelTitleText(Loc_PickLiteral("SPACECRAFT LIVING", "飞船求生"), Vector2{screenWidth * 0.5f, 214.0f * scale}, 96.0f * scale, scale, Color{232, 248, 255, 255});
+    DrawPixelTitleText(assets, Loc_PickLiteral("SPACECRAFT LIVING", "飞船求生"), Vector2{screenWidth * 0.5f, 214.0f * scale}, 96.0f * scale, scale, Color{232, 248, 255, 255});
 
     std::snprintf(accountBuffer, sizeof(accountBuffer), "%s: %s", Loc_PickLiteral("Account", "账号"), (accountName != NULL && accountName[0] != '\0') ? accountName : Loc_PickLiteral("Unknown", "未知"));
     std::snprintf(saveCountBuffer, sizeof(saveCountBuffer), "%s: %d", Loc_PickLiteral("Visible saves", "可见存档"), saveCount);
@@ -451,11 +455,19 @@ void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int scre
     }
 }
 
-void UI_DrawSettlementConfirmPopup(const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton) {
+void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
+                                   const Player *player,
+                                   const TaskSystem *tasks,
+                                   int screenWidth,
+                                   int screenHeight,
+                                   int selectedButton) {
     float scale;
     Rectangle panel;
     Rectangle bodyRect;
     Rectangle noteRect;
+    const char *titleText;
+    const char *bodyText;
+    const char *noteText;
     const char *buttonLabels[SETTLEMENT_CONFIRM_BUTTON_COUNT] = {
         Loc_PickLiteral("Heroic", "强行救援"),
         Loc_PickLiteral("Peaceful", "和平救援"),
@@ -468,13 +480,29 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets, int screenWidth, i
     panel = UI_GetSettlementConfirmPanelRect(screenWidth, screenHeight);
     bodyRect = Rectangle{panel.x + 34.0f * scale, panel.y + 96.0f * scale, panel.width - 68.0f * scale, 62.0f * scale};
     noteRect = Rectangle{panel.x + 34.0f * scale, panel.y + 166.0f * scale, panel.width - 68.0f * scale, 50.0f * scale};
+    titleText = Loc_PickLiteral("Confirm Final Route", "确认最终路线");
+    bodyText = Loc_PickLiteral("Loxi has finished the final archive review. Commit to the route you want before the tower or airlock turns that choice into a point of no return.",
+                               "洛希已经完成最终档案复核。请先在这里确认你要走的路线，再去触发塔楼或气闸里的不可回头步骤。");
+    if (tasks != NULL && tasks->bossDefeated) {
+        noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful still requires the Signal Amplifier. Settlement still ends the run here at the ship.",
+                                   "强行救援现在可以直接去信号塔完成。和平救援仍需要信号放大器。异星定居仍会在飞船处结束本轮。");
+    } else if (tasks != NULL && tasks->selectedEndingRoute == ENDING_HEROIC) {
+        noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful requires the Signal Amplifier. Settlement still closes both rescue routes.",
+                                   "强行救援已经锁定为守卫战场路线。和平救援仍需要信号放大器。异星定居仍会关闭两条救援路线。");
+    } else if (player != NULL && player->hasSignalAmplifier) {
+        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful can now finish at the tower with the Signal Amplifier. Settlement still closes both rescue routes.",
+                                   "强行救援需要进入守卫战场。和平救援现在可以带着信号放大器去塔楼完成。异星定居仍会关闭两条救援路线。");
+    } else {
+        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful requires the Signal Amplifier. Settlement still closes both rescue routes and ends the run at the ship.",
+                                   "强行救援需要进入守卫战场。和平救援需要信号放大器。异星定居仍会关闭两条救援路线，并在飞船处结束本轮。");
+    }
 
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{6, 10, 18, 200});
     UIRuntime_DrawPanel(panel, Color{16, 22, 30, 245}, Color{255, 214, 154, 80});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Choose Ending", "选择结局"), Vector2{panel.x + 34.0f * scale, panel.y + 28.0f * scale}, 32.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, titleText, Vector2{panel.x + 34.0f * scale, panel.y + 28.0f * scale}, 32.0f * scale, WHITE);
     UIRuntime_DrawText(assets, Loc_PickLiteral("ESC cancels", "按 ESC 取消"), Vector2{panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("ESC cancels", "按 ESC 取消"), 16.0f * scale).x - 30.0f * scale, panel.y + 34.0f * scale}, 16.0f * scale, Color{182, 199, 214, 255});
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Loxi has assembled the full archive. Choose the ending route here before the tower accepts any final commitment.", "洛西已经整理出完整档案。请在塔楼接受任何最终行为之前，在这里先选定结局路线。"), bodyRect, 18.0f * scale, 22.0f * scale, Color{226, 235, 244, 255});
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Heroic requires the guardian. Peaceful requires the Signal Amplifier. Settlement ends the run at the ship.", "强行救援需要击败守卫，和平救援需要信号放大器，异星定居会在飞船处结束本轮。"), noteRect, 16.0f * scale, 19.0f * scale, Color{255, 214, 154, 255});
+    UIRuntime_DrawWrappedText(assets, bodyText, bodyRect, 18.0f * scale, 22.0f * scale, Color{226, 235, 244, 255});
+    UIRuntime_DrawWrappedText(assets, noteText, noteRect, 16.0f * scale, 19.0f * scale, Color{255, 214, 154, 255});
 
     for (buttonIndex = 0; buttonIndex < SETTLEMENT_CONFIRM_BUTTON_COUNT; buttonIndex++) {
         Rectangle buttonRect;

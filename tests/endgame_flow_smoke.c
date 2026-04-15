@@ -28,6 +28,7 @@ static void ResetEndgameState(GameMap *map, Player *player, TaskSystem *tasks) {
     tasks->crashClueFound = true;
     tasks->amplifierUnlocked = true;
     tasks->ending = ENDING_NONE;
+    tasks->endingArchiveReviewed = false;
     tasks->signalTowerActivated = false;
 }
 
@@ -36,6 +37,7 @@ static void PrepareEndingBranch(TaskSystem *tasks) {
 
     tasks->ending = ENDING_NONE;
     tasks->selectedEndingRoute = ENDING_NONE;
+    tasks->endingArchiveReviewed = true;
     tasks->signalTowerActivated = false;
     tasks->westW5Completed = true;
     tasks->southS5Completed = true;
@@ -50,6 +52,7 @@ static void PrepareMainArchiveOnly(TaskSystem *tasks) {
 
     tasks->ending = ENDING_NONE;
     tasks->selectedEndingRoute = ENDING_NONE;
+    tasks->endingArchiveReviewed = false;
     tasks->signalTowerActivated = false;
     tasks->westW5Completed = true;
     tasks->southS5Completed = true;
@@ -57,6 +60,20 @@ static void PrepareMainArchiveOnly(TaskSystem *tasks) {
         tasks->logs[index].active = true;
         tasks->logs[index].collected = tasks->logs[index].category == SHIP_LOG_MAINLINE;
     }
+}
+
+static void MovePlayerToLoxiRightSide(Player *player) {
+    player->gridX = LOXI_TERMINAL_X + STATION_FOOTPRINT_WIDTH;
+    player->gridY = LOXI_TERMINAL_Y;
+    player->facingX = -1;
+    player->facingY = 0;
+}
+
+static void MovePlayerToLoxiLeftPickupTile(Player *player) {
+    player->gridX = LOXI_TERMINAL_X - 1;
+    player->gridY = LOXI_TERMINAL_Y;
+    player->facingX = 0;
+    player->facingY = 1;
 }
 
 int main(void) {
@@ -67,18 +84,31 @@ int main(void) {
 
     ResetEndgameState(&map, &player, &tasks);
     player.hasSignalAmplifier = true;
-    player.gridX = LOXI_TERMINAL_X - 1;
-    player.gridY = LOXI_TERMINAL_Y;
+    MovePlayerToLoxiLeftPickupTile(&player);
     Tasks_UpdateObjective(&tasks, &player);
     Require(strcmp(tasks.objective, "Recover the remaining mainline logs and finish west/south archive tasks before choosing an ending with Loxi.") == 0,
             "stage 7 should now keep the player on archive completion before the branch point opens");
 
     PrepareMainArchiveOnly(&tasks);
+    MovePlayerToLoxiLeftPickupTile(&player);
     Tasks_UpdateObjective(&tasks, &player);
     Require(Tasks_IsEndingBranchReady(&tasks),
             "mainline archive completion should be enough to open the ending branch");
+    Require(strcmp(tasks.objective, "Return to Loxi and review the assembled archive before choosing the final route.") == 0,
+            "mainline archive completion should now require a final ship-side archive review before route selection");
+    Require(!Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
+            "route selection should stay locked until the archive review step is completed");
+
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "loxi terminal should perform the archive review once the main archive is assembled");
+    Require(tasks.endingArchiveReviewed,
+            "loxi interaction should mark the final archive review as complete");
+    Require(strstr(message, "Archive review complete") != NULL || strstr(message, "档案复核完成") != NULL,
+            "archive review interaction should explicitly explain that the truth review step has completed");
+    Tasks_UpdateObjective(&tasks, &player);
     Require(strcmp(tasks.objective, "Return to Loxi and choose the final route.") == 0,
-            "supplemental archive gaps should not block the return-to-Loxi ending prompt");
+            "after the archive review, the objective should advance to the actual route choice");
 
     PrepareEndingBranch(&tasks);
     Tasks_UpdateObjective(&tasks, &player);
@@ -124,6 +154,28 @@ int main(void) {
             "chosen peaceful route should end in peaceful rescue");
 
     ResetEndgameState(&map, &player, &tasks);
+    PrepareEndingBranch(&tasks);
+    player.gridX = AIRLOCK_CONSOLE_X - 1;
+    player.gridY = AIRLOCK_CONSOLE_Y;
+    Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),
+            "heroic route should be selectable once the archive is complete");
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(strcmp(tasks.objective, "Heroic route chosen. Open the airlock and commit to the guardian arena.") == 0,
+            "heroic route should now point to the airlock before the boss fight starts");
+    Map_LockSwampOuter(&map);
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "heroic airlock interaction should now trigger the arena transition");
+    Require(player.gridX == BOSS_ARENA_PLAYER_ENTRY_X && player.gridY == BOSS_ARENA_PLAYER_ENTRY_Y,
+            "heroic airlock interaction should teleport the player into the isolated boss arena");
+    Require(Map_GetAreaAt(player.gridX, player.gridY) == MAP_AREA_BOSS_ARENA,
+            "heroic airlock interaction should place the player in the boss arena area");
+    Require(strstr(message, "guardian arena") != NULL || strstr(message, "isolated breach mode") != NULL,
+            "heroic airlock interaction should explain the forced arena breach");
+    Require(strcmp(tasks.objective, "Heroic route chosen. Defeat the guardian in the isolated arena, then return to the Signal Tower.") == 0,
+            "heroic arena entry should update the objective to defeating the guardian before the tower");
+
+    ResetEndgameState(&map, &player, &tasks);
     player.hasSignalAmplifier = true;
     tasks.bossDefeated = true;
     player.gridX = SIGNAL_TOWER_X - 1;
@@ -150,8 +202,7 @@ int main(void) {
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);
     player.hasSignalAmplifier = true;
-    player.gridX = LOXI_TERMINAL_X - 1;
-    player.gridY = LOXI_TERMINAL_Y;
+    MovePlayerToLoxiRightSide(&player);
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "loxi terminal should stay interactive when X3 is ready");
@@ -177,8 +228,7 @@ int main(void) {
     PrepareEndingBranch(&tasks);
     player.hasSignalAmplifier = true;
     tasks.bossDefeated = true;
-    player.gridX = LOXI_TERMINAL_X - 1;
-    player.gridY = LOXI_TERMINAL_Y;
+    MovePlayerToLoxiRightSide(&player);
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "settlement should remain selectable after the boss route is available");

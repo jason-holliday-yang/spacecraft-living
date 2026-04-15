@@ -22,6 +22,7 @@ static void PrepareEndingBranch(TaskSystem *tasks) {
     tasks->stage = 7;
     tasks->ending = ENDING_NONE;
     tasks->selectedEndingRoute = ENDING_NONE;
+    tasks->endingArchiveReviewed = true;
     tasks->signalTowerActivated = false;
     tasks->oxygenRepairLevel = 2;
     tasks->commRepairLevel = 1;
@@ -88,9 +89,9 @@ int main(void) {
             "stage text lookup should return the cleaner player-facing chapter title");
     Require(strcmp(Tasks_GetEndingTitle(ENDING_PEACEFUL), "Peaceful Rescue") == 0,
             "ending title lookup should still return the expected label");
-    Require(strstr(Tasks_GetEndingBody(ENDING_SETTLEMENT), "long-term home") != NULL,
+    Require(strstr(Tasks_GetEndingBody(ENDING_SETTLEMENT), "deliberate home") != NULL,
             "ending body lookup should still expose the expected settlement text");
-    Require(strstr(Tasks_GetEndingBody(ENDING_FAILURE), "Repeated collapses") != NULL,
+    Require(strstr(Tasks_GetEndingBody(ENDING_FAILURE), "collapses came faster than repair") != NULL,
             "failure ending text should match the broader death tolerance rules");
 
     tasks.stage = 3;
@@ -191,6 +192,8 @@ int main(void) {
     player.gridX = SIGNAL_TOWER_X;
     player.gridY = SIGNAL_TOWER_Y + 6;
     Tasks_UpdateObjective(&tasks, &player);
+    Require(strstr(tasks.objective, "Open the airlock") != NULL || strstr(tasks.objective, "guardian arena") != NULL,
+            "heroic route objective should now send the player back to the ship airlock before the boss fight");
     Require(strstr(tasks.communicator, "Current Area: Ruins") != NULL,
             "north-route communicator should use the same ruins area label as the map overlay");
     Require(strstr(tasks.communicator, "Plateau") != NULL || strstr(tasks.communicator, "Signal Tower") != NULL,
@@ -200,10 +203,10 @@ int main(void) {
 
     tasks.monolithsLit = 2;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.objective, "Light remaining monoliths") != NULL || strstr(tasks.objective, "remaining monoliths") != NULL,
-            "heroic route objective should tighten around the remaining ring prep once partial progress exists");
-    Require(strstr(tasks.communicator, "Light remaining monoliths") != NULL || strstr(tasks.communicator, "remaining") != NULL,
-            "stage 7 communicator should reflect that the ring is nearly complete");
+    Require(strstr(tasks.objective, "Open the airlock") != NULL || strstr(tasks.objective, "guardian arena") != NULL,
+            "heroic route objective should still point to the airlock even when monolith prep is partial");
+    Require(strstr(tasks.communicator, "airlock") != NULL || strstr(tasks.communicator, "arena") != NULL,
+            "stage 7 communicator should explain that partial monolith prep carries into the airlock-triggered arena");
 
     tasks.monolithsLit = 3;
     tasks.monolithActivated[0] = true;
@@ -213,27 +216,32 @@ int main(void) {
     player.gridX = MONOLITH_B_X;
     player.gridY = MONOLITH_B_Y;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.objective, "ring is complete") != NULL || strstr(tasks.objective, "Defeat the guardian") != NULL,
-            "heroic route objective should flip into the guardian push once the ring is complete");
+    Require(strstr(tasks.objective, "Open the airlock") != NULL || strstr(tasks.objective, "guardian arena") != NULL,
+            "heroic route objective should keep the airlock as the final commit point even after full monolith prep");
     Require(strstr(tasks.communicator, "Heroic route chosen") != NULL
                 || strstr(tasks.communicator, "guardian") != NULL
-                || strstr(tasks.communicator, "Signal Tower") != NULL,
+                || strstr(tasks.communicator, "airlock") != NULL,
             "fully lit monolith guidance should explain the completed heroic prep payoff");
 
     tasks.monsterCount = 1;
     tasks.monsters[0].active = true;
     tasks.monsters[0].type = MONSTER_FINAL_BOSS;
-    tasks.monsters[0].gridX = SIGNAL_TOWER_X;
-    tasks.monsters[0].gridY = SIGNAL_TOWER_Y + 10;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].maxHealth = 220.0f;
     tasks.monsters[0].health = 220.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_CHARGE;
     tasks.monsters[0].attackTelegraph = 1.2f;
-    player.gridX = SIGNAL_TOWER_X;
-    player.gridY = SIGNAL_TOWER_Y + 6;
+    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
+    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "Signal Tower") != NULL || strstr(tasks.communicator, "Plateau") != NULL,
-            "tower communicator should stay relevant during the final climb");
+    Require(strstr(tasks.objective, "Defeat the guardian") != NULL || strstr(tasks.objective, "isolated arena") != NULL,
+            "heroic route objective should switch to defeating the guardian once the player is inside the arena");
+    Require(strstr(tasks.communicator, "Guardian Arena") != NULL,
+            "communicator should expose the guardian arena location once the player is teleported there");
+    Require(strstr(tasks.communicator, "guardian") != NULL || strstr(tasks.communicator, "oxygen margin") != NULL,
+            "guardian arena communicator should stay focused on the boss fight once the arena is entered");
 
     tasks.monsters[0].attackTelegraph = 0.0f;
     tasks.monsters[0].phaseTriggered = true;
@@ -281,9 +289,16 @@ int main(void) {
             "heroic route should remain selectable for marker tests");
     tasks.monolithActivated[1] = true;
     Require(Tasks_GetObjectiveMarker(&tasks, &player, &markerX, &markerY),
-            "stage 7 should continue exposing a monolith marker while the sequence is incomplete");
-    Require(markerX == MONOLITH_A_X && markerY == MONOLITH_A_Y,
-            "stage 7 should advance the marker to the next unresolved monolith");
+            "stage 7 should point the heroic route back to the airlock before the arena transition");
+    Require(markerX == AIRLOCK_CONSOLE_X && markerY == AIRLOCK_CONSOLE_Y,
+            "stage 7 heroic marker should now advance to the airlock instead of the next monolith");
+
+    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
+    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
+    Require(Tasks_GetObjectiveMarker(&tasks, &player, &markerX, &markerY),
+            "stage 7 should retarget the marker to the guardian once the player is inside the arena");
+    Require(markerX == BOSS_ARENA_BOSS_X && markerY == BOSS_ARENA_BOSS_Y,
+            "stage 7 heroic marker should point to the isolated boss once the arena fight begins");
 
     player.gridX = WORKBENCH_X;
     player.gridY = WORKBENCH_Y;

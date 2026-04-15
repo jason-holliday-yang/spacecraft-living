@@ -20,6 +20,23 @@ static bool RectContainsRect(Rectangle outer, Rectangle inner) {
         && inner.y + inner.height <= outer.y + outer.height;
 }
 
+static float GetLayoutScale(int screenWidth, int screenHeight) {
+    float widthScale;
+    float heightScale;
+    float scale;
+
+    widthScale = (float)screenWidth / 1440.0f;
+    heightScale = (float)screenHeight / 900.0f;
+    scale = widthScale < heightScale ? widthScale : heightScale;
+    if (scale < 0.84f) {
+        return 0.84f;
+    }
+    if (scale > 1.25f) {
+        return 1.25f;
+    }
+    return scale;
+}
+
 static void VerifySettingsLayout(int screenWidth, int screenHeight) {
     Rectangle overlay;
     Rectangle slider;
@@ -165,6 +182,43 @@ static void VerifyAuthLayout(int screenWidth, int screenHeight) {
     Require(!CheckCollisionRecs(switchAccountButton, deleteAccountButton), "main menu account action buttons should not overlap");
 }
 
+static void VerifySavePanelLayout(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+    Rectangle detailsPanel;
+    Rectangle primaryButton;
+    Rectangle deleteButton;
+    Rectangle firstSlot;
+    Rectangle lastSlot;
+
+    scale = GetLayoutScale(screenWidth, screenHeight);
+    panel = (Rectangle){
+        screenWidth * 0.5f - 520.0f * scale,
+        screenHeight * 0.5f - 290.0f * scale,
+        1040.0f * scale,
+        580.0f * scale
+    };
+    detailsPanel = (Rectangle){
+        panel.x + 724.0f * scale,
+        panel.y + 108.0f * scale,
+        286.0f * scale,
+        386.0f * scale
+    };
+    primaryButton = UI_GetSavePrimaryButtonRect(screenWidth, screenHeight);
+    deleteButton = UI_GetSaveDeleteButtonRect(screenWidth, screenHeight);
+    firstSlot = UI_GetSaveSlotRect(screenWidth, screenHeight, 0);
+    lastSlot = UI_GetSaveSlotRect(screenWidth, screenHeight, SAVE_SLOT_COUNT - 1);
+
+    Require(panel.width > 0.0f && panel.height > 0.0f, "save panel should have a positive size");
+    Require(RectContainsRect(panel, firstSlot), "first save slot should stay inside the save panel");
+    Require(RectContainsRect(panel, lastSlot), "last save slot should stay inside the save panel");
+    Require(RectContainsRect(panel, detailsPanel), "save details panel should stay inside the save panel");
+    Require(RectContainsRect(panel, primaryButton), "save primary button should stay inside the save panel");
+    Require(RectContainsRect(panel, deleteButton), "save delete button should stay inside the save panel");
+    Require(!CheckCollisionRecs(primaryButton, deleteButton), "save panel action buttons should not overlap");
+    Require(!CheckCollisionRecs(firstSlot, detailsPanel), "save list and details panel should not overlap");
+}
+
 int main(void) {
     const int screenWidth = 1440;
     const int screenHeight = 900;
@@ -209,6 +263,9 @@ int main(void) {
     VerifyAuthLayout(1440, 900);
     VerifyAuthLayout(1280, 720);
     VerifyAuthLayout(1024, 768);
+    VerifySavePanelLayout(1440, 900);
+    VerifySavePanelLayout(1280, 720);
+    VerifySavePanelLayout(1024, 768);
     VerifyAccountDeleteConfirmLayout(1440, 900);
     VerifyAccountDeleteConfirmLayout(1280, 720);
     VerifyAccountDeleteConfirmLayout(1024, 768);

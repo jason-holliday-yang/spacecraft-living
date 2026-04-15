@@ -86,6 +86,7 @@ typedef struct SaveSnapshot {
     bool bossDefeated;
     bool signalTowerActivated;
     int selectedEndingRoute;
+    bool endingArchiveReviewed;
     bool westW1Started;
     bool westW1Completed;
     bool westW2Started;

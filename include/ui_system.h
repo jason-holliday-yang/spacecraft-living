@@ -94,9 +94,29 @@ typedef enum StoryScene {
     STORY_SCENE_MAIN_BOSS_FALL,
     STORY_SCENE_MAIN_SIGNAL_TOWER_HEROIC,
     STORY_SCENE_MAIN_SIGNAL_TOWER_PEACEFUL,
+    STORY_SCENE_MAIN_ECHO_BASIN_LOCK,
+    STORY_SCENE_MAIN_LOXI_ROUTE_REWRITE,
+    STORY_SCENE_MAIN_LAST_CAMP_ARCHIVE,
+    STORY_SCENE_MAIN_PURIFIER_RING_BOOT,
+    STORY_SCENE_MAIN_GLOBAL_RISK_DROP,
+    STORY_SCENE_MAIN_ROOT_VAULT_CORE,
+    STORY_SCENE_MAIN_TRACE_CORRELATION,
+    STORY_SCENE_MAIN_LOXI_SYNC_REWRITE,
+    STORY_SCENE_MAIN_FINAL_STANCE,
     STORY_SCENE_LOG_THE_CRASH,
     STORY_SCENE_LOG_MISSING_CREW,
     STORY_SCENE_LOG_ALIEN_ECOLOGY,
+    STORY_SCENE_LOG_WEST_SIGNAL_FRAGMENT,
+    STORY_SCENE_LOG_SURVEY_BREAK_ANCHOR_NOTES,
+    STORY_SCENE_LOG_CANOPY_HANDOFF_RECORD,
+    STORY_SCENE_LOG_ECHO_BASIN_TOPOLOGY,
+    STORY_SCENE_LOG_LAST_CAMP_TESTAMENT,
+    STORY_SCENE_LOG_BLACK_BOX_RESIDUE,
+    STORY_SCENE_LOG_PURIFIER_OUTAGE_MEMO,
+    STORY_SCENE_LOG_VENT_CALIBRATION_HANDOVER,
+    STORY_SCENE_LOG_SERVICE_SHAFT_SYNC,
+    STORY_SCENE_LOG_PURIFIER_RING_CONTROL_BRIEF,
+    STORY_SCENE_LOG_ROOT_VAULT_CORE_DOSSIER,
     STORY_SCENE_COUNT
 } StoryScene;
 
@@ -115,6 +135,7 @@ Rectangle UI_GetPauseMenuButtonRect(int screenWidth, int screenHeight, int butto
 Rectangle UI_GetDeathPopupButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 Rectangle UI_GetStandardOverlayRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSaveSlotRect(int screenWidth, int screenHeight, int slotIndex);
+Rectangle UI_GetSavePrimaryButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSaveDeleteButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetBackpackSlotRect(int screenWidth, int screenHeight, int itemIndex);
 Rectangle UI_GetCraftSlotRect(int screenWidth, int screenHeight, int itemIndex);
@@ -159,7 +180,12 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets, const TaskSystem *tas
 void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHeight);
 void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds);
 void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton);
-void UI_DrawSettlementConfirmPopup(const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton);
+void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
+                                   const Player *player,
+                                   const TaskSystem *tasks,
+                                   int screenWidth,
+                                   int screenHeight,
+                                   int selectedButton);
 void UI_DrawAccountDeleteConfirmPopup(const AssetBundle *assets,
                                       const char *accountName,
                                       int screenWidth,

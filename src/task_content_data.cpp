@@ -88,7 +88,7 @@ const std::array<TaskMonsterSeed, 8> kMonsterSeeds = {{
     {MONSTER_SENTINEL_JELLY, EXTERIOR_X(114), EXTERIOR_Y(98), 6},
     {MONSTER_FOG_WORM, EXTERIOR_X(121), EXTERIOR_Y(100), 6},
     {MONSTER_RELIC_GUARD, EXTERIOR_X(74), EXTERIOR_Y(18), 7},
-    {MONSTER_FINAL_BOSS, EXTERIOR_X(84), EXTERIOR_Y(20), 7}
+    {MONSTER_FINAL_BOSS, BOSS_ARENA_BOSS_X, BOSS_ARENA_BOSS_Y, 7}
 }};
 
 const std::array<TaskLogSeed, 14> kLogSeeds = {{
@@ -99,7 +99,7 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         0,
         LT("Ship Log 01: Impact Protocol", "飞船日志 01：撞击应对"),
         LT("Day 1. Impact did not kill us. The air nearly did. Oxygen lines burst through three compartments, and Loxi forced every remaining watt into keeping one corridor breathable. We are alive only because the ship chose triage over comfort. If this record survives, remember the order that kept us alive: air first, panic later.",
-           "第 1 天。撞击没有杀死我们，差点要命的是空气。氧气管线在三个舱段里同时爆裂，洛西把剩下的每一瓦电力都压进了一条还能呼吸的走廊。我们活下来，不是因为舒适，而是因为飞船先做了取舍。如果这份记录还能留下，请记住让我们活下来的顺序：先保住空气，恐慌以后再说。"),
+           "第 1 天。撞击没有杀死我们，差点要命的是空气。氧气管线在三个舱段里同时爆裂，洛希把剩下的每一瓦电力都压进了一条还能呼吸的走廊。我们活下来，不是因为舒适，而是因为飞船先做了取舍。如果这份记录还能留下，请记住让我们活下来的顺序：先保住空气，恐慌以后再说。"),
         LT("Permanent max health +6", "永久最大生命值 +6")
     },
     {
@@ -117,9 +117,9 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         SHIP_DIAGNOSTICS_Y + 2,
         SHIP_LOG_MAINLINE,
         2,
-        LT("Ship Log 03: Pattern, Not Wilderness", "飞船日志 03：这不是荒野"),
+        LT("Ship Log 03: Pattern, Not Wilderness", "飞船日志 03：这里是模式，不是荒野"),
         LT("Day 7. Growth rings, fog pulses, and stone harmonics repeat on a schedule. This is not wilderness in the human sense. Someone engineered a living maintenance field and then walked away before it finished learning how to heal itself. Loxi thinks the monoliths, purifier structures, and tower signal are all parts of the same unfinished response.",
-           "第 7 天。生长环、雾潮脉冲和石质共振都在按固定节律重复。这不是人类意义上的荒野。有人建造了一片活着的维护场，却在它学会自我修复之前就离开了。洛西认为，石碑、净化结构和塔楼信号，其实都属于同一个尚未完成的应答系统。"),
+           "第 7 天。生长环、雾潮脉冲和石质共振都在按固定节律重复。这不是人类意义上的荒野。有人建造了一片活着的维护场，却在它学会自我修复之前就离开了。洛希认为，石碑、净化结构和塔楼信号，其实都属于同一个尚未完成的应答系统。"),
         LT("Instant oxygen +18", "立即恢复氧气 +18")
     },
     {
@@ -179,7 +179,7 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         3,
         LT("Crash Recorder: Black Box Residue", "坠毁记录：黑匣残留"),
         LT("Recovered after the residue scan matched Loxi's filter tables. The eastern wreck did not simply fall here. Its final corrections were trying to avoid the same tower lattice the western scouts later mapped from the canopy. The crash clue matters because it proves the crew was already fighting a system-wide failure, not a random storm. What happened in the forest, the swamp, and the ruins was one collapse seen from different angles.",
-           "在残留扫描与洛西的过滤表匹配后才成功恢复。东侧残骸并不是单纯坠落到这里。它最后的修正动作，是在试图避开后来被西侧侦察员从林冠上标出的那片塔楼格网。这个坠毁线索之所以关键，是因为它证明船员面对的从来不是一场随机风暴，而是一次系统级失效。森林、沼泽和遗迹里发生的，其实是同一场崩塌，只是从不同角度看到。"),
+           "在残留扫描与洛希的过滤表匹配后才成功恢复。东侧残骸并不是单纯坠落到这里。它最后的修正动作，是在试图避开后来被西侧侦察员从林冠上标出的那片塔楼格网。这个坠毁线索之所以关键，是因为它证明船员面对的从来不是一场随机风暴，而是一次系统级失效。森林、沼泽和遗迹里发生的，其实是同一场崩塌，只是从不同角度看到。"),
         LT("Instant oxygen +22", "立即恢复氧气 +22")
     },
     {

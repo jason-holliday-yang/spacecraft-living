@@ -91,6 +91,9 @@ HazardType Map_GetHazardAt(const GameMap *map, int gridX, int gridY) {
 }
 
 MapArea Map_GetAreaAt(int gridX, int gridY) {
+    if (IsRectBounds(gridX, gridY, BOSS_ARENA_X, BOSS_ARENA_Y, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT)) {
+        return MAP_AREA_BOSS_ARENA;
+    }
     if (IsRectBounds(gridX, gridY, SHIP_CARGO_HOLD_X, SHIP_CREW_QUARTERS_Y, AIRLOCK_DOOR_X - SHIP_CARGO_HOLD_X + 1, SHIP_POWER_BAY_Y + SHIP_POWER_BAY_HEIGHT - SHIP_CREW_QUARTERS_Y)) {
         return MAP_AREA_BASE;
     }
@@ -138,6 +141,8 @@ const char *Map_GetAreaName(MapArea area) {
             return "Spore Swamp";
         case MAP_AREA_RUINS:
             return "Ruins";
+        case MAP_AREA_BOSS_ARENA:
+            return "Boss Arena";
         case MAP_AREA_UNKNOWN:
         default:
             return "Unknown Area";
@@ -171,6 +176,9 @@ const char *Map_GetLocationNameAt(int gridX, int gridY) {
     }
     if (IsRectBounds(gridX, gridY, SHIP_AIRLOCK_LINK_X, SHIP_AIRLOCK_LINK_Y, SHIP_AIRLOCK_LINK_WIDTH, SHIP_AIRLOCK_LINK_HEIGHT)) {
         return "Airlock Link";
+    }
+    if (IsRectBounds(gridX, gridY, BOSS_ARENA_X, BOSS_ARENA_Y, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT)) {
+        return "Guardian Arena";
     }
 
     if (IsRectBounds(gridX, gridY, RUINS_MAIN_X, RUINS_MAIN_Y, RUINS_MAIN_WIDTH, RUINS_MAIN_HEIGHT)) {

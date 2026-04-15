@@ -17,6 +17,9 @@ static void ConfirmEndingChoice(Game *game, GameEnding ending) {
         Tasks_CommitSettlement(&game->tasks);
     } else {
         Tasks_SelectEndingRoute(&game->tasks, ending);
+        if (ending == ENDING_HEROIC && game->tasks.selectedEndingRoute == ENDING_HEROIC && !game->tasks.bossDefeated) {
+            Map_LockSwampOuter(&game->map);
+        }
         Tasks_UpdateObjective(&game->tasks, &game->player);
     }
 
@@ -598,9 +601,15 @@ static void UpdateMainMenu(Game *game) {
 }
 
 static void UpdateOpeningCutscene(Game *game) {
+    if (game->narrativeTransitionActive) {
+        return;
+    }
+
     if (IsKeyPressed(KEY_ESCAPE)) {
         Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
-        Game_CompleteOpeningCutscene(game);
+        game->narrativeTransitionActive = true;
+        game->narrativeTransitionElapsed = 0.0f;
+        game->narrativeTransitionAction = NARRATIVE_TRANSITION_OPENING_COMPLETE;
         return;
     }
 
@@ -610,19 +619,28 @@ static void UpdateOpeningCutscene(Game *game) {
 
     if (game->openingSlideIndex + 1 >= INTRO_CUTSCENE_SLIDE_COUNT) {
         Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
-        Game_CompleteOpeningCutscene(game);
+        game->narrativeTransitionActive = true;
+        game->narrativeTransitionElapsed = 0.0f;
+        game->narrativeTransitionAction = NARRATIVE_TRANSITION_OPENING_COMPLETE;
         return;
     }
 
-    game->openingSlideIndex += 1;
-    game->openingCutsceneElapsed = 0.0f;
     Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+    game->narrativeTransitionActive = true;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_OPENING_NEXT_SLIDE;
 }
 
 static void UpdateStoryScene(Game *game) {
+    if (game->narrativeTransitionActive) {
+        return;
+    }
+
     if (IsKeyPressed(KEY_ESCAPE)) {
-        Game_CloseStoryScene(game);
         Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        game->narrativeTransitionActive = true;
+        game->narrativeTransitionElapsed = 0.0f;
+        game->narrativeTransitionAction = NARRATIVE_TRANSITION_STORY_CLOSE;
         return;
     }
 
@@ -630,8 +648,10 @@ static void UpdateStoryScene(Game *game) {
         return;
     }
 
-    Game_CloseStoryScene(game);
     Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+    game->narrativeTransitionActive = true;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_STORY_CLOSE;
 }
 
 static void UpdatePauseMenu(Game *game) {
@@ -863,7 +883,14 @@ static void UpdateSavePanel(Game *game) {
 
     slotIndex = GameOverlay_FindClickedIndexedRect(mouse, SAVE_SLOT_COUNT, UI_GetSaveSlotRect);
     if (slotIndex >= 0) {
+        if (game->selectedSaveSlot != slotIndex) {
+            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        }
         game->selectedSaveSlot = slotIndex;
+        return;
+    }
+
+    if (CheckCollisionPointRec(mouse, UI_GetSavePrimaryButtonRect(GetScreenWidth(), GetScreenHeight()))) {
         Game_ActivateSelectedSaveSlot(game);
         return;
     }

@@ -78,6 +78,7 @@ void Tasks_Init(TaskSystem *tasks, GameMap *map) {
     tasks->phase = DAY_PHASE_DAY;
     tasks->currentEvent = EVENT_HARVEST;
     tasks->communicatorUnlocked = false;
+    tasks->endingArchiveReviewed = false;
     tasks->westW1Started = false;
     tasks->westW1Completed = false;
     tasks->westW2Started = false;

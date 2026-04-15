@@ -27,7 +27,7 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     {
         RECIPE_ROPE,
         LT("Simple Rope", "简易绳索"),
-        LT("1 Wood + 2 Vines. Crosses swamp and solves shortcuts.", "1 木材 + 2 藤蔓。穿越沼泽并开启捷径。"),
+        LT("1 Wood + 2 Vines. Crosses swamp and solves shortcuts.", "1 木材 + 2 异星藤蔓。穿越沼泽并开启捷径。"),
         LT("Traversal utility that converts marked swamp barriers into shortcuts.", "用于穿越地形，可把特定沼泽障碍变成捷径。"),
         LT("1 Wood, 2 Alien Vines", "1 木材，2 异星藤蔓"),
         3,
@@ -75,9 +75,9 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     {
         RECIPE_PROTECTION_SUIT,
         LT("Protection Suit", "防护服"),
-        LT("1 Wood + 2 Vines + 1 Fiber. Grants filtered protection in dangerous zones.", "1 木材 + 2 藤蔓 + 1 防护纤维。可在危险区域提供过滤防护。"),
+        LT("1 Wood + 2 Vines + 1 Fiber. Grants filtered protection in dangerous zones.", "1 木材 + 2 异星藤蔓 + 1 防护纤维。可在危险区域提供过滤呼吸。"),
         LT("Protective equipment that cuts hazard oxygen drain and lowers poison and leak risk.", "降低危险区域的氧气消耗，并减少中毒与漏氧风险。"),
-        LT("1 Wood, 2 Vines, 1 Protective Fiber", "1 木材，2 藤蔓，1 防护纤维"),
+        LT("1 Wood, 2 Vines, 1 Protective Fiber", "1 木材，2 异星藤蔓，1 防护纤维"),
         4,
         true,
         true,

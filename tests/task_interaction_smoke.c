@@ -189,6 +189,11 @@ static void CollectAllLogs(TaskSystem *tasks) {
 
 static void PrepareEndingBranch(TaskSystem *tasks) {
     tasks->stage = 7;
+    tasks->ending = ENDING_NONE;
+    tasks->selectedEndingRoute = ENDING_NONE;
+    tasks->endingArchiveReviewed = true;
+    tasks->signalTowerActivated = false;
+    tasks->bossDefeated = false;
     tasks->oxygenRepairLevel = 2;
     tasks->commRepairLevel = 1;
     tasks->energyRepairLevel = 1;
@@ -260,8 +265,10 @@ static bool IsReasonableMonsterArea(const Monster *monster) {
 
     switch (monster->type) {
         case MONSTER_RELIC_GUARD:
+            return monster->area == MAP_AREA_RUINS
+                || monster->area == MAP_AREA_BOSS_ARENA;
         case MONSTER_FINAL_BOSS:
-            return monster->area == MAP_AREA_RUINS;
+            return monster->area == MAP_AREA_BOSS_ARENA;
         case MONSTER_SENTINEL_JELLY:
         case MONSTER_FOG_WORM:
             return monster->area == MAP_AREA_SWAMP_DEEP
@@ -426,8 +433,10 @@ int main(void) {
             "purifier ring should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Root Vault") == 1,
             "root vault should retain a single local monster encounter");
-    Require(CountActiveMonstersInLocation(&tasks, "Monolith Ring") == 2,
-            "ruins should now hold one relic guard plus the final boss");
+    Require(CountActiveMonstersInLocation(&tasks, "Monolith Ring") == 1,
+            "ruins should now hold only the relic guard after the boss is moved to the arena");
+    Require(CountActiveMonstersInLocation(&tasks, "Guardian Arena") == 1,
+            "guardian arena should now hold the isolated final boss encounter");
 
     Player_SetStatus(&player, PLAYER_STATUS_LOW_OXYGEN, 1, 6.0f, 12.0f);
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 1, 10.0f, 8.0f);
@@ -463,8 +472,10 @@ int main(void) {
     player.gridX = EXTERIOR_X(84);
     player.gridY = EXTERIOR_Y(20);
     Tasks_Update(&tasks, &map, &player, 0.0f);
-    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 1,
-            "combat-light boss flow should keep only the single fixed relic guard even after phase changes");
+    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) >= 2,
+            "boss phase changes should now be able to summon additional relic guards into the arena");
+    Require(CountActiveMonstersInLocation(&tasks, "Guardian Arena") >= 2,
+            "guardian arena should gain at least one reinforcement once the boss enters its later phase");
     RequireValidSpawnPlacements(&map, &tasks);
     tasks.stage = 1;
 
@@ -676,6 +687,25 @@ int main(void) {
             "central corridor room interaction should summarize the final base role");
     Require(strstr(message, "decision corridor") != NULL && strstr(message, "settlement") != NULL,
             "central corridor should explain that the full ship now supports the final rescue-versus-settlement decision");
+
+    player.gridX = AIRLOCK_CONSOLE_X - 1;
+    player.gridY = AIRLOCK_CONSOLE_Y;
+    PrepareEndingBranch(&tasks);
+    tasks.bossDefeated = false;
+    Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),
+            "heroic route should become selectable for the airlock-to-arena flow");
+    Map_LockSwampOuter(&map);
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "heroic-route airlock interaction should now transition into the isolated arena");
+    Require(player.gridX == BOSS_ARENA_PLAYER_ENTRY_X && player.gridY == BOSS_ARENA_PLAYER_ENTRY_Y,
+            "heroic-route airlock interaction should teleport the player to the arena entry");
+    Require(Map_GetAreaAt(player.gridX, player.gridY) == MAP_AREA_BOSS_ARENA,
+            "heroic-route airlock interaction should place the player inside the boss arena area");
+    Require(strstr(message, "guardian arena") != NULL || strstr(message, "isolated breach mode") != NULL,
+            "heroic-route airlock text should explain the forced transition into the isolated boss arena");
+    Require(strstr(tasks.objective, "Defeat the guardian") != NULL || strstr(tasks.objective, "isolated arena") != NULL,
+            "heroic-route arena transition should immediately update the objective to the guardian fight");
 
     player.gridX = SIGNAL_TOWER_X - 1;
     player.gridY = SIGNAL_TOWER_Y;

@@ -22,6 +22,50 @@ static Font GetUIFont(const AssetBundle *assets) {
     return assets->uiFontLoaded ? assets->uiFont : GetFontDefault();
 }
 
+static int GetUtf8CharLength(const char *text) {
+    unsigned char value;
+
+    if (text == NULL || text[0] == '\0') {
+        return 0;
+    }
+
+    value = (unsigned char)text[0];
+    if ((value & 0x80u) == 0) {
+        return 1;
+    }
+    if ((value & 0xE0u) == 0xC0u) {
+        return text[1] != '\0' ? 2 : 1;
+    }
+    if ((value & 0xF0u) == 0xE0u) {
+        if (text[1] != '\0' && text[2] != '\0') {
+            return 3;
+        }
+        return text[1] != '\0' ? 2 : 1;
+    }
+    if ((value & 0xF8u) == 0xF0u) {
+        if (text[1] != '\0' && text[2] != '\0' && text[3] != '\0') {
+            return 4;
+        }
+        if (text[1] != '\0' && text[2] != '\0') {
+            return 3;
+        }
+        return text[1] != '\0' ? 2 : 1;
+    }
+
+    return 1;
+}
+
+static bool IsAsciiBreakCharacter(const char *text, int charLength) {
+    unsigned char value;
+
+    if (text == NULL || charLength != 1) {
+        return false;
+    }
+
+    value = (unsigned char)text[0];
+    return value == ' ' || value == '-' || value == '/' || value == '\t';
+}
+
 static float GetUIScale(int screenWidth, int screenHeight) {
     float widthScale;
     float heightScale;
@@ -75,19 +119,25 @@ static void DrawTextureAssetFitted(const TextureAsset *asset, Rectangle rect, Co
 
 static int GetWrappedLineLength(const AssetBundle *assets, const char *text, float fontSize, float maxWidth) {
     char buffer[512];
-    int index;
+    int byteOffset;
     int lastBreak;
 
     if (text == NULL || text[0] == '\0') {
         return 0;
     }
 
-    index = 0;
+    byteOffset = 0;
     lastBreak = -1;
-    while (text[index] != '\0' && text[index] != '\n') {
+    while (text[byteOffset] != '\0' && text[byteOffset] != '\n') {
+        int charLength;
         int copyLength;
 
-        copyLength = index + 1;
+        charLength = GetUtf8CharLength(text + byteOffset);
+        if (charLength <= 0) {
+            break;
+        }
+
+        copyLength = byteOffset + charLength;
         if (copyLength >= (int)sizeof(buffer)) {
             break;
         }
@@ -99,16 +149,16 @@ static int GetWrappedLineLength(const AssetBundle *assets, const char *text, flo
             if (lastBreak > 0) {
                 return lastBreak;
             }
-            return index > 0 ? index : 1;
+            return byteOffset > 0 ? byteOffset : charLength;
         }
 
-        if (text[index] == ' ' || text[index] == '-' || text[index] == '/') {
-            lastBreak = index + 1;
+        if (IsAsciiBreakCharacter(text + byteOffset, charLength)) {
+            lastBreak = copyLength;
         }
-        index += 1;
+        byteOffset = copyLength;
     }
 
-    return index;
+    return byteOffset;
 }
 
 static void DrawWrappedUIText(const AssetBundle *assets, const char *text, Rectangle rect, float fontSize, float lineSpacing, Color tint) {

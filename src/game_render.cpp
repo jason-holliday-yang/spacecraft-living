@@ -2,6 +2,41 @@
 
 #include <cmath>
 
+static float ClampUnit(float value) {
+    if (value < 0.0f) {
+        return 0.0f;
+    }
+    if (value > 1.0f) {
+        return 1.0f;
+    }
+    return value;
+}
+
+static float GetNarrativeOverlayAlpha(const Game *game) {
+    static constexpr float kNarrativeFadeDuration = 0.22f;
+    float fadeInAlpha;
+    float fadeOutAlpha;
+    float elapsed;
+
+    if (game == nullptr) {
+        return 0.0f;
+    }
+
+    if (game->state == GAME_STATE_OPENING) {
+        elapsed = game->openingCutsceneElapsed;
+    } else if (game->storySceneOpen) {
+        elapsed = game->storySceneElapsed;
+    } else {
+        return 0.0f;
+    }
+
+    fadeInAlpha = 1.0f - ClampUnit(elapsed / kNarrativeFadeDuration);
+    fadeOutAlpha = game->narrativeTransitionActive
+        ? ClampUnit(game->narrativeTransitionElapsed / kNarrativeFadeDuration)
+        : 0.0f;
+    return fadeInAlpha > fadeOutAlpha ? fadeInAlpha : fadeOutAlpha;
+}
+
 static float TileScale(float value) {
     return value * (static_cast<float>(TILE_SIZE) / 64.0f);
 }
@@ -192,12 +227,24 @@ void Game_Draw(Game *game) {
 
     if (game->state == GAME_STATE_OPENING) {
         UI_DrawOpeningCutscene(&game->assets, game->openingSlideIndex, game->openingCutsceneElapsed, screenWidth, screenHeight);
+        {
+            const float overlayAlpha = GetNarrativeOverlayAlpha(game);
+            if (overlayAlpha > 0.0f) {
+                DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
+            }
+        }
         EndDrawing();
         return;
     }
 
     if (game->storySceneOpen) {
         UI_DrawStoryScene(&game->assets, game->storyScene, game->storySceneElapsed, screenWidth, screenHeight);
+        {
+            const float overlayAlpha = GetNarrativeOverlayAlpha(game);
+            if (overlayAlpha > 0.0f) {
+                DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
+            }
+        }
         EndDrawing();
         return;
     }
@@ -215,7 +262,12 @@ void Game_Draw(Game *game) {
         UI_DrawEnding(game->tasks.ending, &game->player, &game->tasks, &game->assets, screenWidth, screenHeight, game->elapsedSeconds);
     } else if (game->settlementConfirmOpen) {
         UI_DrawHud(&game->player, &game->tasks, &game->hudMessage, &game->assets, screenWidth, screenHeight);
-        UI_DrawSettlementConfirmPopup(&game->assets, screenWidth, screenHeight, game->settlementConfirmSelection);
+        UI_DrawSettlementConfirmPopup(&game->assets,
+                                      &game->player,
+                                      &game->tasks,
+                                      screenWidth,
+                                      screenHeight,
+                                      game->settlementConfirmSelection);
     } else if (game->showDeathPopup) {
         UI_DrawDeathPopup(&game->player, &game->assets, screenWidth, screenHeight, game->deathPopupSelection);
     } else if (game->logReaderOpen) {

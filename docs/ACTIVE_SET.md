@@ -16,6 +16,7 @@
 4. [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md)
 5. [`plans/BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
 6. [`engineering/ARCHITECTURE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/engineering/ARCHITECTURE.md)
+7. [`design/PLAY_GUIDE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/PLAY_GUIDE.md)
 
 ## 任务扩展阅读（按需）
 
@@ -29,6 +30,8 @@
   [`design/WEST_SOUTH_RESOURCE_GAP.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/WEST_SOUTH_RESOURCE_GAP.md)
 - 状态系统与生存规则映射：
   [`design/STATUS_SYSTEM_MAPPING.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/STATUS_SYSTEM_MAPPING.md)
+- 对外试玩与流程核对：
+  [`design/PLAY_GUIDE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/PLAY_GUIDE.md)
 
 ## 资源协作文档（按需）
 

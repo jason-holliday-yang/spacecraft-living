@@ -139,7 +139,7 @@ void Player_GetStatusSourceText(PlayerStatusType status, char *buffer, int buffe
 void Player_GetStatusReliefText(PlayerStatusType status, char *buffer, int bufferSize) {
     switch (status) {
         case PLAYER_STATUS_POISONED:
-            CopyText(buffer, bufferSize, Loc_PickLiteral("Relief: antidotes, calm mushrooms, camp rest, or full base treatment.", "缓解方式：解毒物、宁神蘑菇、营地休整或基地完整治疗。"));
+            CopyText(buffer, bufferSize, Loc_PickLiteral("Relief: antidotes, calm mushrooms, camp rest, or full base treatment.", "缓解方式：解毒物、宁神蘑菇、在营地休息，或基地完整治疗。"));
             break;
         case PLAYER_STATUS_OXYGEN_LEAK:
             CopyText(buffer, bufferSize, Loc_PickLiteral("Relief: seal the suit, rest at camp, or return to base support.", "缓解方式：修补防护服、在营地休息，或返回基地支援。"));

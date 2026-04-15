@@ -1,10 +1,10 @@
 # SpaceCraft Living 西线 / 南线地图设计（2026-04-09）
 
-> 当前状态说明：本文件已恢复为活动设计文档，用于指导 `Echo Wilds` 与 `Subsurface Sink` 的正式补完开发。项目目标是在补齐西线 / 南线后再冻结地图范围。
+> 当前状态说明：本文件已恢复为活动设计文档，用于指导 `回响荒野（Echo Wilds）` 与 `地下沉降带（Subsurface Sink）` 的正式补完开发。项目目标是在补齐西线 / 南线后再冻结地图范围。
 
 ## 1. 文档目的
 
-本文档用于把“西侧 `Echo Wilds` + 南侧 `Subsurface Sink`”两块待补完区域，从占位级概念进一步整理成可直接指导当前设计与开发的地图方案。
+本文档用于把“西侧 `回响荒野（Echo Wilds）` + 南侧 `地下沉降带（Subsurface Sink）`”两块待补完区域，从占位级概念进一步整理成可直接指导当前设计与开发的地图方案。
 
 它主要回答以下问题：
 
@@ -18,9 +18,10 @@
 
 1. [`GAME_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/GAME_DESIGN.md)
 2. [`CURRENT_STATUS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/CURRENT_STATUS.md)
-3. 本文档
-4. [`EXPANSION_STORY_TASKS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_STORY_TASKS.md)
-5. [`../plans/MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md)
+3. [`TERMINOLOGY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/TERMINOLOGY.md)
+4. 本文档
+5. [`EXPANSION_STORY_TASKS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_STORY_TASKS.md)
+6. [`../plans/MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md)
 
 ## 2. 设计前提
 
@@ -45,8 +46,8 @@
 - `中央偏上`：飞船基地与森林教学区
 - `正上方`：遗迹、石碑、Boss、Signal Tower 主线终局区
 - `右侧`：swamp 风险与准备区
-- `左侧`：`Echo Wilds` 调查 / 潜行 / 失踪船员区
-- `下方`：`Subsurface Sink` 设施 / 调度 / 真相揭示区
+- `左侧`：`回响荒野（Echo Wilds）` 调查 / 潜行 / 失踪船员区
+- `下方`：`地下沉降带（Subsurface Sink）` 设施 / 调度 / 真相揭示区
 
 方向职责保持清晰：
 
@@ -74,8 +75,8 @@
 
 | 扩展区 | 首次明确提示时机 | 正式开放时机建议 | 主要服务阶段 |
 | --- | --- | --- | --- |
-| `Echo Wilds` | `Stage 3 - Stage 4` | `Stage 4` 之后 | `Stage 4 - Stage 6` |
-| `Subsurface Sink` | `Stage 5` | `Stage 5` 之后 | `Stage 5 - Stage 7` |
+| `回响荒野（Echo Wilds）` | `Stage 3 - Stage 4` | `Stage 4` 之后 | `Stage 4 - Stage 6` |
+| `地下沉降带（Subsurface Sink）` | `Stage 5` | `Stage 5` 之后 | `Stage 5 - Stage 7` |
 
 节奏原则：
 
@@ -84,11 +85,11 @@
 - 第一版扩展不建议追加强制性的 `Stage 8`
 - 扩展区首次上线时，应先作为 `可选高价值支线`，而不是改写原主线流程
 
-## 5. 西侧扩展区：回声林地 Echo Wilds
+## 5. 西侧扩展区：回响荒野（Echo Wilds）
 
 ### 5.1 区域定位
 
-`Echo Wilds` 的核心定位应固定为：
+`回响荒野（Echo Wilds）` 的核心定位应固定为：
 
 - 失踪船员搜寻区
 - 中后期调查与潜行区
@@ -98,7 +99,7 @@
 它要与东侧 swamp 明确区分：
 
 - swamp 让玩家学会“准备不足会被环境压垮”
-- Echo Wilds 让玩家学会“准备得再足，也不该鲁莽进入未知视线和追踪网”
+- 回响荒野让玩家学会“准备得再足，也不该鲁莽进入未知视线和追踪网”
 
 ### 5.2 核心玩法关键词
 
@@ -140,7 +141,7 @@
 
 定位：
 
-- 第一段真正进入 Echo Wilds 的调查走廊
+- 第一段真正进入回响荒野的调查走廊
 
 职责：
 
@@ -240,11 +241,11 @@
 - 新的临时补给点或观察点说明
 - 未来角色线、营地升级或 settlement 扩展的前置条件
 
-## 6. 南侧扩展区：地核沉降层 Subsurface Sink
+## 6. 南侧扩展区：地下沉降带（Subsurface Sink）
 
 ### 6.1 区域定位
 
-`Subsurface Sink` 的核心定位应固定为：
+`地下沉降带（Subsurface Sink）` 的核心定位应固定为：
 
 - 后期设施探索区
 - 高价值环境控制区
@@ -385,7 +386,7 @@
 
 ## 7. 两块扩展区的差异化要求
 
-| 维度 | Echo Wilds | Subsurface Sink |
+| 维度 | 回响荒野（Echo Wilds） | 地下沉降带（Subsurface Sink） |
 | --- | --- | --- |
 | 主主题 | 调查、踪迹、失踪船员 | 设施、调度、世界真相 |
 | 主要风险 | 迷向、暴露、被追踪 | 过热、静电、漏氧、结构失稳 |
@@ -473,8 +474,8 @@
 如果接下来继续围绕扩展地图推进，推荐按下面顺序补文档：
 
 1. 先用 [`EXPANSION_STORY_TASKS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_STORY_TASKS.md) 固定西侧 / 南侧的剧情任务链
-2. 再把 `Echo Wilds` 的子区域与 landmark 列成一张单独表
-3. 再把 `Subsurface Sink` 的设施节点、控制结果与地图联动列成一张单独表
+2. 再把 `回响荒野（Echo Wilds）` 的子区域与 landmark 列成一张单独表
+3. 再把 `地下沉降带（Subsurface Sink）` 的设施节点、控制结果与地图联动列成一张单独表
 4. 再补一份“扩展地图如何影响现有 ending”的分支说明
 5. 最后再进入具体模块拆分和实现排期
 

@@ -38,7 +38,16 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
         target->active = false;
         TasksRuntime_DropMonsterRewards(tasks, player, target);
         if (target->type == MONSTER_FINAL_BOSS) {
-            TasksRuntime_WriteMessage(message, messageSize, "The final boss is down. The Signal Tower is temporarily safe.");
+            if (map != NULL) {
+                Map_UnlockSwampOuter(map);
+            }
+            player->gridX = BOSS_ARENA_RETURN_X;
+            player->gridY = BOSS_ARENA_RETURN_Y;
+            player->facingX = 1;
+            player->facingY = 0;
+            Player_UpdateWorldPosition(player);
+            Tasks_UpdateObjective(tasks, player);
+            TasksRuntime_WriteMessage(message, messageSize, "The guardian collapses and the breach spits you back to the ship-side airlock. The Signal Tower is now the final step.");
         } else {
             TasksRuntime_WriteMessage(message, messageSize, "Target eliminated. Loot collected.");
         }

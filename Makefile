@@ -120,6 +120,9 @@ SUPPORT_CXX_SOURCES := \
 	src/minimap.cpp \
 	src/resource_path.cpp
 
+LOCALIZATION_CXX_SOURCES := \
+	src/localization.cpp
+
 APP_C_SOURCES := \
 	src/main.c \
 	$(MAP_C_SOURCES) \
@@ -160,12 +163,14 @@ TASK_SMOKE_C_SOURCES := \
 	$(TASK_RUNTIME_C_SOURCES)
 
 TASK_SMOKE_CXX_SOURCES := \
-	$(TASK_CONTENT_CXX_SOURCES)
+	$(TASK_CONTENT_CXX_SOURCES) \
+	$(LOCALIZATION_CXX_SOURCES)
 
 SAVE_SMOKE_SOURCES := \
 	tests/save_system_smoke.c \
 	$(MAP_C_SOURCES) \
-	$(SAVE_CXX_SOURCES)
+	$(SAVE_CXX_SOURCES) \
+	$(LOCALIZATION_CXX_SOURCES)
 
 MAP_SMOKE_SOURCES := \
 	tests/map_layout_smoke.c \
@@ -220,7 +225,8 @@ STATUS_SYSTEM_SMOKE_SOURCES := \
 	tests/status_system_smoke.c \
 	$(MAP_C_SOURCES) \
 	$(PLAYER_C_SOURCES) \
-	src/recipe_catalog.cpp
+	src/recipe_catalog.cpp \
+	$(LOCALIZATION_CXX_SOURCES)
 
 CAMP_RECOVERY_SMOKE_SOURCES := \
 	tests/camp_recovery_smoke.c \
@@ -230,7 +236,8 @@ CAMP_RECOVERY_SMOKE_SOURCES := \
 SAVE_STATUS_SMOKE_SOURCES := \
 	tests/save_status_smoke.c \
 	$(MAP_C_SOURCES) \
-	$(SAVE_CXX_SOURCES)
+	$(SAVE_CXX_SOURCES) \
+	$(LOCALIZATION_CXX_SOURCES)
 
 ENDGAME_NEW_SURVIVAL_SMOKE_SOURCES := \
 	tests/endgame_new_survival_smoke.c \

@@ -29,8 +29,9 @@
 
 1. [`GAME_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/GAME_DESIGN.md)
 2. [`CURRENT_STATUS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/CURRENT_STATUS.md)
-3. 本文档
-4. [`NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
+3. [`TERMINOLOGY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/TERMINOLOGY.md)
+4. 本文档
+5. [`NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
 
 ## 2. 当前平衡性总判断
 
@@ -346,8 +347,8 @@
 
 - `英雄路线`：高风险、高压、强调石碑准备、guardian 击杀窗口与回船后的主动确认
 - `和平路线`：高准备、低战斗、强调信号增幅器、稳定氧气计划与回船后的主动确认
-- `定居路线`：低冲突、重确认、强调“你主动放弃求救而不是误触发”，且必须在 Loxi 分支点完成二次确认
-- 三条路线都应先经过 `飞船 / Loxi 分支点`，再进入各自的最终执行段；Signal Tower 只负责执行已选路线，不负责替玩家做选择
+- `定居路线`：低冲突、重确认、强调“你主动放弃求救而不是误触发”，且必须在洛希分支点完成二次确认
+- 三条路线都应先经过 `飞船 / 洛希分支点`，再进入各自的最终执行段；Signal Tower 只负责执行已选路线，不负责替玩家做选择
 
 后续任何调参都不应把三条路线重新调成同一种体验。
 
@@ -360,8 +361,8 @@
 - `中上部飞船基地`：恢复、制作、路线确认、结局确认
 - `北侧遗迹主线`：终局推进区，负责碎片、石碑、Boss、Signal Tower
 - `东侧 swamp`：风险学习区，负责路线管理、状态处理、装备验证
-- `西侧 Echo Wilds`：人物调查、潜行追踪、定居主题补强
-- `南侧 Subsurface Sink`：设施控制、风险改写、真相揭示
+- `西侧回响荒野（Echo Wilds）`：人物调查、潜行追踪、定居主题补强
+- `南侧地下沉降带（Subsurface Sink）`：设施控制、风险改写、真相揭示
 
 ### 8.2 当前地图匹配为什么是合理的
 
@@ -396,7 +397,7 @@
 
 ### 9.1 地图与剧情扩展的当前处理方式
 
-西侧 `Echo Wilds` 与南侧 `Subsurface Sink` 当前应固定视为：
+西侧 `回响荒野（Echo Wilds）` 与南侧 `地下沉降带（Subsurface Sink）` 当前应固定视为：
 
 - 正式补完目标
 - 主线之外的高价值可玩区

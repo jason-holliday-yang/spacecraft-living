@@ -6,6 +6,7 @@
 
 #include <cmath>
 #include <cstring>
+#include <vector>
 
 static int MinInt(int a, int b) {
     return a < b ? a : b;
@@ -13,6 +14,18 @@ static int MinInt(int a, int b) {
 
 static int MaxInt(int a, int b) {
     return a > b ? a : b;
+}
+
+static void AppendCodepointRange(std::vector<int> *codepoints, int first, int last) {
+    int value;
+
+    if (codepoints == NULL || first > last) {
+        return;
+    }
+
+    for (value = first; value <= last; ++value) {
+        codepoints->push_back(value);
+    }
 }
 
 Font AssetsInternal_LoadUIFont(void) {
@@ -27,31 +40,32 @@ Font AssetsInternal_LoadUIFont(void) {
         "/System/Library/Fonts/SFNS.ttf"
     };
     const int fontBaseSize = 42;
-    int codepointCount;
-    int *codepoints;
+    std::vector<int> codepoints;
     int pathIndex;
 
-    codepointCount = 0;
-    codepoints = LoadCodepoints(Loc_GetUIFontSampleText(), &codepointCount);
+    codepoints.reserve(22000);
+    AppendCodepointRange(&codepoints, 0x0020, 0x007E);  // Basic Latin
+    AppendCodepointRange(&codepoints, 0x00A0, 0x00FF);  // Latin-1 punctuation/symbols
+    AppendCodepointRange(&codepoints, 0x2000, 0x206F);  // General punctuation
+    AppendCodepointRange(&codepoints, 0x3000, 0x303F);  // CJK punctuation
+    AppendCodepointRange(&codepoints, 0x4E00, 0x9FFF);  // Common CJK ideographs
+    AppendCodepointRange(&codepoints, 0xFF00, 0xFFEF);  // Full-width forms
 
     for (pathIndex = 0; pathIndex < (int)(sizeof(fontPaths) / sizeof(fontPaths[0])); pathIndex++) {
         if (FileExists(fontPaths[pathIndex])) {
             Font font;
 
-            font = LoadFontEx(fontPaths[pathIndex], fontBaseSize, codepoints, codepointCount);
+            font = LoadFontEx(fontPaths[pathIndex],
+                              fontBaseSize,
+                              codepoints.empty() ? NULL : codepoints.data(),
+                              (int)codepoints.size());
             if (font.texture.id != 0) {
                 SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
-                if (codepoints != NULL) {
-                    UnloadCodepoints(codepoints);
-                }
                 return font;
             }
         }
     }
 
-    if (codepoints != NULL) {
-        UnloadCodepoints(codepoints);
-    }
     return Font{};
 }
 

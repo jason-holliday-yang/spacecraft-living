@@ -51,6 +51,9 @@ void Game_CloseStoryScene(Game *game) {
     game->storySceneOpen = false;
     game->storyScene = STORY_SCENE_NONE;
     game->storySceneElapsed = 0.0f;
+    game->narrativeTransitionActive = false;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
 }
 
 AudioScene Game_SelectAudioScene(const Game *game) {
@@ -65,7 +68,9 @@ AudioScene Game_SelectAudioScene(const Game *game) {
     }
 
     area = Map_GetAreaAt(game->player.gridX, game->player.gridY);
-    if (!game->tasks.bossDefeated && area == MAP_AREA_RUINS && game->tasks.stage >= 7) {
+    if (!game->tasks.bossDefeated
+        && (area == MAP_AREA_RUINS || area == MAP_AREA_BOSS_ARENA)
+        && game->tasks.stage >= 7) {
         return AUDIO_SCENE_BOSS;
     }
 
@@ -79,6 +84,8 @@ AudioScene Game_SelectAudioScene(const Game *game) {
             return AUDIO_SCENE_SWAMP;
         case MAP_AREA_RUINS:
             return AUDIO_SCENE_RUINS;
+        case MAP_AREA_BOSS_ARENA:
+            return AUDIO_SCENE_BOSS;
         case MAP_AREA_UNKNOWN:
         default:
             return AUDIO_SCENE_BASE;
@@ -162,12 +169,16 @@ static bool IsCrossX3Ready(const TaskSystem *tasks) {
 
 static bool IsShipBaseLocation(const char *locationName) {
     return locationName != NULL
-        && (std::strcmp(locationName, "Command Deck") == 0
+        && (std::strcmp(locationName, "Central Corridor") == 0
+            || std::strcmp(locationName, "Command Deck") == 0
             || std::strcmp(locationName, "Workshop") == 0
             || std::strcmp(locationName, "Terminal Bay") == 0
+            || std::strcmp(locationName, "Life Support") == 0
             || std::strcmp(locationName, "Life Support Bay") == 0
             || std::strcmp(locationName, "Cargo Hold") == 0
+            || std::strcmp(locationName, "Diagnostics") == 0
             || std::strcmp(locationName, "Recovery Zone") == 0
+            || std::strcmp(locationName, "Airlock Link") == 0
             || std::strcmp(locationName, "Airlock Passage") == 0
             || std::strcmp(locationName, "Power Bay") == 0);
 }
@@ -511,9 +522,13 @@ static bool TryAdvanceWestSouthRouteFlags(Game *game, const char *locationName, 
 }
 
 static const char *GetBaseReturnSummary(const Game *game, const char *previousLocationName) {
+    GameEnding selectedRoute;
+
     if (game == NULL || previousLocationName == NULL || Map_GetAreaAt(game->player.gridX, game->player.gridY) != MAP_AREA_BASE) {
         return NULL;
     }
+
+    selectedRoute = Tasks_GetSelectedEndingRoute(&game->tasks);
 
     if (IsTrackedEastLocation(previousLocationName)) {
         if (game->tasks.stage == 3) {
@@ -531,6 +546,13 @@ static const char *GetBaseReturnSummary(const Game *game, const char *previousLo
         return "Base summary: east run complete. Recover and continue.";
     }
 
+    if (std::strcmp(previousLocationName, "Guardian Arena") == 0) {
+        if (game->tasks.stage == 7 && selectedRoute == ENDING_HEROIC && game->tasks.bossDefeated) {
+            return "Base summary: guardian breach complete. Finish the heroic route at the Signal Tower.";
+        }
+        return "Base summary: guardian breach complete. The Signal Tower is now exposed.";
+    }
+
     if (IsTrackedRuinsLocation(previousLocationName)) {
         if (game->tasks.stage == 6 && game->player.resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
             return "Base summary: fragment set complete. Sync with Loxi.";
@@ -538,11 +560,34 @@ static const char *GetBaseReturnSummary(const Game *game, const char *previousLo
         if (game->tasks.stage == 6) {
             return "Base summary: continue north fragment runs after recovery.";
         }
+        if (game->tasks.stage == 7 && selectedRoute == ENDING_HEROIC && game->tasks.bossDefeated) {
+            return "Base summary: guardian breach complete. Finish the heroic route at the Signal Tower.";
+        }
+        if (game->tasks.stage == 7 && selectedRoute == ENDING_HEROIC) {
+            return "Base summary: heroic route locked. Open the airlock when you are ready to enter the guardian arena.";
+        }
+        if (game->tasks.stage == 7 && selectedRoute == ENDING_PEACEFUL && game->player.hasSignalAmplifier) {
+            return "Base summary: peaceful route locked. Carry the Signal Amplifier to the Signal Tower.";
+        }
+        if (game->tasks.stage == 7 && selectedRoute == ENDING_PEACEFUL) {
+            return "Base summary: peaceful route locked. Craft the Signal Amplifier before returning to the tower.";
+        }
+        if (game->tasks.stage == 7
+            && game->tasks.endingArchiveReviewed
+            && Tasks_IsEndingBranchReady(&game->tasks)
+            && selectedRoute == ENDING_NONE) {
+            return "Base summary: archive review complete. Confirm the final route with Loxi.";
+        }
+        if (game->tasks.stage == 7
+            && !game->tasks.endingArchiveReviewed
+            && Tasks_IsEndingBranchReady(&game->tasks)) {
+            return "Base summary: the archive is assembled. Return to Loxi for the final review.";
+        }
         if (game->tasks.stage == 7 && game->tasks.bossDefeated) {
-            return "Base summary: boss defeated. Choose rescue or settlement.";
+            return "Base summary: boss defeated. Return to Loxi and commit to the final route.";
         }
         if (game->tasks.stage == 7 && game->player.hasSignalAmplifier) {
-            return "Base summary: peaceful route available. Choose rescue or settlement.";
+            return "Base summary: Signal Amplifier ready. Return to Loxi and commit to the final route.";
         }
         if (game->tasks.stage == 7 && game->tasks.monolithsLit >= 3) {
             return "Base summary: monolith ring complete. Prepare for final push.";

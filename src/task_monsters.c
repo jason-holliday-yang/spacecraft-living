@@ -268,9 +268,59 @@ static void ApplyMonsterAttack(const TaskSystem *tasks, MonsterType type, Player
     }
 }
 
+static int CountActiveBossArenaGuards(const TaskSystem *tasks) {
+    int count;
+    int index;
+
+    if (tasks == NULL) {
+        return 0;
+    }
+
+    count = 0;
+    for (index = 0; index < tasks->monsterCount; index++) {
+        const Monster *monster;
+
+        monster = &tasks->monsters[index];
+        if (monster->active
+            && monster->type == MONSTER_RELIC_GUARD
+            && monster->area == MAP_AREA_BOSS_ARENA) {
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
 static void TrySpawnBossGuards(TaskSystem *tasks, const GameMap *map) {
-    (void)tasks;
-    (void)map;
+    static const int kPreferredOrigins[][2] = {
+        {BOSS_ARENA_X + 1, BOSS_ARENA_Y + 1},
+        {BOSS_ARENA_X + 1, BOSS_ARENA_Y + 3},
+        {BOSS_ARENA_X + 4, BOSS_ARENA_Y + 1},
+        {BOSS_ARENA_X + 3, BOSS_ARENA_Y + 4}
+    };
+    const int maxArenaGuards = 2;
+    int activeGuards;
+    int index;
+
+    if (tasks == NULL || map == NULL) {
+        return;
+    }
+
+    activeGuards = CountActiveBossArenaGuards(tasks);
+    for (index = 0;
+         index < (int)(sizeof(kPreferredOrigins) / sizeof(kPreferredOrigins[0]))
+            && activeGuards < maxArenaGuards
+            && tasks->monsterCount < MAX_MONSTERS;
+         index++) {
+        if (TasksRuntime_AddMonsterSpawn(tasks,
+                                         map,
+                                         MONSTER_RELIC_GUARD,
+                                         kPreferredOrigins[index][0],
+                                         kPreferredOrigins[index][1],
+                                         7)) {
+            activeGuards += 1;
+        }
+    }
 }
 
 static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player, const GameMap *map) {
@@ -334,6 +384,9 @@ static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player, 
             }
             break;
         }
+        case BOSS_ATTACK_SPAWN:
+            TrySpawnBossGuards(tasks, map);
+            break;
         default:
             break;
     }

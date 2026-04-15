@@ -12,7 +12,7 @@
 - 当前目标是在补齐 `西线 Echo Wilds` 与 `南线 Subsurface Sink` 内容后冻结地图与剧情范围
 - 在此之前，不再继续扩展超出西线 / 南线补完之外的新地图、新剧情主线或大型新玩法系统
 - 核心游玩体验固定为 `求生 + 搜集真相 + 主动选择结局`，而不是以连续战斗清场为主
-- 主线剧情推进固定以 `任务 -> 日志 / 调查回收 -> 回船总结 -> 终局分支确认` 为骨架
+- 主线剧情推进固定以 `任务 -> 日志 / 调查回收 -> 回船总结 -> 洛希分支确认 -> 路线执行` 为骨架
 - 活动开发围绕 `西线补完`、`南线补完`、`主线整合`、`平衡性`、`稳定性` 与 `发布级收尾` 展开
 
 ## 当前最值得先看
@@ -20,7 +20,7 @@
 - [`design/GAME_DESIGN.md`](design/GAME_DESIGN.md)
   当前设计基线，定义固定玩法、世界布局、日志驱动推进与结局结构。
 - [`design/CURRENT_STATUS.md`](design/CURRENT_STATUS.md)
-  当前代码真实落地状态，回答“已经做到哪里”，并核对日志解锁、Loxi 分支点与战斗轻量化是否已落地。
+  当前代码真实落地状态，回答“已经做到哪里”，并核对日志解锁、Loxi 分支点、英雄路线气闸 Boss 战与战斗轻量化是否已落地。
 - [`design/EXPANSION_MAP_DESIGN.md`](design/EXPANSION_MAP_DESIGN.md)
   西线 `Echo Wilds` 与南线 `Subsurface Sink` 的当前活动地图设计文档。
 - [`design/EXPANSION_STORY_TASKS.md`](design/EXPANSION_STORY_TASKS.md)

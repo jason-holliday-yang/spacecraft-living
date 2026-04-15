@@ -209,11 +209,11 @@ static bool TryUseSignalTower(TaskSystem *tasks, const Player *player, char *mes
 
     if (selectedRoute == ENDING_HEROIC) {
         if (tasks->monolithsLit >= 3) {
-            TasksRuntime_WriteMessage(message, messageSize, "The heroic route is locked in, but the tower still detects the guardian. The fully lit ring has weakened it and softened the climb. Finish the kill, then return here.");
+            TasksRuntime_WriteMessage(message, messageSize, "The heroic route is locked in, but the tower is waiting on the isolated guardian breach. Open the ship airlock, clear the arena, then return here.");
         } else if (tasks->monolithsLit > 0) {
-            TasksRuntime_WriteMessage(message, messageSize, "The heroic route is locked in. Lit monoliths are helping, but you still need the guardian down before this tower will accept the final launch.");
+            TasksRuntime_WriteMessage(message, messageSize, "The heroic route is locked in. The arena breach is ready at the ship airlock, and your lit monoliths will still help once the guardian engages.");
         } else {
-            TasksRuntime_WriteMessage(message, messageSize, "The heroic route is locked in. Light the monolith ring if you want a safer push, then defeat the guardian before using the tower.");
+            TasksRuntime_WriteMessage(message, messageSize, "The heroic route is locked in. The ship airlock now leads into the guardian arena. Clear that fight before trying to launch the tower.");
         }
     } else if (tasks->monolithsLit >= 3) {
         TasksRuntime_WriteMessage(message, messageSize, "The peaceful route is locked in, but the tower still needs the Signal Amplifier. The fully lit ring is helping keep the climb stable while you prepare it.");

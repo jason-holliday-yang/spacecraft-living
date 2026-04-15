@@ -40,19 +40,47 @@ static const IntroSlideDef kEndingBackdropDefs[STORY_ENDING_SCENE_COUNT] = {
         Color{166, 255, 226, 255},
         Color{16, 42, 42, 255},
         Color{6, 12, 18, 255}
+    },
+    {
+        LT("Heroic Rescue", "强行救援"),
+        LT("Heroic Rescue With Records", "强行救援与完整记录"),
+        LT("", ""),
+        Color{255, 214, 154, 255},
+        Color{48, 28, 20, 255},
+        Color{12, 8, 12, 255}
+    },
+    {
+        LT("Peaceful Rescue", "和平救援"),
+        LT("Peaceful Rescue With Repair", "和平救援与修复成果"),
+        LT("", ""),
+        Color{166, 255, 226, 255},
+        Color{16, 44, 40, 255},
+        Color{6, 12, 18, 255}
+    },
+    {
+        LT("Settlement Ending", "定居结局"),
+        LT("Settlement With Legacy", "定居与遗产传承"),
+        LT("", ""),
+        Color{255, 214, 154, 255},
+        Color{34, 28, 24, 255},
+        Color{10, 8, 12, 255}
     }
 };
 
-static int GetEndingBackdropIndex(GameEnding ending) {
+static bool IsCrossX3Ready(const TaskSystem *tasks);
+
+static int GetEndingBackdropIndex(GameEnding ending, const TaskSystem *tasks) {
+    const bool fullArchiveReady = IsCrossX3Ready(tasks);
+
     switch (ending) {
         case ENDING_SETTLEMENT:
-            return 0;
+            return fullArchiveReady ? 6 : 0;
         case ENDING_FAILURE:
             return 1;
         case ENDING_HEROIC:
-            return 2;
+            return fullArchiveReady ? 4 : 2;
         case ENDING_PEACEFUL:
-            return 3;
+            return fullArchiveReady ? 5 : 3;
         case ENDING_NONE:
         default:
             return 2;
@@ -85,13 +113,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX3Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return Loc_Translate("With the full archive in hand, west and south findings confirm a deliberate high-cost rescue.");
+                return Loc_Translate("After Loxi's final review, the full archive frames this as a deliberate high-cost rescue.");
             case ENDING_PEACEFUL:
-                return Loc_Translate("With the full archive in hand, west and south findings frame this as full-system stabilization through understanding.");
+                return Loc_Translate("After Loxi's final review, the full archive frames this as full-system stabilization through understanding.");
             case ENDING_SETTLEMENT:
-                return Loc_Translate("With the full archive in hand, west and south findings frame settlement as deliberate long-term stewardship.");
+                return Loc_Translate("After Loxi's final review, the full archive frames settlement as deliberate long-term stewardship.");
             case ENDING_FAILURE:
-                return Loc_Translate("Even with the full archive in hand, the final attempt still collapsed under sustained pressure.");
+                return Loc_Translate("Even after Loxi's final review, the final attempt still collapsed under sustained pressure.");
             case ENDING_NONE:
             default:
                 return "";
@@ -101,13 +129,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX2Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return Loc_Translate("With the late findings revealed, you chose force knowing the tower, purifier ring, and monoliths were one damaged maintenance lattice.");
+                return Loc_Translate("By the time Loxi confirmed it, the late findings had shown the tower, purifier ring, and monoliths were one damaged lattice.");
             case ENDING_PEACEFUL:
-                return Loc_Translate("With the late findings revealed, you chose stabilization knowing the tower and purifier controls were the same failing system.");
+                return Loc_Translate("By the time Loxi confirmed it, the late findings had shown the tower and purifier controls were one failing system.");
             case ENDING_SETTLEMENT:
-                return Loc_Translate("With the late findings revealed, settlement means inheriting the maintenance lattice instead of escaping it.");
+                return Loc_Translate("By the time Loxi confirmed it, settlement meant inheriting the maintenance lattice instead of escaping it.");
             case ENDING_FAILURE:
-                return Loc_Translate("The late findings were already visible, but the damaged lattice still outlasted the run.");
+                return Loc_Translate("Loxi could already see the late findings, but the damaged lattice still outlasted the run.");
             case ENDING_NONE:
             default:
                 return "";
@@ -117,13 +145,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX1Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return Loc_Translate("The shared trail was already visible: west crew handoffs and south facility records had aligned into one survival timeline.");
+                return Loc_Translate("By the time Loxi confirmed it, west crew handoffs and south facility records had aligned into one survival timeline.");
             case ENDING_PEACEFUL:
-                return Loc_Translate("The shared trail was already visible: the archive had already shown that coordination mattered more than panic.");
+                return Loc_Translate("By the time Loxi confirmed it, the archive had already shown that coordination mattered more than panic.");
             case ENDING_SETTLEMENT:
-                return Loc_Translate("The shared trail was already visible: the archive had already shown that staying was a deliberate option, not surrender.");
+                return Loc_Translate("By the time Loxi confirmed it, the archive had already shown that staying was deliberate, not surrender.");
             case ENDING_FAILURE:
-                return Loc_Translate("The shared trail was already visible, but the run still collapsed before it could be carried through.");
+                return Loc_Translate("By the time Loxi framed the choice, the shared trail was visible, but the run still collapsed before it held.");
             case ENDING_NONE:
             default:
                 return "";
@@ -147,7 +175,7 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
     Rectangle bodyRect;
     Rectangle contextRect;
 
-    endingBackdropIndex = GetEndingBackdropIndex(ending);
+    endingBackdropIndex = GetEndingBackdropIndex(ending, tasks);
     endingBackdrop = &kEndingBackdropDefs[endingBackdropIndex];
     endingTexture = &assets->storyEndingScenes[endingBackdropIndex];
     scale = UIRuntime_GetScale(screenWidth, screenHeight);

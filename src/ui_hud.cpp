@@ -128,7 +128,7 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
     UIRuntime_DrawWrappedText(assets, reserveBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 88.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 14.5f * scale, 16.0f * scale, Color{255, 214, 154, 255});
     if (showLoxiGuidance) {
         UIRuntime_DrawPanel(objectivePanel, Color{8, 18, 30, 214}, Color{99, 221, 194, 75});
-        UIRuntime_DrawText(assets, Loc_PickLiteral("Loxi Guidance", "洛西指引"), Vector2{objectivePanel.x + 18.0f * scale, objectivePanel.y + 14.0f * scale}, 25.0f * scale, WHITE);
+        UIRuntime_DrawText(assets, Loc_PickLiteral("Loxi Guidance", "洛希指引"), Vector2{objectivePanel.x + 18.0f * scale, objectivePanel.y + 14.0f * scale}, 25.0f * scale, WHITE);
         UIRuntime_DrawText(assets, LOC_UI_OBJECTIVE, Vector2{objectivePanel.x + 18.0f * scale, objectivePanel.y + 48.0f * scale}, 15.0f * scale, Color{255, 214, 154, 255});
         UIRuntime_DrawWrappedText(assets,
                                   tasks->objective,

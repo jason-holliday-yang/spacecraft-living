@@ -17,6 +17,7 @@ typedef enum MapArea {
     MAP_AREA_SWAMP_OUTER,
     MAP_AREA_SWAMP_DEEP,
     MAP_AREA_RUINS,
+    MAP_AREA_BOSS_ARENA,
     MAP_AREA_UNKNOWN
 } MapArea;
 

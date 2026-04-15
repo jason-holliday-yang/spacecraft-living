@@ -240,14 +240,26 @@ Rectangle UI_GetSaveSlotRect(int screenWidth, int screenHeight, int slotIndex) {
     };
 }
 
-Rectangle UI_GetSaveDeleteButtonRect(int screenWidth, int screenHeight) {
+Rectangle UI_GetSavePrimaryButtonRect(int screenWidth, int screenHeight) {
     float scale;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     return Rectangle{
         screenWidth * 0.5f + 248.0f * scale,
         screenHeight * 0.5f + 206.0f * scale,
-        220.0f * scale,
+        104.0f * scale,
+        50.0f * scale
+    };
+}
+
+Rectangle UI_GetSaveDeleteButtonRect(int screenWidth, int screenHeight) {
+    float scale;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    return Rectangle{
+        screenWidth * 0.5f + 364.0f * scale,
+        screenHeight * 0.5f + 206.0f * scale,
+        104.0f * scale,
         50.0f * scale
     };
 }

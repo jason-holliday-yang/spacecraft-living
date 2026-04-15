@@ -21,18 +21,18 @@ typedef struct EndingTextDef {
 const std::array<StageTextDef, 7> kStageTextDefs = {{
     {1, {"Wake Up", "苏醒"}, {"Gather 3 Wood + 2 Metal Scrap, then repair the oxygen console.", "收集 3 份木材和 2 份金属残片，然后修好氧气控制台。"}},
     {2, {"First Steps", "迈出第一步"}, {"Gather Glow Moss and Ore, craft a Glow Stick, finish oxygen repair.", "收集发光苔和矿石，制作荧光棒，完成氧气修复。"}},
-    {3, {"Into the Wild", "走向荒野"}, {"Open airlock, gather Vine/Fruit/Fungus, repair comm relay.", "打开气闸，收集藤蔓 / 果实 / 菌株，修复通讯中继。"}},
+    {3, {"Into the Wild", "走向荒野"}, {"Open airlock, gather Vine/Fruit/Fungus, repair comm relay.", "打开气闸，收集异星藤蔓 / 植物果实 / 特殊菌株，修复通讯中继。"}},
     {4, {"Rising Risk", "风险升级"}, {"Craft Laser Gun and Suit, then inspect the crash clue.", "制作激光枪和防护服，然后调查坠毁线索。"}},
     {5, {"Power Breakthrough", "动力突破"}, {"Secure an Energy Core and restore the power bay.", "取得能源核心并恢复动力舱。"}},
-    {6, {"Final Preparation", "最终准备"}, {"Collect 3 Relic Fragments and sync with Loxi terminal.", "收集 3 枚遗迹碎片，并在洛西终端同步。"}},
-    {7, {"Final Choice", "最终抉择"}, {"Recover the final logs, return to Loxi, and choose the ending route.", "找回最后的日志，回到洛西处，选择最终结局路线。"}}
+    {6, {"Final Preparation", "最终准备"}, {"Collect 3 Relic Fragments and sync with Loxi terminal.", "收集 3 枚遗迹碎片，并在洛希终端同步。"}},
+    {7, {"Final Choice", "最终抉择"}, {"Recover the final logs, return to Loxi, and choose the ending route.", "找回最后的日志，回到洛希处，选择最终结局路线。"}}
 }};
 
 const std::array<EndingTextDef, 4> kEndingTextDefs = {{
-    {ENDING_HEROIC, {"Heroic Rescue", "强行救援"}, {"You defeated the final threat and manually activated the Signal Tower. Loxi confirmed the rescue beacon was sent.", "你击败了最后的威胁，并手动启动了信号塔。洛西确认求救信标已经发出。"}},
-    {ENDING_PEACEFUL, {"Peaceful Rescue", "和平救援"}, {"You avoided the final battle and stabilized the tower with the Signal Amplifier, leaving the alien ecosystem undisturbed.", "你避开了最终战斗，用信号放大器稳定了塔楼，没有进一步扰动异星生态。"}},
-    {ENDING_SETTLEMENT, {"Alien Settlement", "异星定居"}, {"You gave up on uncertain rescue and transformed the ship base into a long-term home.", "你放弃了不确定的救援，把飞船基地改造成了可以长期生活的家园。"}},
-    {ENDING_FAILURE, {"Failed Survival", "生存失败"}, {"Repeated collapses and failing life-support left the expedition unsustainable. The ship could no longer keep you alive on this world.", "反复崩溃与失效的生命维持系统让这次远征再也无法持续。飞船已经无法继续让你在这颗星球上活下去。"}}
+    {ENDING_HEROIC, {"Heroic Rescue", "强行救援"}, {"The guardian fell, the Signal Tower yielded to manual control, and the beacon finally cut into the sky. Loxi confirmed the rescue call was sent, but it was a departure bought by force and marked by what had to be broken to make it happen.", "守卫倒下后，信号塔终于服从人工控制，求救信标也随之刺入天际。洛希确认求援已经发出，但这是一场靠强行突破换来的离开，它留下的痕迹也会和启程本身一起被记住。"}},
+    {ENDING_PEACEFUL, {"Peaceful Rescue", "和平救援"}, {"The amplifier folded human systems into the tower's language, and the signal rose without a final breach. Loxi confirmed the route held, and the world was left quieter than it would have been if you had forced your way through it.", "信号放大器把人类系统嵌进了塔楼的语言，于是信号在没有最后强闯的情况下升起。洛希确认路线已经成立，而你离开时，这个世界也比被强行撕开时更完整、更安静。"}},
+    {ENDING_SETTLEMENT, {"Alien Settlement", "异星定居"}, {"Rescue stopped being the only future that mattered. With Loxi, the ship, and the surviving systems, the wreck became a deliberate home and the beginning of a longer duty on this world.", "求援不再是唯一值得追逐的未来。借助洛希、飞船和那些仍能维持的系统，这艘残骸被真正改造成了家，也成了你在这颗星球上继续承担下去的起点。"}},
+    {ENDING_FAILURE, {"Failed Survival", "生存失败"}, {"The collapses came faster than repair could answer them. Air, power, and shelter never held long enough, and the expedition ended before this world could be understood or survived on your terms.", "崩溃来得比修复更快。空气、电力与庇护始终没能维持得足够久，这场远征最终在你真正弄清这颗世界之前就先一步结束了。"}}
 }};
 
 bool IsTowerPlateau(const Player *player) {
@@ -118,19 +118,19 @@ const char *TasksContent_GetStageObjective(const TaskSystem *tasks, const Player
     }
     if (tasks->stage == 7) {
         if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
+            if (!tasks->endingArchiveReviewed) {
+                return Loc_Translate("Return to Loxi and review the assembled archive before choosing the final route.");
+            }
             return Loc_Translate("Return to Loxi and choose the final route.");
         }
         if (tasks->selectedEndingRoute == ENDING_HEROIC) {
             if (tasks->bossDefeated) {
                 return Loc_Translate("Heroic route chosen. Reach the Signal Tower and launch the rescue beacon.");
             }
-            if (tasks->monolithsLit >= 3) {
-                return Loc_Translate("Heroic route chosen. The ring is complete. Defeat the guardian, then reach the Signal Tower.");
+            if (player != NULL && Map_GetAreaAt(player->gridX, player->gridY) == MAP_AREA_BOSS_ARENA) {
+                return Loc_Translate("Heroic route chosen. Defeat the guardian in the isolated arena, then return to the Signal Tower.");
             }
-            if (tasks->monolithsLit > 0) {
-                return Loc_Translate("Heroic route chosen. Light remaining monoliths or defeat the guardian, then reach the Signal Tower.");
-            }
-            return Loc_Translate("Heroic route chosen. Light monoliths or defeat the guardian, then reach the Signal Tower.");
+            return Loc_Translate("Heroic route chosen. Open the airlock and commit to the guardian arena.");
         }
         if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
             if (player != NULL && player->hasSignalAmplifier) {
@@ -457,13 +457,22 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
         case 7:
             if (area == MAP_AREA_BASE) {
                 if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
+                    if (!tasks->endingArchiveReviewed) {
+                        return Loc_Translate("Full archive context is assembled. Return to Loxi so it can review how the west, south, and mainline evidence reshape each ending before you choose.");
+                    }
                     return Loc_Translate("Full archive context is assembled. Loxi can now frame heroic rescue, peaceful rescue, or settlement as deliberate answers to the same truth.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                     if (tasks->bossDefeated) {
                         return Loc_Translate("Heroic route chosen. Head to the Signal Tower.");
                     }
-                    return Loc_Translate("Heroic route chosen. Finish monolith prep if needed, then defeat the guardian.");
+                    if (tasks->monolithsLit >= 3) {
+                        return Loc_Translate("Heroic route chosen. The ring is fully lit. Open the airlock when you are ready for the isolated guardian arena.");
+                    }
+                    if (tasks->monolithsLit > 0) {
+                        return Loc_Translate("Heroic route chosen. Your monolith prep carries into the arena. Open the airlock when you are ready.");
+                    }
+                    return Loc_Translate("Heroic route chosen. Open the airlock to begin the isolated guardian fight.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
                     if (player != NULL && player->hasSignalAmplifier) {
@@ -486,10 +495,16 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
                 if (tasks->bossDefeated) {
                     return Loc_Translate("The tower is ready for the chosen heroic ending.");
                 }
-                if (tasks->monolithsLit >= 3) {
-                    return Loc_Translate("Heroic route selected. The guardian is weakened.");
+                if (area == MAP_AREA_BOSS_ARENA) {
+                    if (tasks->monolithsLit >= 3) {
+                        return Loc_Translate("Heroic route selected. The guardian is isolated, and the fully lit ring is weakening it.");
+                    }
+                    return Loc_Translate("Heroic route selected. The guardian is isolated inside the arena. Finish the fight, then return to the tower.");
                 }
-                return Loc_Translate("Heroic route selected. Finish monolith prep or hunt the guardian.");
+                if (tasks->monolithsLit >= 3) {
+                    return Loc_Translate("Heroic route selected. The guardian is isolated, and the ring is already weakening it. Open the airlock when ready.");
+                }
+                return Loc_Translate("Heroic route selected. Open the airlock to enter the guardian arena.");
             }
             if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
                 if (player != NULL && player->hasSignalAmplifier) {
@@ -498,6 +513,9 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
                 return Loc_Translate("Peaceful route selected. Craft the Signal Amplifier first.");
             }
             if (Tasks_IsEndingBranchReady(tasks)) {
+                if (!tasks->endingArchiveReviewed) {
+                    return Loc_Translate("The archive is assembled, but Loxi still needs a final review at the ship before any ending route becomes a deliberate commitment.");
+                }
                 return Loc_Translate("The main archive is complete. Return to Loxi to choose the ending route before pushing farther.");
             }
             return Loc_Translate("Recover the remaining mainline logs and finish archive tasks before the final branch opens.");
@@ -804,13 +822,19 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
             }
             if (tasks->stage == 7) {
                 if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
+                    if (!tasks->endingArchiveReviewed) {
+                        return Loc_Translate("All mainline logs recovered. Return to Loxi and review the assembled truth before choosing how to answer it.");
+                    }
                     return Loc_Translate("All mainline logs recovered. Return to Loxi and choose how to answer the full archive truth.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_HEROIC) {
                     if (tasks->bossDefeated) {
                         return Loc_Translate("Heroic route chosen. Finish at the Signal Tower.");
                     }
-                    return Loc_Translate("Heroic route chosen. Push the guardian when ready.");
+                    if (tasks->monolithsLit >= 3) {
+                        return Loc_Translate("Heroic route chosen. The ring is ready. Open the airlock when you are ready for the guardian arena.");
+                    }
+                    return Loc_Translate("Heroic route chosen. Open the airlock to start the guardian fight.");
                 }
                 if (tasks->selectedEndingRoute == ENDING_PEACEFUL) {
                     if (player->hasSignalAmplifier) {
@@ -873,6 +897,9 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
                         return Loc_Translate("Heroic route chosen. This is the best timing for the tower push after the guardian falls.");
                     }
                     if (tasks->selectedEndingRoute == ENDING_NONE) {
+                        if (Tasks_IsEndingBranchReady(tasks) && !tasks->endingArchiveReviewed) {
+                            return Loc_Translate("Do not commit here blind. Return to Loxi and review the assembled archive first.");
+                        }
                         return Loc_Translate("Do not commit here blind. Return to Loxi once the archive is complete.");
                     }
                     return Loc_Translate("Plateau is dangerous. Follow the chosen route's prep before committing.");
@@ -894,6 +921,14 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
                 return Loc_Translate("Tower area: keep oxygen margin and retreat plan.");
             }
             return Loc_Translate("Ruins have high oxygen pressure. Use short planned runs.");
+        case MAP_AREA_BOSS_ARENA:
+            if (tasks->bossDefeated) {
+                return Loc_Translate("Guardian Arena is clear. Return to the ship and finish at the Signal Tower.");
+            }
+            if (tasks->monolithsLit >= 3) {
+                return Loc_Translate("Guardian Arena: the monolith ring is already softening this fight. Keep oxygen margin for the last phase.");
+            }
+            return Loc_Translate("Guardian Arena: no route tricks remain. Stabilize oxygen and win the fight cleanly.");
         case MAP_AREA_UNKNOWN:
         default:
             return Loc_Translate("Watch oxygen, health, and retreat route.");

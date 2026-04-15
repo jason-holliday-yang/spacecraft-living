@@ -16,9 +16,9 @@ typedef struct TextureAsset {
 } TextureAsset;
 
 #define INTRO_CUTSCENE_SLIDE_COUNT 5
-#define STORY_MAIN_SCENE_COUNT 13
-#define STORY_LOG_SCENE_COUNT 3
-#define STORY_ENDING_SCENE_COUNT 4
+#define STORY_MAIN_SCENE_COUNT 22
+#define STORY_LOG_SCENE_COUNT 14
+#define STORY_ENDING_SCENE_COUNT 7
 
 typedef struct AssetBundle {
     TextureAsset player;
@@ -36,6 +36,7 @@ typedef struct AssetBundle {
     TextureAsset tileSwampGround;
     TextureAsset tileSwampOuterGround;
     TextureAsset tileSwampDeepGround;
+    TextureAsset tileEchoBasinFloor;
     TextureAsset tileRuinsFloor;
     TextureAsset tileRuinsApproachFloor;
     TextureAsset tileRuinsRingFloor;

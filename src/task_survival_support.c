@@ -103,6 +103,9 @@ float TasksRuntime_GetAreaOxygenDrain(MapArea area, const Player *player) {
                 rate = 0.58f;
             }
             break;
+        case MAP_AREA_BOSS_ARENA:
+            rate = 0.54f;
+            break;
         case MAP_AREA_UNKNOWN:
         default:
             rate = 0.25f;
@@ -177,6 +180,9 @@ void TasksRuntime_GetLowOxygenThresholds(MapArea area,
             *lowOxygenThreshold = 36.0f;
             *criticalOxygenThreshold = 13.0f;
         }
+    } else if (area == MAP_AREA_BOSS_ARENA) {
+        *lowOxygenThreshold = 35.0f;
+        *criticalOxygenThreshold = 13.0f;
     }
 }
 

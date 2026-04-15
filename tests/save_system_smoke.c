@@ -117,6 +117,7 @@ static SaveSnapshot BuildSnapshot(void) {
     snapshot.amplifierUnlocked = true;
     snapshot.bossDefeated = false;
     snapshot.signalTowerActivated = false;
+    snapshot.endingArchiveReviewed = true;
     snapshot.monolithActivated[0] = true;
     snapshot.monolithActivated[1] = false;
     snapshot.monolithActivated[2] = true;
@@ -395,6 +396,7 @@ int main(void) {
     Require(loaded.statuses[PLAYER_STATUS_POISONED].level == saved.statuses[PLAYER_STATUS_POISONED].level, "status level should round-trip");
     Require(loaded.oxygenRepairLevel == 2, "oxygen repair level 2 should round-trip");
     Require(loaded.communicatorUnlocked, "communicator state should round-trip");
+    Require(loaded.endingArchiveReviewed == saved.endingArchiveReviewed, "ending archive review state should round-trip");
     Require(loaded.clearedDynamicTileCount == saved.clearedDynamicTileCount, "dynamic tile count should round-trip");
     Require(loaded.resources[RESOURCE_JUNK_METAL] == saved.resources[RESOURCE_JUNK_METAL], "resource inventory should round-trip");
     Require(loaded.logs[0].collected == saved.logs[0].collected, "log collection should round-trip");

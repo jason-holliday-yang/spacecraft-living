@@ -53,6 +53,12 @@ static bool AreFinalArchiveTasksComplete(const TaskSystem *tasks) {
         && tasks->southS5Completed;
 }
 
+static bool IsEndingRouteSelectionReady(const TaskSystem *tasks) {
+    return Tasks_IsEndingBranchReady(tasks)
+        && tasks != NULL
+        && tasks->endingArchiveReviewed;
+}
+
 static bool IsLogUnlockedByIndex(const TaskSystem *tasks, int logIndex) {
     switch (logIndex) {
         case 0:
@@ -117,6 +123,26 @@ static void SetNextMonolithMarker(const TaskSystem *tasks, int *gridX, int *grid
     *gridY = SIGNAL_TOWER_Y;
 }
 
+static void SetBossArenaMarker(const TaskSystem *tasks, int *gridX, int *gridY) {
+    int index;
+
+    if (tasks != NULL) {
+        for (index = 0; index < tasks->monsterCount; index++) {
+            const Monster *monster;
+
+            monster = &tasks->monsters[index];
+            if (monster->active && monster->type == MONSTER_FINAL_BOSS) {
+                *gridX = monster->gridX;
+                *gridY = monster->gridY;
+                return;
+            }
+        }
+    }
+
+    *gridX = BOSS_ARENA_BOSS_X;
+    *gridY = BOSS_ARENA_BOSS_Y;
+}
+
 void TasksRuntime_SyncLogAvailability(TaskSystem *tasks) {
     int index;
 
@@ -159,7 +185,7 @@ static void UpdateCommunicatorText(TaskSystem *tasks, const Player *player) {
              locationName,
              Loc_PickLiteral("Task Brief", "任务简报"),
              tasks->objective,
-             Loc_PickLiteral("Loxi Tip", "洛西提示"),
+             Loc_PickLiteral("Loxi Tip", "洛希提示"),
              guidanceBuffer,
              Loc_PickLiteral("Field Note", "现场备注"),
              fieldNoteBuffer);
@@ -316,9 +342,16 @@ bool Tasks_GetObjectiveMarker(const TaskSystem *tasks, const Player *player, int
                     *gridX = WORKBENCH_X;
                     *gridY = WORKBENCH_Y;
                 }
-            } else if (tasks->selectedEndingRoute == ENDING_HEROIC && tasks->bossDefeated) {
-                *gridX = SIGNAL_TOWER_X;
-                *gridY = SIGNAL_TOWER_Y;
+            } else if (tasks->selectedEndingRoute == ENDING_HEROIC) {
+                if (tasks->bossDefeated) {
+                    *gridX = SIGNAL_TOWER_X;
+                    *gridY = SIGNAL_TOWER_Y;
+                } else if (player != NULL && Map_GetAreaAt(player->gridX, player->gridY) == MAP_AREA_BOSS_ARENA) {
+                    SetBossArenaMarker(tasks, gridX, gridY);
+                } else {
+                    *gridX = AIRLOCK_CONSOLE_X;
+                    *gridY = AIRLOCK_CONSOLE_Y;
+                }
             } else {
                 SetNextMonolithMarker(tasks, gridX, gridY);
             }
@@ -367,7 +400,7 @@ bool Tasks_SelectEndingRoute(TaskSystem *tasks, GameEnding ending) {
     if (tasks == NULL
         || tasks->ending != ENDING_NONE
         || tasks->selectedEndingRoute != ENDING_NONE
-        || !Tasks_IsEndingBranchReady(tasks)) {
+        || !IsEndingRouteSelectionReady(tasks)) {
         return false;
     }
 
@@ -385,7 +418,7 @@ bool Tasks_SelectEndingRoute(TaskSystem *tasks, GameEnding ending) {
 
 bool Tasks_CanChooseSettlement(const TaskSystem *tasks) {
     return tasks != NULL
-        && Tasks_IsEndingBranchReady(tasks)
+        && IsEndingRouteSelectionReady(tasks)
         && tasks->selectedEndingRoute == ENDING_NONE
         && tasks->ending == ENDING_NONE;
 }

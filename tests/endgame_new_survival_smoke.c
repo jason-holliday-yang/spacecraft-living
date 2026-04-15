@@ -16,6 +16,22 @@ static void Require(bool condition, const char *message) {
     exit(1);
 }
 
+static int CountBossArenaRelicGuards(const TaskSystem *tasks) {
+    int count;
+    int index;
+
+    count = 0;
+    for (index = 0; index < tasks->monsterCount; index++) {
+        if (tasks->monsters[index].active
+            && tasks->monsters[index].type == MONSTER_RELIC_GUARD
+            && tasks->monsters[index].area == MAP_AREA_BOSS_ARENA) {
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
 static void ResetEndgameState(GameMap *map, Player *player, TaskSystem *tasks) {
     Map_Init(map);
     Player_Init(player);
@@ -39,6 +55,7 @@ static void ResetEndgameState(GameMap *map, Player *player, TaskSystem *tasks) {
 static void PrepareEndingBranch(TaskSystem *tasks) {
     int index;
 
+    tasks->endingArchiveReviewed = true;
     tasks->westW5Completed = true;
     tasks->southS5Completed = true;
     for (index = 0; index < tasks->logCount; index++) {
@@ -115,16 +132,16 @@ int main(void) {
     tasks.monsterCount = 1;
     tasks.monsters[0].active = true;
     tasks.monsters[0].type = MONSTER_FINAL_BOSS;
-    tasks.monsters[0].gridX = EXTERIOR_X(84);
-    tasks.monsters[0].gridY = EXTERIOR_Y(20);
-    tasks.monsters[0].area = MAP_AREA_RUINS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
     tasks.monsters[0].health = 220.0f;
     tasks.monsters[0].maxHealth = 220.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_MELEE;
-    player.gridX = EXTERIOR_X(83);
-    player.gridY = EXTERIOR_Y(20);
+    player.gridX = BOSS_ARENA_BOSS_X - 1;
+    player.gridY = BOSS_ARENA_BOSS_Y;
     Tasks_Update(&tasks, &map, &player, 0.0f);
     Require(player.health < INITIAL_HEALTH,
             "boss contact should still deal direct health damage");
@@ -140,17 +157,17 @@ int main(void) {
     tasks.monsterCount = 1;
     tasks.monsters[0].active = true;
     tasks.monsters[0].type = MONSTER_FINAL_BOSS;
-    tasks.monsters[0].gridX = EXTERIOR_X(84);
-    tasks.monsters[0].gridY = EXTERIOR_Y(20);
-    tasks.monsters[0].area = MAP_AREA_RUINS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
     tasks.monsters[0].health = 220.0f;
     tasks.monsters[0].maxHealth = 220.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_MELEE;
     preparedPlayer.hasProtectionSuit = true;
-    preparedPlayer.gridX = EXTERIOR_X(83);
-    preparedPlayer.gridY = EXTERIOR_Y(20);
+    preparedPlayer.gridX = BOSS_ARENA_BOSS_X - 1;
+    preparedPlayer.gridY = BOSS_ARENA_BOSS_Y;
     Tasks_Update(&tasks, &map, &preparedPlayer, 0.0f);
     preparedHealth = preparedPlayer.health;
     preparedOxygen = preparedPlayer.oxygen;
@@ -168,20 +185,78 @@ int main(void) {
     tasks.monsterCount = 1;
     tasks.monsters[0].active = true;
     tasks.monsters[0].type = MONSTER_FINAL_BOSS;
-    tasks.monsters[0].gridX = EXTERIOR_X(84);
-    tasks.monsters[0].gridY = EXTERIOR_Y(20);
-    tasks.monsters[0].area = MAP_AREA_RUINS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
     tasks.monsters[0].health = 220.0f;
     tasks.monsters[0].maxHealth = 220.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_MELEE;
-    player.gridX = EXTERIOR_X(83);
-    player.gridY = EXTERIOR_Y(20);
+    player.gridX = BOSS_ARENA_BOSS_X - 1;
+    player.gridY = BOSS_ARENA_BOSS_Y;
     Tasks_Update(&tasks, &map, &player, 0.0f);
     litBossHealth = player.health;
     Require(litBossHealth > unlitBossHealth,
             "lit monoliths should weaken the guardian's direct combat pressure");
+
+    ResetEndgameState(&map, &player, &tasks);
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 140.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_SPAWN;
+    tasks.monsters[0].attackTelegraph = 0.1f;
+    tasks.monsters[0].phaseTriggered = true;
+    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
+    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
+    Tasks_Update(&tasks, &map, &player, 0.2f);
+    Require(CountBossArenaRelicGuards(&tasks) >= 1,
+            "boss spawn attack should now summon relic-guard reinforcements into the isolated arena");
+
+    ResetEndgameState(&map, &player, &tasks);
+    PrepareEndingBranch(&tasks);
+    Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),
+            "heroic route should be selectable for boss-fight combat verification");
+    Map_LockSwampOuter(&map);
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 20.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_NONE;
+    player.hasLaserGun = true;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE;
+    player.gridY = BOSS_ARENA_BOSS_Y;
+    player.facingX = -1;
+    player.facingY = 0;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "player attack should be able to finish the guardian in the arena");
+    Require(tasks.bossDefeated,
+            "killing the guardian through combat should mark the boss as defeated");
+    Require(player.gridX == BOSS_ARENA_RETURN_X && player.gridY == BOSS_ARENA_RETURN_Y,
+            "guardian defeat should return the player to the ship-side airlock");
+    Require(Map_IsSwampOuterUnlocked(&map),
+            "guardian defeat should reopen the outer route after the isolated arena clears");
+    Require(player.resources[RESOURCE_BOSS_SCALE] >= 1,
+            "guardian defeat should still award the boss-scale trophy resource");
+    Require(strstr(message, "guardian collapses") != NULL || strstr(message, "守卫已经崩溃") != NULL,
+            "guardian defeat should explain the forced return to the ship");
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(strcmp(tasks.objective, "Heroic route chosen. Reach the Signal Tower and launch the rescue beacon.") == 0,
+            "guardian defeat should hand the heroic route back to the tower finale");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);

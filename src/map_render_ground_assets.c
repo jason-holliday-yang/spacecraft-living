@@ -22,6 +22,19 @@ static const TextureAsset *GetShipFloorAsset(const AssetBundle *assets, const ch
     return &assets->tileBaseFloor;
 }
 
+static const TextureAsset *GetForestFloorAsset(const AssetBundle *assets, const char *locationName) {
+    if (assets == NULL) {
+        return NULL;
+    }
+
+    if (locationName != NULL
+        && strcmp(locationName, "Echo Basin") == 0
+        && assets->tileEchoBasinFloor.loaded) {
+        return &assets->tileEchoBasinFloor;
+    }
+    return &assets->tileForestGround;
+}
+
 static const TextureAsset *GetSwampFloorAsset(const AssetBundle *assets, const char *locationName, bool deepLayer) {
     if (assets == NULL) {
         return NULL;
@@ -113,7 +126,7 @@ const TextureAsset *MapInternal_GetGroundTextureAsset(const AssetBundle *assets,
         case TILE_BASE_FLOOR:
             return GetShipFloorAsset(assets, roomName);
         case TILE_FOREST_GROUND:
-            return assets != NULL ? &assets->tileForestGround : NULL;
+            return GetForestFloorAsset(assets, locationName);
         case TILE_SWAMP_GROUND:
             return GetSwampFloorAsset(assets, locationName, false);
         case TILE_DEEP_SWAMP_GROUND:

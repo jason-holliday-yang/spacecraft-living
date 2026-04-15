@@ -78,6 +78,33 @@ TaskInteractionTarget TasksRuntime_GetPreferredInteractionTarget(const Player *p
     return bestTarget;
 }
 
+static bool ShouldPrioritizeLoxiTerminal(const TaskSystem *tasks,
+                                         const Player *player,
+                                         TaskInteractionTarget target) {
+    GameEnding selectedRoute;
+
+    if (tasks == NULL || player == NULL || target != TASK_INTERACTION_LOXI_TERMINAL) {
+        return false;
+    }
+
+    if (tasks->stage == 6 && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
+        return true;
+    }
+
+    if (tasks->stage != 7) {
+        return false;
+    }
+
+    selectedRoute = Tasks_GetSelectedEndingRoute(tasks);
+    if (Tasks_IsEndingBranchReady(tasks) && selectedRoute == ENDING_NONE) {
+        return true;
+    }
+
+    return selectedRoute == ENDING_HEROIC
+        || selectedRoute == ENDING_PEACEFUL
+        || Tasks_CanChooseSettlement(tasks);
+}
+
 bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize) {
     ResourceNode *node;
     ResourceNode *nearbyNode;
@@ -87,6 +114,13 @@ bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, ch
     if (tasks == NULL || map == NULL || player == NULL) {
         TasksRuntime_WriteMessage(message, messageSize, "Interaction unavailable.");
         return false;
+    }
+
+    target = TasksRuntime_GetPreferredInteractionTarget(player);
+
+    if (ShouldPrioritizeLoxiTerminal(tasks, player, target)
+        && TasksRuntime_HandleShipInteraction(tasks, map, player, target, message, messageSize)) {
+        return true;
     }
 
     node = TasksRuntime_FindNearbyNode(tasks, player);
@@ -99,9 +133,6 @@ bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, ch
         TasksRuntime_GrantLogReward(tasks, player, log, message, messageSize);
         return true;
     }
-
-    target = TasksRuntime_GetPreferredInteractionTarget(player);
-
     if (TasksRuntime_HandleShipInteraction(tasks, map, player, target, message, messageSize)) {
         return true;
     }

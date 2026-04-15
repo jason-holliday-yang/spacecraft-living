@@ -187,6 +187,7 @@ void Game_BuildSaveSnapshot(const Game *game, SaveSnapshot *snapshot) {
     snapshot->bossDefeated = game->tasks.bossDefeated;
     snapshot->signalTowerActivated = game->tasks.signalTowerActivated;
     snapshot->selectedEndingRoute = game->tasks.selectedEndingRoute;
+    snapshot->endingArchiveReviewed = game->tasks.endingArchiveReviewed;
     snapshot->westW1Started = game->tasks.westW1Started;
     snapshot->westW1Completed = game->tasks.westW1Completed;
     snapshot->westW2Started = game->tasks.westW2Started;
@@ -290,6 +291,7 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     game->tasks.bossDefeated = snapshot->bossDefeated;
     game->tasks.signalTowerActivated = snapshot->signalTowerActivated;
     game->tasks.selectedEndingRoute = (GameEnding)snapshot->selectedEndingRoute;
+    game->tasks.endingArchiveReviewed = snapshot->endingArchiveReviewed;
     game->tasks.westW1Started = snapshot->westW1Started;
     game->tasks.westW1Completed = snapshot->westW1Completed;
     game->tasks.westW2Started = snapshot->westW2Started;
@@ -341,6 +343,9 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
         Map_SetFieldCamp(&game->map, snapshot->campX, snapshot->campY);
     }
     ApplySavedDynamicTiles(&game->map, snapshot);
+    if (game->tasks.selectedEndingRoute == ENDING_HEROIC && !game->tasks.bossDefeated) {
+        Map_LockSwampOuter(&game->map);
+    }
 
     positionAdjusted = false;
     safeGridX = game->player.gridX;

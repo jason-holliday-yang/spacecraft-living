@@ -122,6 +122,7 @@ typedef struct TaskSystem {
     bool crashClueFound;
     bool amplifierUnlocked;
     bool communicatorUnlocked;
+    bool endingArchiveReviewed;
     bool bossDefeated;
     bool signalTowerActivated;
     bool westW1Started;

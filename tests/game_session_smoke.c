@@ -37,6 +37,18 @@ static void CollectArchiveEvidence(TaskSystem *tasks, int logIndex) {
     tasks->logs[logIndex].collected = true;
 }
 
+static void CollectAllMainlineLogs(TaskSystem *tasks) {
+    int index;
+
+    Require(tasks != NULL, "mainline archive helper requires a task system");
+    for (index = 0; index < tasks->logCount; index++) {
+        if (tasks->logs[index].category == SHIP_LOG_MAINLINE) {
+            tasks->logs[index].active = true;
+            tasks->logs[index].collected = true;
+        }
+    }
+}
+
 static void ConfigureIsolatedSaveHome(void) {
     char tempHomeTemplate[] = "/tmp/scl-session-smoke-XXXXXX";
     char *tempHome;
@@ -89,6 +101,30 @@ int main(void) {
         Require(game.storySceneOpen, "collecting the first log should open its story scene");
         Require(game.storyScene == STORY_SCENE_LOG_THE_CRASH,
                 "the first collected log should map to the first log story scene");
+        Game_CloseStoryScene(&game);
+    }
+
+    {
+        StoryTriggerSnapshot storyBefore;
+
+        Game_CloseStoryScene(&game);
+        game.storySceneShown[STORY_SCENE_MAIN_FINAL_STANCE] = false;
+        game.tasks.stage = 7;
+        game.tasks.westW5Completed = true;
+        game.tasks.southS5Completed = true;
+        game.tasks.endingArchiveReviewed = false;
+        GamePlay_CaptureStoryTriggerSnapshot(&game, &storyBefore);
+        GamePlay_TryOpenStorySceneFromSnapshot(&game, &storyBefore);
+        Require(!game.storySceneOpen,
+                "final stance story should stay quiet while the archive review step is still incomplete");
+
+        GamePlay_CaptureStoryTriggerSnapshot(&game, &storyBefore);
+        game.tasks.endingArchiveReviewed = true;
+        GamePlay_TryOpenStorySceneFromSnapshot(&game, &storyBefore);
+        Require(game.storySceneOpen,
+                "final stance story should open once the final archive review is completed");
+        Require(game.storyScene == STORY_SCENE_MAIN_FINAL_STANCE,
+                "archive review completion should map to the final stance story scene");
         Game_CloseStoryScene(&game);
     }
 
@@ -307,6 +343,50 @@ int main(void) {
     Require(strstr(game.hudMessage.text, "peaceful route is live") != NULL,
             "entering the tower plateau with the amplifier should post the peaceful-route commitment hint");
 
+    {
+        Game reviewGame;
+
+        PrepareGame(&reviewGame);
+        reviewGame.tasks.stage = 7;
+        reviewGame.tasks.oxygenRepairLevel = 2;
+        reviewGame.tasks.commRepairLevel = 1;
+        reviewGame.tasks.energyRepairLevel = 1;
+        reviewGame.tasks.crashClueFound = true;
+        reviewGame.tasks.amplifierUnlocked = true;
+        reviewGame.tasks.westW5Completed = true;
+        reviewGame.tasks.southS5Completed = true;
+        reviewGame.tasks.endingArchiveReviewed = false;
+        CollectAllMainlineLogs(&reviewGame.tasks);
+        snprintf(reviewGame.lastLocationName, sizeof(reviewGame.lastLocationName), "%s", "Signal Tower Plateau");
+        MovePlayerAndUpdate(&reviewGame, SHIP_CORRIDOR_X + 1, SHIP_CORRIDOR_Y + 1);
+        Require(strstr(reviewGame.hudMessage.text, "final review") != NULL
+                    || strstr(reviewGame.hudMessage.text, "Loxi") != NULL,
+                "returning from the ruins with the full archive but no review should send the player back to Loxi for final review");
+    }
+
+    {
+        Game heroicReturnGame;
+
+        PrepareGame(&heroicReturnGame);
+        heroicReturnGame.tasks.stage = 7;
+        heroicReturnGame.tasks.oxygenRepairLevel = 2;
+        heroicReturnGame.tasks.commRepairLevel = 1;
+        heroicReturnGame.tasks.energyRepairLevel = 1;
+        heroicReturnGame.tasks.crashClueFound = true;
+        heroicReturnGame.tasks.amplifierUnlocked = true;
+        heroicReturnGame.tasks.westW5Completed = true;
+        heroicReturnGame.tasks.southS5Completed = true;
+        heroicReturnGame.tasks.endingArchiveReviewed = true;
+        heroicReturnGame.tasks.selectedEndingRoute = ENDING_HEROIC;
+        heroicReturnGame.tasks.bossDefeated = true;
+        CollectAllMainlineLogs(&heroicReturnGame.tasks);
+        snprintf(heroicReturnGame.lastLocationName, sizeof(heroicReturnGame.lastLocationName), "%s", "Guardian Arena");
+        MovePlayerAndUpdate(&heroicReturnGame, SHIP_CORRIDOR_X + 1, SHIP_CORRIDOR_Y + 1);
+        Require(strstr(heroicReturnGame.hudMessage.text, "Signal Tower") != NULL
+                    && strstr(heroicReturnGame.hudMessage.text, "heroic route") != NULL,
+                "returning from the guardian arena after locking the heroic route should point straight to the Signal Tower finale");
+    }
+
     PrepareGame(&game);
     game.tasks.stage = 4;
     game.tasks.commRepairLevel = 1;
@@ -323,6 +403,36 @@ int main(void) {
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW1Completed,
             "returning to base from West Frontier with the record should complete W1");
+
+    {
+        Game archiveRoomGame;
+
+        PrepareGame(&archiveRoomGame);
+        archiveRoomGame.tasks.stage = 4;
+        archiveRoomGame.tasks.commRepairLevel = 1;
+        archiveRoomGame.tasks.westW1Started = true;
+        archiveRoomGame.tasks.westW1Completed = false;
+        CollectArchiveEvidence(&archiveRoomGame.tasks, 3);
+        snprintf(archiveRoomGame.lastLocationName, sizeof(archiveRoomGame.lastLocationName), "%s", "West Frontier");
+        MovePlayerAndUpdate(&archiveRoomGame, SHIP_CORRIDOR_X + 1, SHIP_CORRIDOR_Y + 1);
+        Require(archiveRoomGame.tasks.westW1Completed,
+            "returning through Central Corridor with the record should still count as a valid base archive hand-in");
+    }
+
+    {
+        Game archiveRoomGame;
+
+        PrepareGame(&archiveRoomGame);
+        archiveRoomGame.tasks.stage = 5;
+        archiveRoomGame.tasks.energyRepairLevel = 1;
+        archiveRoomGame.tasks.southS1Started = true;
+        archiveRoomGame.tasks.southS1Completed = false;
+        CollectArchiveEvidence(&archiveRoomGame.tasks, 9);
+        snprintf(archiveRoomGame.lastLocationName, sizeof(archiveRoomGame.lastLocationName), "%s", "South Collapse");
+        MovePlayerAndUpdate(&archiveRoomGame, SHIP_DIAGNOSTICS_X + 1, SHIP_DIAGNOSTICS_Y + 1);
+        Require(archiveRoomGame.tasks.southS1Completed,
+            "returning through Diagnostics with the record should still count as a valid base archive hand-in");
+    }
     MovePlayerAndUpdate(&game, EXTERIOR_X(34), EXTERIOR_Y(68));
     Require(game.tasks.westW2Started && !game.tasks.westW2Completed,
             "entering Survey Break after W1 should transition to W2");

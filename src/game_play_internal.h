@@ -13,11 +13,21 @@ typedef struct StoryTriggerSnapshot {
     bool crashClueFound;
     int energyRepairLevel;
     bool amplifierUnlocked;
+    bool westW4Started;
+    bool westW4Completed;
+    bool westW5Completed;
+    bool southS4Started;
+    bool southS4Completed;
+    bool southS5Completed;
     bool monolithPuzzleActive;
     bool monolithSolved;
+    bool endingArchiveReviewed;
     bool bossDefeated;
     bool signalTowerActivated;
     GameEnding ending;
+    bool crossX1Ready;
+    bool crossX2Ready;
+    bool crossX3Ready;
     bool logCollected[MAX_LOGS];
 } StoryTriggerSnapshot;
 

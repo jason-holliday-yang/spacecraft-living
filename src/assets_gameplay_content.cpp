@@ -22,6 +22,7 @@ void AssetsInternal_LoadGameplayAssets(AssetBundle *assets,
     assets->tileSwampGround = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_swamp_ground.png", singleTileSize, singleTileSize);
     assets->tileSwampOuterGround = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_swamp_outer_ground.png", singleTileSize, singleTileSize);
     assets->tileSwampDeepGround = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_swamp_deep_ground.png", singleTileSize, singleTileSize);
+    assets->tileEchoBasinFloor = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_echo_basin_floor.png", singleTileSize, singleTileSize);
     assets->tileRuinsFloor = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_ruins_floor.png", singleTileSize, singleTileSize);
     assets->tileRuinsApproachFloor = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_ruins_path.png", singleTileSize, singleTileSize);
     assets->tileRuinsRingFloor = AssetsInternal_LoadOptionalTextureFitted("resources/images/tile_ruins_ring_floor.png", singleTileSize, singleTileSize);
@@ -87,6 +88,7 @@ void AssetsInternal_UnloadGameplayAssets(AssetBundle *assets) {
     AssetsInternal_UnloadTextureAsset(&assets->tileSwampGround);
     AssetsInternal_UnloadTextureAsset(&assets->tileSwampOuterGround);
     AssetsInternal_UnloadTextureAsset(&assets->tileSwampDeepGround);
+    AssetsInternal_UnloadTextureAsset(&assets->tileEchoBasinFloor);
     AssetsInternal_UnloadTextureAsset(&assets->tileRuinsFloor);
     AssetsInternal_UnloadTextureAsset(&assets->tileRuinsApproachFloor);
     AssetsInternal_UnloadTextureAsset(&assets->tileRuinsRingFloor);

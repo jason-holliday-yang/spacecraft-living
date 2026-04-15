@@ -20,6 +20,64 @@ static float SanitizeDeltaTime(float deltaTime) {
     return ClampFloat(deltaTime, 0.0f, 0.1f);
 }
 
+static constexpr float kNarrativeFadeDuration = 0.22f;
+
+static void ResolveNarrativeTransition(Game *game) {
+    NarrativeTransitionAction action;
+
+    if (game == nullptr) {
+        return;
+    }
+
+    action = game->narrativeTransitionAction;
+    game->narrativeTransitionActive = false;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
+
+    switch (action) {
+        case NARRATIVE_TRANSITION_OPENING_NEXT_SLIDE:
+            game->openingSlideIndex += 1;
+            game->openingCutsceneElapsed = 0.0f;
+            return;
+        case NARRATIVE_TRANSITION_OPENING_COMPLETE:
+            Game_CompleteOpeningCutscene(game);
+            return;
+        case NARRATIVE_TRANSITION_STORY_CLOSE:
+            Game_CloseStoryScene(game);
+            return;
+        case NARRATIVE_TRANSITION_NONE:
+        default:
+            return;
+    }
+}
+
+static void UpdateNarrativePresentation(Game *game, float deltaTime) {
+    if (game == nullptr) {
+        return;
+    }
+
+    if (game->state != GAME_STATE_OPENING && !game->storySceneOpen) {
+        game->narrativeTransitionActive = false;
+        game->narrativeTransitionElapsed = 0.0f;
+        game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
+        return;
+    }
+
+    if (game->narrativeTransitionActive) {
+        game->narrativeTransitionElapsed += deltaTime;
+        if (game->narrativeTransitionElapsed >= kNarrativeFadeDuration) {
+            ResolveNarrativeTransition(game);
+        }
+        return;
+    }
+
+    if (game->state == GAME_STATE_OPENING) {
+        game->openingCutsceneElapsed += deltaTime;
+    } else if (game->storySceneOpen) {
+        game->storySceneElapsed += deltaTime;
+    }
+}
+
 void Game_Init(Game *game) {
     std::memset(game, 0, sizeof(*game));
 
@@ -66,11 +124,7 @@ void Game_Update(Game *game, float deltaTime) {
         }
     }
 
-    if (game->state == GAME_STATE_OPENING) {
-        game->openingCutsceneElapsed += deltaTime;
-    } else if (game->storySceneOpen) {
-        game->storySceneElapsed += deltaTime;
-    }
+    UpdateNarrativePresentation(game, deltaTime);
 
     if (Game_UpdateOverlayState(game)) {
         return;

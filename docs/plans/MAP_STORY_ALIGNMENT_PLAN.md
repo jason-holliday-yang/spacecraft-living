@@ -18,16 +18,17 @@
 
 1. [`../design/GAME_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/GAME_DESIGN.md)
 2. [`../design/CURRENT_STATUS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/CURRENT_STATUS.md)
-3. 本文档
-4. [`BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
-5. [`NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
+3. [`../design/TERMINOLOGY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/TERMINOLOGY.md)
+4. 本文档
+5. [`BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
+6. [`NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
 
 ## 2. 当前统一范围
 
 从当前这轮开始，地图和剧情联动补齐必须遵守以下范围约束：
 
 - `现有世界布局主框架已经定版`
-- `当前允许并要求补齐西线 Echo Wilds 与南线 Subsurface Sink`
+- `当前允许并要求补齐西线回响荒野（Echo Wilds）与南线地下沉降带（Subsurface Sink）`
 - `在补齐西线 / 南线后，不再继续扩展更大的新地图、新剧情主线或大型新玩法系统`
 - `地图补齐的目标是让当前世界完整，而不是无限继续把世界做大`
 - `剧情补齐的目标是让现有主线、西线和南线形成完整闭环`
@@ -52,7 +53,7 @@
 
 额外约束：
 
-- `返回结果` 不能只写成“玩家回来过了”，而必须明确说明：玩家带回了哪份关键记录、Loxi 因此更新了什么判断、下一步为什么改去别的方向
+- `返回结果` 不能只写成“玩家回来过了”，而必须明确说明：玩家带回了哪份关键记录、洛希因此更新了什么判断、下一步为什么改去别的方向
 - 对于西线 / 南线调查，如果玩家没有带回对应现场记录，基地反馈必须明确指出“该段归档尚未完成”
 
 ## 4. 当前固定世界结构
@@ -67,9 +68,9 @@
   风险学习区、状态处理区、路线规划区
 - `北侧 ruins`
   真相回收区、终局准备区、终局执行区
-- `西侧 Echo Wilds`
+- `西侧回响荒野（Echo Wilds）`
   船员调查区、潜行追踪区、定居动机补强区
-- `南侧 Subsurface Sink`
+- `南侧地下沉降带（Subsurface Sink）`
   设施控制区、真相揭示区、终局准备补强区
 
 当前这张地图不是平均展开的大平面，而是固定形成：
@@ -94,7 +95,7 @@
 当前已经成立的基础：
 
 - 基地已经承担完整恢复点职责
-- Loxi 终端已经承担目标同步与路线解锁职责
+- 洛希终端已经承担目标同步与路线解锁职责
 - 工作台、氧气舱、终端舱、诊断舱已经开始有明确功能分工
 
 仍需补齐的内容：
@@ -127,7 +128,7 @@
 - `基础循环说明更完整`
   森林必须把“出去一小段 -> 带资源回来 -> 再出门”这件事教清楚。
 - `夜间与潜行认知更稳定`
-  Glow Stick 与 crouch 的价值应继续通过文本和区域反馈巩固。
+  `荧光棒（Glow Stick）` 与 `蹲伏（crouch）` 的价值应继续通过文本和区域反馈巩固。
 - `和基地的闭环更明确`
   玩家第一次回基地后，应更明显感到“飞船是恢复和判断中心”。
 
@@ -152,7 +153,7 @@
 
 仍需补齐：
 
-- 首次到达时更明确的 Loxi 判断
+- 首次到达时更明确的洛希判断
 - 通讯修复与“必须先恢复外部联系”之间的叙事绑定
 - 强化它是教学线，而不是深区主体
 
@@ -168,7 +169,7 @@
 
 仍需补齐：
 
-- 更明确地把 Rope 与 Field Camp 绑定到回程稳定性
+- 更明确地把 简易绳索（Simple Rope）与野外营地（Field Camp） 绑定到回程稳定性
 - 让这里承担“第一次真正规划中途回撤”的叙事意义
 - 避免玩家把它误解成普通延长路段
 
@@ -201,7 +202,7 @@
 
 仍需补齐：
 
-- 强化 `Energy Core` 的剧情推进身份，而不只是资源身份
+- 强化 `能源核心（Energy Core）` 的剧情推进身份，而不只是资源身份
 - 强化“为什么能源修复是北线前置条件”的叙事结果
 - 玩家回基地后，应明显感到“东线这一轮任务已经完成了自己的使命”
 
@@ -271,7 +272,7 @@
 
 - 玩家进入塔区时，能明确知道自己现在在做哪一种终局执行
 
-### 5.5 西侧 Echo Wilds：调查与人物线
+### 5.5 西侧回响荒野（Echo Wilds）：调查与人物线
 
 西线当前应固定承担：
 
@@ -313,7 +314,7 @@
 
 - 玩家会把西线读成“调查谁留下了什么、为什么有人选择不回去”的可玩剧情线
 
-### 5.6 南侧 Subsurface Sink：设施与真相线
+### 5.6 南侧地下沉降带（Subsurface Sink）：设施与真相线
 
 南线当前应固定承担：
 
@@ -397,7 +398,7 @@
 
 - 去某个区域有明确理由
 - 在区域内知道了新的事情
-- 回基地后，Loxi 或系统给出明确总结
+- 回基地后，洛希或系统给出明确总结
 - 下一次外出因此变得更有方向
 
 ### 6.4 地图 UI 与剧情解释必须统一
@@ -486,12 +487,12 @@
 - `src/task_progress.c`
   保证 objective 与 communicator 在阶段切换时同步更新
 - `src/task_ship_interactions.cpp`
-  强化 Loxi terminal 与关键舱室的阶段总结与出发理由
+  强化洛希终端与关键舱室的阶段总结与出发理由
 
 本轮要先补清楚：
 
 - 为什么 Stage 3 必须去东边
-- 为什么 Stage 4 不是“有枪就够了”，而是 `Laser Gun + Protection Suit` 同时成立
+- 为什么 Stage 4 不是“有枪就够了”，而是 `激光枪（Laser Gun） + 防护服（Protection Suit）` 同时成立
 - 为什么 Stage 5 不是继续刷资源，而是正式进入深区资格验证
 
 完成判断：
@@ -534,7 +535,7 @@
 
 - `Comm Relay` 修复后的总结
 - `Crash Clue` 发现后的总结
-- `Energy Core` 带回基地后的总结
+- `能源核心（Energy Core）` 带回基地后的总结
 - `Energy Console` 修复后的总结
 
 建议主要改这些文件：

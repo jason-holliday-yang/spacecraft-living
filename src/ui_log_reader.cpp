@@ -228,7 +228,7 @@ const char *GetCrossRouteArchiveNote(const TaskSystem *tasks) {
         return Loc_PickLiteral("Both route conclusions are ready. Your ending choice now carries the full crew and facility context.", "两条路线的结论都已就位，你的结局选择如今拥有完整的船员与设施背景。");
     }
     if (tasks->westW4Completed && tasks->southS4Completed) {
-        return Loc_PickLiteral("Loxi can now synthesize both investigations into a final strategy comparison for the endgame.", "洛西现在可以把两条调查线整合成终局策略对照。");
+        return Loc_PickLiteral("Loxi can now synthesize both investigations into a final strategy comparison for the endgame.", "洛希现在可以把两条调查线整合成终局策略对照。");
     }
     if (tasks->westW3Completed && tasks->southS2Completed) {
         return Loc_PickLiteral("Crew trails and facility records now form one chain. The truth is no longer split across regions.", "船员轨迹与设施记录已经连成一条链，真相不再分散在不同区域。");

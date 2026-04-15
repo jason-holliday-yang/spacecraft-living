@@ -18,9 +18,9 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets, const TaskSystem *tas
 
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{5, 9, 16, 190});
     UIRuntime_DrawPanel(panel, Color{8, 18, 30, 245}, Color{99, 233, 195, 75});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Loxi Interface", "洛西界面"), Vector2{panel.x + 30.0f * scale, panel.y + 24.0f * scale}, 34.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Loxi Interface", "洛希界面"), Vector2{panel.x + 30.0f * scale, panel.y + 24.0f * scale}, 34.0f * scale, WHITE);
     UIRuntime_DrawText(assets, closeHint, Vector2{panel.x + panel.width - UIRuntime_MeasureText(assets, closeHint, 17.5f * scale).x - 24.0f * scale, panel.y + 28.0f * scale}, 17.5f * scale, Color{182, 199, 214, 255});
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Current task from Loxi", "洛西当前任务"), Rectangle{panel.x + 30.0f * scale, panel.y + 66.0f * scale, panel.width - 60.0f * scale, 22.0f * scale}, 18.0f * scale, 18.0f * scale, Color{194, 224, 255, 255});
+    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Current task from Loxi", "洛希当前任务"), Rectangle{panel.x + 30.0f * scale, panel.y + 66.0f * scale, panel.width - 60.0f * scale, 22.0f * scale}, 18.0f * scale, 18.0f * scale, Color{194, 224, 255, 255});
     UIRuntime_DrawPanel(taskPanel, Color{11, 20, 32, 230}, Color{104, 196, 222, 50});
     UIRuntime_DrawText(assets, Loc_PickLiteral("Mission Feed", "任务简报"), Vector2{taskPanel.x + 22.0f * scale, taskPanel.y + 22.0f * scale}, 24.0f * scale, Color{255, 214, 154, 255});
     UIRuntime_DrawWrappedText(assets, Tasks_GetCommunicatorHint(tasks), objectiveRect, 17.0f * scale, 21.0f * scale, Color{227, 237, 245, 255});
@@ -34,7 +34,7 @@ void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHe
         {"F: interact, gather, repair, read logs, craft at workbench", "F：交互、采集、修理、读取日志，或在工作台制作"},
         {"Space: attack, uses laser line if available", "Space：攻击，拥有激光枪时会发射激光"},
         {"B: open the backpack and inspect supplies", "B：打开背包并查看补给"},
-        {"N: open the Loxi interface", "N：打开洛西界面"},
+        {"N: open the Loxi interface", "N：打开洛希界面"},
         {"M: open the area map overlay", "M：打开区域地图"},
         {"H: open this help panel", "H：打开本帮助面板"},
         {"Z: use food for quick health and oxygen recovery", "Z：使用食物快速恢复生命与氧气"},

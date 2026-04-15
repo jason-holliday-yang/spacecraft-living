@@ -60,6 +60,25 @@ void MapInternal_SeedWorldLayout(GameMap *map) {
 
     MapInternal_FillGroundRect(map, kCrashVoidX, kCrashVoidY, kCrashVoidWidth, kCrashVoidHeight, TILE_VOID);
     MapInternal_FillGroundRect(map, 83, 50, 12, 5, TILE_FOREST_GROUND);
+    MapInternal_FillGroundRect(map,
+                               BOSS_ARENA_X,
+                               BOSS_ARENA_Y,
+                               BOSS_ARENA_WIDTH,
+                               BOSS_ARENA_HEIGHT,
+                               TILE_RUINS_GROUND);
+
+    for (column = BOSS_ARENA_X; column < BOSS_ARENA_X + BOSS_ARENA_WIDTH; column++) {
+        MapInternal_SetPropTile(map, column, BOSS_ARENA_Y, TILE_ROCK);
+        MapInternal_SetPropTile(map, column, BOSS_ARENA_Y + BOSS_ARENA_HEIGHT - 1, TILE_ROCK);
+    }
+    for (row = BOSS_ARENA_Y; row < BOSS_ARENA_Y + BOSS_ARENA_HEIGHT; row++) {
+        MapInternal_SetPropTile(map, BOSS_ARENA_X, row, TILE_ROCK);
+        MapInternal_SetPropTile(map, BOSS_ARENA_X + BOSS_ARENA_WIDTH - 1, row, TILE_ROCK);
+    }
+    MapInternal_SetPropTile(map, BOSS_ARENA_X + 2, BOSS_ARENA_Y + 2, TILE_ROCK);
+    MapInternal_SetPropTile(map, BOSS_ARENA_X + BOSS_ARENA_WIDTH - 3, BOSS_ARENA_Y + 1, TILE_ROCK);
+    MapInternal_SetPropTile(map, BOSS_ARENA_X + 2, BOSS_ARENA_Y + BOSS_ARENA_HEIGHT - 3, TILE_ROCK);
+    MapInternal_SetPropTile(map, BOSS_ARENA_X + BOSS_ARENA_WIDTH - 4, BOSS_ARENA_Y + BOSS_ARENA_HEIGHT - 3, TILE_ROCK);
 
     /* North: ruins approach -> monolith ring -> tower plateau. */
     FillExteriorGroundRect(map, 56, 22, 25, 14, TILE_RUINS_GROUND);

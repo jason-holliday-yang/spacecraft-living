@@ -84,6 +84,8 @@ Color GetMiniMapTileColor(const GameMap *map, int gridX, int gridY) {
             return Color{92, 101, 56, 220};
         case MAP_AREA_RUINS:
             return Color{120, 124, 137, 220};
+        case MAP_AREA_BOSS_ARENA:
+            return Color{154, 88, 88, 220};
         case MAP_AREA_UNKNOWN:
         default:
             return Color{26, 30, 38, 220};

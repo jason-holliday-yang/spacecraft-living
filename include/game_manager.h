@@ -22,6 +22,13 @@ typedef enum GameState {
     GAME_STATE_ENDING
 } GameState;
 
+typedef enum NarrativeTransitionAction {
+    NARRATIVE_TRANSITION_NONE = 0,
+    NARRATIVE_TRANSITION_OPENING_NEXT_SLIDE,
+    NARRATIVE_TRANSITION_OPENING_COMPLETE,
+    NARRATIVE_TRANSITION_STORY_CLOSE
+} NarrativeTransitionAction;
+
 typedef struct Game {
     GameState state;
     GameMap map;
@@ -74,6 +81,9 @@ typedef struct Game {
     char authMessage[SAVE_AUTH_MESSAGE_MAX];
     int openingSlideIndex;
     float storySceneElapsed;
+    bool narrativeTransitionActive;
+    float narrativeTransitionElapsed;
+    NarrativeTransitionAction narrativeTransitionAction;
     int selectedLogIndex;
     bool showDeathPopup;
     int deathPopupSelection;

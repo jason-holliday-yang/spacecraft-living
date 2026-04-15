@@ -26,14 +26,22 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
         286.0f * scale,
         386.0f * scale,
     };
+    Rectangle primaryButton = UI_GetSavePrimaryButtonRect(screenWidth, screenHeight);
     Rectangle deleteButton = UI_GetSaveDeleteButtonRect(screenWidth, screenHeight);
     const SaveSlotInfo *selectedInfo = (selectedSlot >= 0 && selectedSlot < slotCount) ? &slots[selectedSlot] : nullptr;
+    bool primaryEnabled = selectedInfo != nullptr
+        && ((mode == SAVE_PANEL_MODE_LOAD && selectedInfo->exists)
+            || (mode == SAVE_PANEL_MODE_SAVE && !selectedInfo->exists));
+    bool deleteEnabled = selectedInfo != nullptr && selectedInfo->exists;
+    const char *primaryLabel = mode == SAVE_PANEL_MODE_SAVE
+        ? Loc_PickLiteral("Save", "保存")
+        : Loc_PickLiteral("Load", "读取");
     const char *modeTitle = mode == SAVE_PANEL_MODE_SAVE
         ? Loc_PickLiteral("Save Slots", "保存栏位")
         : Loc_PickLiteral("Load Slots", "读取栏位");
     const char *modeHint = mode == SAVE_PANEL_MODE_SAVE
-        ? Loc_PickLiteral("Click an empty slot to save. Occupied slots can be deleted from the panel.", "点击空栏位即可保存，已占用栏位也可在此面板删除。")
-        : Loc_PickLiteral("Click an occupied slot to load. You can also delete a selected save.", "点击已占用栏位即可读取，也可以删除当前选中的存档。");
+        ? Loc_PickLiteral("Select a slot first. Empty slots can be saved, occupied slots can be deleted.", "先选中栏位。空栏位可保存，已占用栏位可删除。")
+        : Loc_PickLiteral("Select an occupied slot first, then use the buttons on the right to load or delete it.", "先选中已占用栏位，再使用右侧按钮读取或删除。");
     char buffer[256];
     char accountBuffer[96];
 
@@ -116,8 +124,8 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
             UIRuntime_DrawText(
                 assets,
                 mode == SAVE_PANEL_MODE_SAVE
-                    ? Loc_PickLiteral("Click this empty slot to write a manual save.", "点击这个空栏位写入手动存档。")
-                    : Loc_PickLiteral("Choose another slot to load existing data.", "请选择其他栏位读取已有数据。"),
+                    ? Loc_PickLiteral("Use the save button below to write a manual save into this empty slot.", "使用下方保存按钮，把手动存档写入这个空栏位。")
+                    : Loc_PickLiteral("This slot is empty. Choose another occupied slot, then use the load button below.", "这个栏位是空的。请选择其他已占用栏位，再使用下方读取按钮。"),
                 Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 132.0f * scale},
                 16.0f * scale,
                 Color{196, 214, 230, 255}
@@ -128,5 +136,6 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
         UIRuntime_DrawWrappedText(assets, selectedInfo->path, Rectangle{detailsPanel.x + 18.0f * scale, detailsPanel.y + 312.0f * scale, detailsPanel.width - 36.0f * scale, 56.0f * scale}, 12.5f * scale, 14.0f * scale, Color{190, 207, 222, 255});
     }
 
-    UIRuntime_DrawButton(assets, deleteButton, Loc_PickLiteral("Delete Selected Save", "删除当前存档"), selectedInfo != nullptr && selectedInfo->exists);
+    UIRuntime_DrawButton(assets, primaryButton, primaryLabel, primaryEnabled);
+    UIRuntime_DrawButton(assets, deleteButton, Loc_PickLiteral("Delete", "删除"), deleteEnabled);
 }

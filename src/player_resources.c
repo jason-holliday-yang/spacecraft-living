@@ -61,7 +61,7 @@ const char *Player_GetResourceLabel(ResourceType resource) {
         case RESOURCE_RELIC_FRAGMENT:
             return Loc_PickLiteral("Relic Fragment", "遗迹碎片");
         case RESOURCE_BOSS_SCALE:
-            return Loc_PickLiteral("Boss Scale", "首领鳞片");
+            return Loc_PickLiteral("Boss Scale", "守卫鳞片");
         case RESOURCE_ALIEN_SLIME:
             return Loc_PickLiteral("Alien Slime", "异星黏液");
         case RESOURCE_COUNT:

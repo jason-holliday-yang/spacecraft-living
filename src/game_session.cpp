@@ -82,6 +82,14 @@ static bool FindDeathRecoveryTile(const Game *game, int *gridX, int *gridY, bool
         *usedCamp = false;
     }
 
+    if (Map_GetAreaAt(game->player.gridX, game->player.gridY) == MAP_AREA_BOSS_ARENA
+        && game->tasks.selectedEndingRoute == ENDING_HEROIC
+        && !game->tasks.bossDefeated) {
+        if (Game_FindNearestSafeLoadedPlayerTile(game, PLAYER_START_X, PLAYER_START_Y, gridX, gridY)) {
+            return true;
+        }
+    }
+
     /* Recover at the field camp first, then fall back to the original base spawn. */
     if (game->map.campPlaced
         && Game_FindNearestSafeLoadedPlayerTile(game, game->map.campX, game->map.campY, gridX, gridY)) {
@@ -145,9 +153,12 @@ static void EnterGameplayFromOpening(Game *game) {
     game->state = GAME_STATE_PLAYING;
     game->openingSlideIndex = 0;
     game->openingCutsceneElapsed = 0.0f;
+    game->narrativeTransitionActive = false;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
     Game_CloseStoryScene(game);
     Audio_SetScene(&game->audio, AUDIO_SCENE_BASE);
-    Game_PostMessage(game, Loc_PickLiteral("Start in the lower oxygen bay: restore the oxygen console. The terminal bay can sync Loxi when you need the link.", "从下层氧气舱开始：先修复氧气控制台。需要时可以去终端舱与洛西同步。"), 4.2f);
+    Game_PostMessage(game, Loc_PickLiteral("Start in the lower oxygen bay: restore the oxygen console. The terminal bay can sync Loxi when you need the link.", "从下层氧气舱开始：先修复氧气控制台。需要时可以去终端舱与洛希同步。"), 4.2f);
 }
 
 void Game_ResetGameplayWorld(Game *game) {
@@ -159,6 +170,9 @@ void Game_ResetGameplayWorld(Game *game) {
     game->elapsedSeconds = 0.0f;
     game->openingCutsceneElapsed = 0.0f;
     game->storySceneElapsed = 0.0f;
+    game->narrativeTransitionActive = false;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
     game->hurtSoundCooldown = 0.0f;
     game->monsterCueCooldown = 0.0f;
     game->bufferedMoveX = 0;
@@ -195,6 +209,9 @@ void Game_StartNewGame(Game *game) {
     game->state = GAME_STATE_OPENING;
     game->openingSlideIndex = 0;
     game->openingCutsceneElapsed = 0.0f;
+    game->narrativeTransitionActive = false;
+    game->narrativeTransitionElapsed = 0.0f;
+    game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
     Audio_SetScene(&game->audio, AUDIO_SCENE_MENU);
 }
 

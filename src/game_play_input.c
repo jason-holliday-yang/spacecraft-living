@@ -92,6 +92,7 @@ static AudioCue GetFootstepCueForArea(MapArea area) {
         case MAP_AREA_SWAMP_DEEP:
             return AUDIO_CUE_STEP_SWAMP;
         case MAP_AREA_RUINS:
+        case MAP_AREA_BOSS_ARENA:
         case MAP_AREA_BASE:
         case MAP_AREA_UNKNOWN:
         default:
@@ -129,8 +130,7 @@ static bool IsNearStationRect(int playerX, int playerY, int targetX, int targetY
 
 static bool ShouldOpenSettlementConfirm(const Game *game) {
     return game != NULL
-        && Tasks_IsEndingBranchReady(&game->tasks)
-        && Tasks_GetSelectedEndingRoute(&game->tasks) == ENDING_NONE
+        && Tasks_CanChooseSettlement(&game->tasks)
         && IsNearStationRect(game->player.gridX,
                              game->player.gridY,
                              LOXI_TERMINAL_X,

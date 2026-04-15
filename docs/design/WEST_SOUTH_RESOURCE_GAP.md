@@ -50,7 +50,7 @@
 - `story/main/main_14_echo_basin_lock.png`
   对应 `W4` 回声定位成功瞬间。
 - `story/main/main_15_loxi_route_rewrite.png`
-  对应 `W4` 结束后 Loxi 策略重写。
+  对应 `W4` 结束后洛希策略重写。
 - `story/main/main_16_last_camp_archive.png`
   对应 `W5` 最后营地档案回收。
 - `story/logs/log_04_west_signal_fragment_01.png`
