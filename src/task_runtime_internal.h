@@ -65,6 +65,12 @@ bool TasksRuntime_FindNodeSpawnTile(const TaskSystem *tasks,
                                     int preferredY,
                                     int *resolvedX,
                                     int *resolvedY);
+bool TasksRuntime_FindLogSpawnTile(const TaskSystem *tasks,
+                                   const GameMap *map,
+                                   int preferredX,
+                                   int preferredY,
+                                   int *resolvedX,
+                                   int *resolvedY);
 bool TasksRuntime_FindMonsterSpawnTile(const TaskSystem *tasks,
                                        const GameMap *map,
                                        int preferredX,
@@ -102,6 +108,7 @@ void TasksRuntime_GrantLogReward(TaskSystem *tasks, Player *player, ShipLog *log
 void TasksRuntime_DropMonsterRewards(TaskSystem *tasks, Player *player, Monster *monster);
 void TasksRuntime_UpdateDayCycle(TaskSystem *tasks, float deltaTime);
 void TasksRuntime_RespawnNodes(TaskSystem *tasks, const Player *player, float deltaTime);
+void TasksRuntime_EnsureEnergyCoreNode(TaskSystem *tasks, const GameMap *map, const Player *player);
 void TasksRuntime_UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *player, float deltaTime);
 bool TasksRuntime_IsOuterSwampLowerRoute(const Player *player);
 bool TasksRuntime_IsDeepSwampCore(const Player *player);

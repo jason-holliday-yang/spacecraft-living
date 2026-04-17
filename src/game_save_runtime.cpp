@@ -1,4 +1,5 @@
 #include "game_session_internal.h"
+#include "task_runtime_internal.h"
 
 #include <cmath>
 #include <cstring>
@@ -77,6 +78,12 @@ static void SanitizeLoadedTaskRuntimeState(Game *game) {
 }
 
 static bool IsTrackedDynamicTile(int gridX, int gridY) {
+    if (gridY == LOXI_ROOM_DOOR_Y
+        && gridX >= LOXI_ROOM_DOOR_X
+        && gridX < LOXI_ROOM_DOOR_X + LOXI_ROOM_DOOR_WIDTH) {
+        return true;
+    }
+
     if (gridX == AIRLOCK_DOOR_X && gridY >= AIRLOCK_DOOR_TOP_Y && gridY < AIRLOCK_DOOR_TOP_Y + AIRLOCK_DOOR_HEIGHT) {
         return true;
     }
@@ -335,12 +342,16 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
 
     if (game->tasks.stage >= 5) {
         Map_UnlockSwampDeep(&game->map);
+        TasksRuntime_EnsureEnergyCoreNode(&game->tasks, &game->map, &game->player);
     }
     if (game->tasks.stage >= 6) {
         Map_UnlockRuins(&game->map);
     }
     if (snapshot->campPlaced) {
         Map_SetFieldCamp(&game->map, snapshot->campX, snapshot->campY);
+    }
+    if (game->tasks.communicatorUnlocked) {
+        Map_UnlockLoxiRoom(&game->map);
     }
     ApplySavedDynamicTiles(&game->map, snapshot);
     if (game->tasks.selectedEndingRoute == ENDING_HEROIC && !game->tasks.bossDefeated) {
@@ -351,7 +362,7 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     safeGridX = game->player.gridX;
     safeGridY = game->player.gridY;
     if (!Game_FindNearestSafeLoadedPlayerTile(game, game->player.gridX, game->player.gridY, &safeGridX, &safeGridY)
-        && Game_FindNearestSafeLoadedPlayerTile(game, PLAYER_START_X, PLAYER_START_Y, &safeGridX, &safeGridY)) {
+        && Game_FindNearestSafeLoadedPlayerTile(game, PLAYER_RESPAWN_X, PLAYER_RESPAWN_Y, &safeGridX, &safeGridY)) {
         positionAdjusted = true;
     } else if (safeGridX != game->player.gridX || safeGridY != game->player.gridY) {
         positionAdjusted = true;

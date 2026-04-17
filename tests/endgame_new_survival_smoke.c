@@ -270,6 +270,11 @@ int main(void) {
             "peaceful route should remain available under the new survival model");
     Require(tasks.ending == ENDING_PEACEFUL,
             "signal tower plus amplifier should still unlock the peaceful ending");
+    Require(Tasks_CalculateEndingScore(&tasks, &player) >= 700,
+            "a completed peaceful route should now award a strong endgame score");
+    Require(strcmp(Tasks_GetEndingScoreRank(Tasks_CalculateEndingScore(&tasks, &player)), "A") == 0
+                || strcmp(Tasks_GetEndingScoreRank(Tasks_CalculateEndingScore(&tasks, &player)), "S") == 0,
+            "a completed peaceful route should land in the upper ending-score ranks");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);
@@ -283,6 +288,8 @@ int main(void) {
             "heroic route should remain available after the boss is defeated");
     Require(tasks.ending == ENDING_HEROIC,
             "boss-defeated tower interaction should still lead to heroic rescue");
+    Require(Tasks_CalculateEndingScore(&tasks, &player) > 0,
+            "the ending score helper should produce a positive score once a successful ending is locked");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);

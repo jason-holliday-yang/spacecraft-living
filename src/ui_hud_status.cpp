@@ -75,6 +75,34 @@ static const char *GetStatusIconLabel(PlayerStatusType status) {
     }
 }
 
+static const TextureAsset *GetStatusTexture(const AssetBundle *assets, PlayerStatusType status) {
+    if (assets == NULL) {
+        return NULL;
+    }
+
+    switch (status) {
+        case PLAYER_STATUS_POISONED:
+            return &assets->statusPoisoned;
+        case PLAYER_STATUS_OXYGEN_LEAK:
+            return &assets->statusOxygenLeak;
+        case PLAYER_STATUS_LOW_OXYGEN:
+            return &assets->statusLowOxygen;
+        case PLAYER_STATUS_SUFFOCATING:
+            return &assets->statusSuffocating;
+        case PLAYER_STATUS_CRITICAL_CONDITION:
+            return &assets->statusCriticalCondition;
+        case PLAYER_STATUS_FILTERED:
+            return &assets->statusFiltered;
+        case PLAYER_STATUS_OXYGEN_RESERVE:
+            return &assets->statusOxygenReserve;
+        case PLAYER_STATUS_CAMP_RECOVERY:
+            return &assets->statusCampRecovery;
+        case PLAYER_STATUS_COUNT:
+        default:
+            return NULL;
+    }
+}
+
 static void DrawStatusChip(const AssetBundle *assets,
                            Rectangle rect,
                            PlayerStatusType status,
@@ -82,10 +110,13 @@ static void DrawStatusChip(const AssetBundle *assets,
                            bool hovered) {
     Color primary;
     Color secondary;
+    Rectangle iconRect;
+    const TextureAsset *iconTexture;
     char levelBuffer[16];
 
     primary = GetStatusPrimaryColor(status);
     secondary = GetStatusSecondaryColor(status);
+    iconTexture = GetStatusTexture(assets, status);
 
     UIRuntime_DrawPanel(rect,
                         hovered ? Color{18, 30, 46, 248} : Color{12, 22, 34, 226},
@@ -97,11 +128,16 @@ static void DrawStatusChip(const AssetBundle *assets,
     DrawCircleV(Vector2{rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f - 1.0f},
                 rect.width * 0.18f,
                 Color{primary.r, primary.g, primary.b, (unsigned char)(hovered ? 240 : 210)});
-    UIRuntime_DrawText(assets,
-                       GetStatusIconLabel(status),
-                       Vector2{rect.x + 7.0f, rect.y + 7.0f},
-                       11.5f,
-                       WHITE);
+    iconRect = Rectangle{rect.x + 6.0f, rect.y + 6.0f, rect.width - 12.0f, rect.height - 12.0f};
+    if (iconTexture != NULL && iconTexture->loaded) {
+        UIRuntime_DrawTextureAssetFitted(iconTexture, iconRect, hovered ? WHITE : Color{255, 255, 255, 232});
+    } else {
+        UIRuntime_DrawText(assets,
+                           GetStatusIconLabel(status),
+                           Vector2{rect.x + 7.0f, rect.y + 7.0f},
+                           11.5f,
+                           WHITE);
+    }
     if (level > 1) {
         std::snprintf(levelBuffer, sizeof(levelBuffer), "%d", level);
         UIRuntime_DrawText(assets,
@@ -150,13 +186,12 @@ bool UIRuntime_DrawHudStatusBar(const AssetBundle *assets,
     }
 
     UIRuntime_DrawPanel(rect, Color{8, 18, 30, 210}, Color{112, 168, 210, 65});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Status Bar", "状态栏"), Vector2{rect.x + 12.0f, rect.y + 7.0f}, 14.0f, WHITE);
 
     activeCount = Player_CollectActiveStatuses(player, activeStatuses, PLAYER_STATUS_COUNT);
     if (activeCount <= 0) {
         UIRuntime_DrawText(assets,
                            Loc_PickLiteral("Stable", "稳定"),
-                           Vector2{rect.x + 14.0f, rect.y + rect.height - 20.0f},
+                           Vector2{rect.x + 14.0f, rect.y + rect.height * 0.5f - 8.0f},
                            14.0f,
                            Color{170, 198, 220, 255});
         return false;
@@ -177,7 +212,7 @@ bool UIRuntime_DrawHudStatusBar(const AssetBundle *assets,
 
         slotRect = Rectangle{
             rect.x + padding + index * (slotSize + gap),
-            rect.y + rect.height - slotSize - 8.0f,
+            rect.y + (rect.height - slotSize) * 0.5f,
             slotSize,
             slotSize
         };

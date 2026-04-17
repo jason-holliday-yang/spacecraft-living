@@ -18,6 +18,17 @@ static bool IsCrossX3Ready(const TaskSystem *tasks) {
         && tasks->southS5Completed;
 }
 
+static bool ShouldAutoOpenLogStoryScene(int logIndex) {
+    const int purifierRingControlBriefIndex =
+        STORY_SCENE_LOG_PURIFIER_RING_CONTROL_BRIEF - STORY_SCENE_LOG_THE_CRASH;
+
+    if (logIndex == purifierRingControlBriefIndex) {
+        return false;
+    }
+
+    return true;
+}
+
 void GamePlay_CaptureStoryTriggerSnapshot(const Game *game, StoryTriggerSnapshot *snapshot) {
     int index;
 
@@ -61,7 +72,7 @@ void GamePlay_TryOpenStorySceneFromSnapshot(Game *game, const StoryTriggerSnapsh
 
     for (logIndex = 0; logIndex < game->tasks.logCount && logIndex < MAX_LOGS; logIndex++) {
         if (!before->logCollected[logIndex] && game->tasks.logs[logIndex].collected) {
-            if (logIndex < STORY_LOG_SCENE_COUNT) {
+            if (logIndex < STORY_LOG_SCENE_COUNT && ShouldAutoOpenLogStoryScene(logIndex)) {
                 Game_OpenStoryScene(game, (StoryScene)(STORY_SCENE_LOG_THE_CRASH + logIndex));
             }
             return;

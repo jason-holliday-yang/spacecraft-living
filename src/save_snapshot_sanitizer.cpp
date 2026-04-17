@@ -49,8 +49,8 @@ void SaveInternal_SanitizeSnapshot(SaveSnapshot *snapshot) {
     }
 
     if (!Map_IsWithinBounds(snapshot->gridX, snapshot->gridY)) {
-        snapshot->gridX = PLAYER_START_X;
-        snapshot->gridY = PLAYER_START_Y;
+        snapshot->gridX = PLAYER_RESPAWN_X;
+        snapshot->gridY = PLAYER_RESPAWN_Y;
     }
 
     if (!IsCardinalFacing(snapshot->facingX, snapshot->facingY)) {

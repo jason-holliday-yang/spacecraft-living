@@ -327,6 +327,7 @@ int main(void) {
     char authMessage[SAVE_AUTH_MESSAGE_MAX];
     char deletedAccountPath[640];
     char gammaAccountPath[640];
+    int bestScore;
     GameSettings settings;
     GameSettings loadedSettings;
     SaveSnapshot saved;
@@ -350,6 +351,16 @@ int main(void) {
     Require(SaveSystem_Register("alpha", "pass1234", authMessage, sizeof(authMessage)), "register should create the first local account");
     Require(SaveSystem_IsAccountAuthenticated(), "register should sign the first account in");
     Require(strcmp(SaveSystem_GetActiveAccountName(), "alpha") == 0, "registered account name should become active");
+    Require(!SaveSystem_GetActiveAccountBestScore(&bestScore), "fresh accounts should not report a best score yet");
+    Require(SaveSystem_UpdateActiveAccountBestScore(420), "best-score tracking should persist a first positive score");
+    Require(SaveSystem_GetActiveAccountBestScore(&bestScore) && bestScore == 420,
+            "best-score tracking should return the recorded score");
+    Require(SaveSystem_UpdateActiveAccountBestScore(360), "recording a lower score should still succeed");
+    Require(SaveSystem_GetActiveAccountBestScore(&bestScore) && bestScore == 420,
+            "best-score tracking should preserve the higher value");
+    Require(SaveSystem_UpdateActiveAccountBestScore(575), "recording a higher score should replace the stored best score");
+    Require(SaveSystem_GetActiveAccountBestScore(&bestScore) && bestScore == 575,
+            "best-score tracking should expose the updated higher score");
     Require(!SaveSystem_Register("alpha", "pass9999", authMessage, sizeof(authMessage)), "register should reject duplicate usernames");
     Require(strstr(authMessage, "already exists") != NULL, "duplicate username should return an already-exists message");
     Require(!SaveSystem_Register("ALPHA", "pass9999", authMessage, sizeof(authMessage)), "register should treat usernames as case-insensitive");

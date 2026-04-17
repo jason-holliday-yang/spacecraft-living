@@ -15,6 +15,10 @@ static void FillExteriorGroundRect(GameMap *map, int x, int y, int width, int he
     MapInternal_FillGroundRect(map, EXTERIOR_X(x), EXTERIOR_Y(y), EXTERIOR_SIZE(width), EXTERIOR_SIZE(height), tile);
 }
 
+static void ClearExteriorPropRect(GameMap *map, int x, int y, int width, int height) {
+    MapInternal_FillPropRect(map, EXTERIOR_X(x), EXTERIOR_Y(y), EXTERIOR_SIZE(width), EXTERIOR_SIZE(height), TILE_VOID);
+}
+
 static void SetExteriorNaturalProp(GameMap *map, int x, int y, TileType tile) {
     MapInternal_SetNaturalPropTile(map, EXTERIOR_X(x), EXTERIOR_Y(y), tile);
 }
@@ -99,7 +103,8 @@ void MapInternal_SeedWorldLayout(GameMap *map) {
     FillExteriorGroundRect(map, 74, 95, 10, 7, TILE_RUINS_GROUND);
     FillExteriorGroundRect(map, 86, 94, 14, 10, TILE_RUINS_GROUND);
     FillExteriorGroundRect(map, 100, 94, 14, 10, TILE_RUINS_GROUND);
-    FillExteriorGroundRect(map, 112, 94, 14, 10, TILE_RUINS_GROUND);
+    /* Give the purifier deck a little more lateral room so the space reads as a proper chamber. */
+    FillExteriorGroundRect(map, 108, 94, 18, 10, TILE_RUINS_GROUND);
 
     for (column = WORLD_MIN_X; column <= WORLD_MAX_X; column++) {
         TileType northTile;
@@ -186,6 +191,26 @@ void MapInternal_SeedWorldLayout(GameMap *map) {
         SetExteriorSeedGroup(map,
                              kWestRouteSeeds,
                              sizeof(kWestRouteSeeds) / sizeof(kWestRouteSeeds[0]),
+                             true);
+    }
+
+    /* Echo Basin should read as a real west-line basin, not a thin edge pocket. */
+    ClearExteriorPropRect(map, 42, 62, 13, 21);
+    {
+        static const ExteriorPropSeed kEchoBasinRimSeeds[] = {
+            {42, 63, TILE_ROCK},
+            {42, 70, TILE_ROCK},
+            {43, 81, TILE_TREE},
+            {47, 62, TILE_TREE},
+            {51, 62, TILE_ROCK},
+            {54, 66, TILE_ROCK},
+            {54, 74, TILE_TREE},
+            {53, 81, TILE_ROCK}
+        };
+
+        SetExteriorSeedGroup(map,
+                             kEchoBasinRimSeeds,
+                             sizeof(kEchoBasinRimSeeds) / sizeof(kEchoBasinRimSeeds[0]),
                              true);
     }
 
@@ -311,7 +336,4 @@ void MapInternal_SeedWorldLayout(GameMap *map) {
     MapInternal_FillPropRect(map, MONOLITH_A_X, MONOLITH_A_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, TILE_MONOLITH);
     MapInternal_FillPropRect(map, MONOLITH_B_X, MONOLITH_B_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, TILE_MONOLITH);
     MapInternal_FillPropRect(map, MONOLITH_C_X, MONOLITH_C_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, TILE_MONOLITH);
-    MapInternal_SetPropTile(map, EXTERIOR_X(24), EXTERIOR_Y(63), TILE_LOG_SITE);
-    MapInternal_SetPropTile(map, EXTERIOR_X(48), EXTERIOR_Y(86), TILE_LOG_SITE);
-    MapInternal_SetPropTile(map, EXTERIOR_X(122), EXTERIOR_Y(102), TILE_LOG_SITE);
 }

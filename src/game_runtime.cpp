@@ -58,6 +58,7 @@ void Game_CloseStoryScene(Game *game) {
 
 AudioScene Game_SelectAudioScene(const Game *game) {
     MapArea area;
+    const char *locationName;
 
     if (game == NULL) {
         return AUDIO_SCENE_NONE;
@@ -68,10 +69,39 @@ AudioScene Game_SelectAudioScene(const Game *game) {
     }
 
     area = Map_GetAreaAt(game->player.gridX, game->player.gridY);
+    locationName = Map_GetLocationNameAt(game->player.gridX, game->player.gridY);
+
+    if (area == MAP_AREA_BOSS_ARENA) {
+        return AUDIO_SCENE_BOSS_ARENA;
+    }
+
     if (!game->tasks.bossDefeated
-        && (area == MAP_AREA_RUINS || area == MAP_AREA_BOSS_ARENA)
-        && game->tasks.stage >= 7) {
+        && game->tasks.stage >= 7
+        && locationName != NULL
+        && (std::strcmp(locationName, "Monolith Ring") == 0
+            || std::strcmp(locationName, "Signal Tower Plateau") == 0)) {
         return AUDIO_SCENE_BOSS;
+    }
+
+    if (locationName != NULL) {
+        if (std::strcmp(locationName, "West Frontier") == 0
+            || std::strcmp(locationName, "Survey Break") == 0
+            || std::strcmp(locationName, "Canopy Hollow") == 0
+            || std::strcmp(locationName, "Echo Basin") == 0
+            || std::strcmp(locationName, "Last Camp") == 0) {
+            return AUDIO_SCENE_FOREST_ROUTE;
+        }
+        if (std::strcmp(locationName, "Deep Gate") == 0
+            || std::strcmp(locationName, "Deep Basin") == 0) {
+            return AUDIO_SCENE_SWAMP_DEEP;
+        }
+        if (std::strcmp(locationName, "South Collapse") == 0
+            || std::strcmp(locationName, "Vent Galleries") == 0
+            || std::strcmp(locationName, "Service Shafts") == 0
+            || std::strcmp(locationName, "Purifier Ring") == 0
+            || std::strcmp(locationName, "Root Vault") == 0) {
+            return AUDIO_SCENE_RUINS_FACILITY;
+        }
     }
 
     switch (area) {
@@ -80,12 +110,11 @@ AudioScene Game_SelectAudioScene(const Game *game) {
         case MAP_AREA_FOREST:
             return AUDIO_SCENE_FOREST;
         case MAP_AREA_SWAMP_OUTER:
-        case MAP_AREA_SWAMP_DEEP:
             return AUDIO_SCENE_SWAMP;
+        case MAP_AREA_SWAMP_DEEP:
+            return AUDIO_SCENE_SWAMP_DEEP;
         case MAP_AREA_RUINS:
             return AUDIO_SCENE_RUINS;
-        case MAP_AREA_BOSS_ARENA:
-            return AUDIO_SCENE_BOSS;
         case MAP_AREA_UNKNOWN:
         default:
             return AUDIO_SCENE_BASE;
@@ -229,45 +258,6 @@ static int GetRequiredArchiveEvidenceLogIndex(const char *locationName) {
     return -1;
 }
 
-static const char *GetRequiredArchiveEvidenceLabel(const char *locationName) {
-    if (locationName == NULL) {
-        return NULL;
-    }
-
-    if (std::strcmp(locationName, "West Frontier") == 0) {
-        return "West Frontier record";
-    }
-    if (std::strcmp(locationName, "Survey Break") == 0) {
-        return "Survey Break record";
-    }
-    if (std::strcmp(locationName, "Canopy Hollow") == 0) {
-        return "Canopy Hollow record";
-    }
-    if (std::strcmp(locationName, "Echo Basin") == 0) {
-        return "Echo Basin record";
-    }
-    if (std::strcmp(locationName, "Last Camp") == 0) {
-        return "Last Camp record";
-    }
-    if (std::strcmp(locationName, "South Collapse") == 0) {
-        return "South Collapse record";
-    }
-    if (std::strcmp(locationName, "Vent Galleries") == 0) {
-        return "Vent Galleries record";
-    }
-    if (std::strcmp(locationName, "Service Shafts") == 0) {
-        return "Service Shafts record";
-    }
-    if (std::strcmp(locationName, "Purifier Ring") == 0) {
-        return "Purifier Ring record";
-    }
-    if (std::strcmp(locationName, "Root Vault") == 0) {
-        return "Root Vault record";
-    }
-
-    return NULL;
-}
-
 static bool CanArchiveEvidencePass(const TaskSystem *tasks,
                                    const char *locationName,
                                    const char *previousLocationName,
@@ -276,63 +266,11 @@ static bool CanArchiveEvidencePass(const TaskSystem *tasks,
                                    const char *targetLocationName) {
     return IsShipBaseLocation(locationName)
         && previousLocationName != NULL
+        && !IsShipBaseLocation(previousLocationName)
         && started
         && !completed
         && targetLocationName != NULL
-        && std::strcmp(previousLocationName, targetLocationName) == 0
         && IsLogCollectedAtIndex(tasks, GetRequiredArchiveEvidenceLogIndex(targetLocationName));
-}
-
-static bool IsAwaitingArchiveEvidence(const TaskSystem *tasks,
-                                      const char *locationName,
-                                      const char *previousLocationName,
-                                      bool started,
-                                      bool completed,
-                                      const char *targetLocationName) {
-    return IsShipBaseLocation(locationName)
-        && previousLocationName != NULL
-        && started
-        && !completed
-        && targetLocationName != NULL
-        && std::strcmp(previousLocationName, targetLocationName) == 0
-        && !IsLogCollectedAtIndex(tasks, GetRequiredArchiveEvidenceLogIndex(targetLocationName));
-}
-
-static const char *GetPendingArchiveEvidenceLabelOnBaseReturn(const TaskSystem *tasks,
-                                                              const char *locationName,
-                                                              const char *previousLocationName) {
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW5Started, tasks->westW5Completed, "Last Camp")) {
-        return GetRequiredArchiveEvidenceLabel("Last Camp");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW4Started, tasks->westW4Completed, "Echo Basin")) {
-        return GetRequiredArchiveEvidenceLabel("Echo Basin");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW3Started, tasks->westW3Completed, "Canopy Hollow")) {
-        return GetRequiredArchiveEvidenceLabel("Canopy Hollow");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW2Started, tasks->westW2Completed, "Survey Break")) {
-        return GetRequiredArchiveEvidenceLabel("Survey Break");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->westW1Started, tasks->westW1Completed, "West Frontier")) {
-        return GetRequiredArchiveEvidenceLabel("West Frontier");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS5Started, tasks->southS5Completed, "Root Vault")) {
-        return GetRequiredArchiveEvidenceLabel("Root Vault");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS4Started, tasks->southS4Completed, "Purifier Ring")) {
-        return GetRequiredArchiveEvidenceLabel("Purifier Ring");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS3Started, tasks->southS3Completed, "Service Shafts")) {
-        return GetRequiredArchiveEvidenceLabel("Service Shafts");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS2Started, tasks->southS2Completed, "Vent Galleries")) {
-        return GetRequiredArchiveEvidenceLabel("Vent Galleries");
-    }
-    if (IsAwaitingArchiveEvidence(tasks, locationName, previousLocationName, tasks->southS1Started, tasks->southS1Completed, "South Collapse")) {
-        return GetRequiredArchiveEvidenceLabel("South Collapse");
-    }
-
-    return NULL;
 }
 
 static bool TryAdvanceWestSouthRouteFlags(Game *game, const char *locationName, const char *previousLocationName) {
@@ -521,91 +459,9 @@ static bool TryAdvanceWestSouthRouteFlags(Game *game, const char *locationName, 
     return false;
 }
 
-static const char *GetBaseReturnSummary(const Game *game, const char *previousLocationName) {
-    GameEnding selectedRoute;
-
-    if (game == NULL || previousLocationName == NULL || Map_GetAreaAt(game->player.gridX, game->player.gridY) != MAP_AREA_BASE) {
-        return NULL;
-    }
-
-    selectedRoute = Tasks_GetSelectedEndingRoute(&game->tasks);
-
-    if (IsTrackedEastLocation(previousLocationName)) {
-        if (game->tasks.stage == 3) {
-            return "Base summary: east relay run complete. Debrief at Loxi.";
-        }
-        if (game->tasks.stage == 5 && game->player.resources[RESOURCE_ENERGY_CORE] > 0) {
-            return "Base summary: Energy Core returned. Install it in Power Bay.";
-        }
-        if (game->tasks.stage == 5) {
-            return "Base summary: prepare gear before next east deep run.";
-        }
-        if (game->tasks.stage >= 6) {
-            return "Base summary: east complete. Recover and pivot north.";
-        }
-        return "Base summary: east run complete. Recover and continue.";
-    }
-
-    if (std::strcmp(previousLocationName, "Guardian Arena") == 0) {
-        if (game->tasks.stage == 7 && selectedRoute == ENDING_HEROIC && game->tasks.bossDefeated) {
-            return "Base summary: guardian breach complete. Finish the heroic route at the Signal Tower.";
-        }
-        return "Base summary: guardian breach complete. The Signal Tower is now exposed.";
-    }
-
-    if (IsTrackedRuinsLocation(previousLocationName)) {
-        if (game->tasks.stage == 6 && game->player.resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
-            return "Base summary: fragment set complete. Sync with Loxi.";
-        }
-        if (game->tasks.stage == 6) {
-            return "Base summary: continue north fragment runs after recovery.";
-        }
-        if (game->tasks.stage == 7 && selectedRoute == ENDING_HEROIC && game->tasks.bossDefeated) {
-            return "Base summary: guardian breach complete. Finish the heroic route at the Signal Tower.";
-        }
-        if (game->tasks.stage == 7 && selectedRoute == ENDING_HEROIC) {
-            return "Base summary: heroic route locked. Open the airlock when you are ready to enter the guardian arena.";
-        }
-        if (game->tasks.stage == 7 && selectedRoute == ENDING_PEACEFUL && game->player.hasSignalAmplifier) {
-            return "Base summary: peaceful route locked. Carry the Signal Amplifier to the Signal Tower.";
-        }
-        if (game->tasks.stage == 7 && selectedRoute == ENDING_PEACEFUL) {
-            return "Base summary: peaceful route locked. Craft the Signal Amplifier before returning to the tower.";
-        }
-        if (game->tasks.stage == 7
-            && game->tasks.endingArchiveReviewed
-            && Tasks_IsEndingBranchReady(&game->tasks)
-            && selectedRoute == ENDING_NONE) {
-            return "Base summary: archive review complete. Confirm the final route with Loxi.";
-        }
-        if (game->tasks.stage == 7
-            && !game->tasks.endingArchiveReviewed
-            && Tasks_IsEndingBranchReady(&game->tasks)) {
-            return "Base summary: the archive is assembled. Return to Loxi for the final review.";
-        }
-        if (game->tasks.stage == 7 && game->tasks.bossDefeated) {
-            return "Base summary: boss defeated. Return to Loxi and commit to the final route.";
-        }
-        if (game->tasks.stage == 7 && game->player.hasSignalAmplifier) {
-            return "Base summary: Signal Amplifier ready. Return to Loxi and commit to the final route.";
-        }
-        if (game->tasks.stage == 7 && game->tasks.monolithsLit >= 3) {
-            return "Base summary: monolith ring complete. Prepare for final push.";
-        }
-        if (game->tasks.stage == 7 && game->tasks.monolithsLit > 0) {
-            return "Base summary: monolith progress made. Recover before next push.";
-        }
-        return "Base summary: north is the active endgame route.";
-    }
-
-    return NULL;
-}
-
 void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     const char *locationName;
     const char *previousLocationName;
-    const char *baseReturnSummary;
-    const char *missingArchiveEvidenceLabel;
     bool routeFlagsChanged;
     bool westCompletedNow;
     bool southCompletedNow;
@@ -624,7 +480,6 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     bool x2ReadyNow;
     bool x3ReadyNow;
     const bool detailedLocationHintsEnabled = false;
-    char baseSummaryBuffer[160];
 
     if (game == NULL) {
         return;
@@ -699,7 +554,6 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
                                                     game->tasks.southS5Started,
                                                     game->tasks.southS5Completed,
                                                     "Root Vault");
-    missingArchiveEvidenceLabel = GetPendingArchiveEvidenceLabelOnBaseReturn(&game->tasks, locationName, previousLocationName);
     routeFlagsChanged = TryAdvanceWestSouthRouteFlags(game, locationName, previousLocationName);
     x1ReadyNow = IsCrossX1Ready(&game->tasks);
     x2ReadyNow = IsCrossX2Ready(&game->tasks);
@@ -707,7 +561,6 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     if (routeFlagsChanged) {
         Tasks_UpdateObjective(&game->tasks, &game->player);
     }
-    baseReturnSummary = GetBaseReturnSummary(game, previousLocationName);
     std::snprintf(game->lastLocationName, sizeof(game->lastLocationName), "%s", locationName);
     if (westFifthCompletedNow) {
         Game_PostMessage(game, "Base summary: the final west archive has been filed.", 3.4f);
@@ -759,18 +612,6 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
     }
     if (southCompletedNow) {
         Game_PostMessage(game, "Base summary: the South Collapse outage memo is archived.", 3.4f);
-        return;
-    }
-    if (missingArchiveEvidenceLabel != NULL) {
-        std::snprintf(baseSummaryBuffer,
-                      sizeof(baseSummaryBuffer),
-                      "Base summary: the record is still open. Bring back the %s before Loxi can close it.",
-                      missingArchiveEvidenceLabel);
-        Game_PostMessage(game, baseSummaryBuffer, 3.4f);
-        return;
-    }
-    if (baseReturnSummary != NULL) {
-        Game_PostMessage(game, baseReturnSummary, 3.4f);
         return;
     }
 
@@ -883,41 +724,5 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
 
     if (game->tasks.stage < 6 || !IsTrackedRuinsLocation(locationName)) {
         return;
-    }
-
-    if (std::strcmp(locationName, "Ruins Approach") == 0) {
-        if (game->tasks.stage >= 7) {
-            Game_PostMessage(game, "Ruins Approach: this is still the last low-commitment prep lane. Stabilize oxygen, suit, and fallback before you push farther north.", 3.2f);
-        } else {
-            Game_PostMessage(game, "Ruins Approach: gather fragments around the ring, then fall back to Loxi before the final route opens.", 3.0f);
-        }
-        return;
-    }
-
-    if (std::strcmp(locationName, "Monolith Ring") == 0) {
-        if (game->tasks.monolithsLit >= 3) {
-            Game_PostMessage(game, "Monolith Ring: the full resonance is active. This is your cleanest transition point from prep into the final north execution.", 3.2f);
-        } else if (game->tasks.monolithsLit == 2) {
-            Game_PostMessage(game, "Monolith Ring: only one silent stone remains. Finish it now if you want the cleanest heroic push before the plateau.", 3.2f);
-        } else if (game->tasks.monolithsLit == 1) {
-            Game_PostMessage(game, "Monolith Ring: the first stone is helping, but the route still wants one more real prep loop before the plateau commit.", 3.0f);
-        } else {
-            Game_PostMessage(game, "Monolith Ring: this is the prep-to-execution hinge. Light the stones here before treating the plateau like a real final climb.", 3.0f);
-        }
-        return;
-    }
-
-    if (std::strcmp(locationName, "Signal Tower Plateau") == 0) {
-        if (game->tasks.bossDefeated) {
-            Game_PostMessage(game, "Signal Tower Plateau: the guardian is down. Finish the rescue beacon now, or fall back and return to base for settlement.", 3.4f);
-        } else if (game->player.hasSignalAmplifier) {
-            Game_PostMessage(game, "Signal Tower Plateau: peaceful route is live. The amplifier is calming the tower systems, but this is still the final oxygen commit.", 3.4f);
-        } else if (game->tasks.monolithsLit >= 3) {
-            Game_PostMessage(game, "Signal Tower Plateau: the full ring is lit. This is your cleanest heroic window, but the final climb is still a hard commitment.", 3.4f);
-        } else if (game->tasks.monolithsLit > 0) {
-            Game_PostMessage(game, "Signal Tower Plateau: partial ring prep is helping, but you are entering the final climb early. Retreat if oxygen is not stable.", 3.4f);
-        } else {
-            Game_PostMessage(game, "Signal Tower Plateau: this is the final climb. Expect heavy oxygen leaks and no cheap recovery beyond this point.", 3.4f);
-        }
     }
 }

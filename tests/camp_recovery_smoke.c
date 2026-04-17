@@ -85,16 +85,16 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "base oxygen console should remain usable");
-    Require(player.health == Player_GetMaxHealth(&player)
-                && player.oxygen == MAX_OXYGEN
-                && player.stamina == Player_GetCurrentStaminaCap(&player),
-            "base oxygen console should still perform a full reset");
-    Require(player.poison == 0.0f && player.pressure == 0.0f,
-            "base oxygen console should clear poison and hidden pressure");
-    Require(!Player_HasStatus(&player, PLAYER_STATUS_POISONED)
+    Require(player.oxygen == MAX_OXYGEN && player.pressure == 0.0f,
+            "base oxygen console should now focus on oxygen refill and pressure stabilization");
+    Require(player.health == 22.0f
+                && player.stamina == 12.0f
+                && player.poison == 48.0f,
+            "base oxygen console should no longer replace rest or medical recovery");
+    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
                 && !Player_HasStatus(&player, PLAYER_STATUS_LOW_OXYGEN)
                 && !Player_HasStatus(&player, PLAYER_STATUS_CRITICAL_CONDITION),
-            "base oxygen console should clear negative statuses completely");
+            "base oxygen console should clear breathing-related alerts while leaving other conditions untouched");
 
     puts("camp_recovery smoke ok");
     return 0;

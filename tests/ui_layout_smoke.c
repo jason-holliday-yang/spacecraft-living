@@ -45,31 +45,57 @@ static void VerifySettingsLayout(int screenWidth, int screenHeight) {
     Rectangle closeButton;
     Rectangle languageEnglishButton;
     Rectangle languageChineseButton;
+    Rectangle accountSwitchButton;
+    Rectangle accountDeleteButton;
+    Rectangle previousRow;
     Rectangle exitButton;
+    int rowIndex;
+    int sliderIndex;
 
     overlay = UI_GetStandardOverlayRect(screenWidth, screenHeight);
-    slider = UI_GetSettingsSliderRect(screenWidth, screenHeight);
-    decreaseButton = UI_GetSettingsDecreaseButtonRect(screenWidth, screenHeight);
-    increaseButton = UI_GetSettingsIncreaseButtonRect(screenWidth, screenHeight);
     closeButton = UI_GetSettingsCloseButtonRect(screenWidth, screenHeight);
     languageEnglishButton = UI_GetSettingsLanguageButtonRect(screenWidth, screenHeight, 0);
     languageChineseButton = UI_GetSettingsLanguageButtonRect(screenWidth, screenHeight, 1);
+    accountSwitchButton = UI_GetSettingsAccountButtonRect(screenWidth, screenHeight, 0);
+    accountDeleteButton = UI_GetSettingsAccountButtonRect(screenWidth, screenHeight, 1);
     exitButton = UI_GetMainMenuButtonRect(screenWidth, screenHeight, MAIN_MENU_BUTTON_EXIT);
 
     Require(overlay.width > 0.0f && overlay.height > 0.0f, "settings overlay should have a positive size");
-    Require(RectContainsRect(overlay, slider), "settings slider should stay inside the overlay");
-    Require(RectContainsRect(overlay, decreaseButton), "settings decrease button should stay inside the overlay");
-    Require(RectContainsRect(overlay, increaseButton), "settings increase button should stay inside the overlay");
     Require(RectContainsRect(overlay, closeButton), "settings close button should stay inside the overlay");
     Require(RectContainsRect(overlay, languageEnglishButton), "settings english language button should stay inside the overlay");
     Require(RectContainsRect(overlay, languageChineseButton), "settings chinese language button should stay inside the overlay");
-    Require(!CheckCollisionRecs(closeButton, slider), "settings close button should not overlap the slider");
-    Require(!CheckCollisionRecs(closeButton, decreaseButton), "settings close button should not overlap the decrease button");
-    Require(!CheckCollisionRecs(closeButton, increaseButton), "settings close button should not overlap the increase button");
+    Require(RectContainsRect(overlay, accountSwitchButton), "settings switch account button should stay inside the overlay");
+    Require(RectContainsRect(overlay, accountDeleteButton), "settings delete account button should stay inside the overlay");
     Require(!CheckCollisionRecs(closeButton, languageEnglishButton), "settings close button should not overlap the english language button");
     Require(!CheckCollisionRecs(closeButton, languageChineseButton), "settings close button should not overlap the chinese language button");
     Require(!CheckCollisionRecs(closeButton, exitButton), "settings close button should not overlap the main menu exit button");
     Require(!CheckCollisionRecs(languageEnglishButton, languageChineseButton), "settings language buttons should not overlap");
+    Require(!CheckCollisionRecs(accountSwitchButton, accountDeleteButton), "settings account buttons should not overlap");
+
+    previousRow = UI_GetSettingsRowRect(screenWidth, screenHeight, 0);
+    Require(RectContainsRect(overlay, previousRow), "first settings row should stay inside the overlay");
+    for (rowIndex = 1; rowIndex < 5; ++rowIndex) {
+        Rectangle row;
+
+        row = UI_GetSettingsRowRect(screenWidth, screenHeight, rowIndex);
+        Require(RectContainsRect(overlay, row), "each settings row should stay inside the overlay");
+        Require(!CheckCollisionRecs(previousRow, row), "settings rows should not overlap");
+        previousRow = row;
+    }
+
+    for (sliderIndex = 0; sliderIndex < 3; ++sliderIndex) {
+        slider = UI_GetSettingsSliderRect(screenWidth, screenHeight, sliderIndex);
+        decreaseButton = UI_GetSettingsDecreaseButtonRect(screenWidth, screenHeight, sliderIndex);
+        increaseButton = UI_GetSettingsIncreaseButtonRect(screenWidth, screenHeight, sliderIndex);
+        Require(RectContainsRect(overlay, slider), "settings slider should stay inside the overlay");
+        Require(RectContainsRect(overlay, decreaseButton), "settings decrease button should stay inside the overlay");
+        Require(RectContainsRect(overlay, increaseButton), "settings increase button should stay inside the overlay");
+        Require(!CheckCollisionRecs(closeButton, slider), "settings close button should not overlap the slider");
+        Require(!CheckCollisionRecs(closeButton, decreaseButton), "settings close button should not overlap the decrease button");
+        Require(!CheckCollisionRecs(closeButton, increaseButton), "settings close button should not overlap the increase button");
+        Require(!CheckCollisionRecs(slider, decreaseButton), "settings slider should not overlap the decrease button");
+        Require(!CheckCollisionRecs(slider, increaseButton), "settings slider should not overlap the increase button");
+    }
 }
 
 static void VerifyPauseMenuLayout(int screenWidth, int screenHeight) {
@@ -155,8 +181,6 @@ static void VerifyAuthLayout(int screenWidth, int screenHeight) {
     Rectangle deleteButton;
     Rectangle submitButton;
     Rectangle switchButton;
-    Rectangle switchAccountButton;
-    Rectangle deleteAccountButton;
 
     panel = UI_GetAuthPanelRect(screenWidth, screenHeight);
     usernameField = UI_GetAuthInputRect(screenWidth, screenHeight, 0);
@@ -165,8 +189,6 @@ static void VerifyAuthLayout(int screenWidth, int screenHeight) {
     deleteButton = UI_GetAuthDeleteAccountRect(screenWidth, screenHeight);
     submitButton = UI_GetAuthSubmitButtonRect(screenWidth, screenHeight);
     switchButton = UI_GetAuthSwitchModeRect(screenWidth, screenHeight);
-    switchAccountButton = UI_GetMainMenuSwitchAccountRect(screenWidth, screenHeight);
-    deleteAccountButton = UI_GetMainMenuDeleteAccountRect(screenWidth, screenHeight);
 
     Require(panel.width > 0.0f && panel.height > 0.0f, "auth panel should have a positive size");
     Require(RectContainsRect(panel, usernameField), "username field should stay inside the auth panel");
@@ -179,7 +201,6 @@ static void VerifyAuthLayout(int screenWidth, int screenHeight) {
     Require(!CheckCollisionRecs(submitButton, deleteButton), "submit and delete buttons should not overlap");
     Require(!CheckCollisionRecs(deleteButton, switchButton), "delete and switch mode buttons should not overlap");
     Require(!CheckCollisionRecs(submitButton, switchButton), "auth buttons should not overlap");
-    Require(!CheckCollisionRecs(switchAccountButton, deleteAccountButton), "main menu account action buttons should not overlap");
 }
 
 static void VerifySavePanelLayout(int screenWidth, int screenHeight) {

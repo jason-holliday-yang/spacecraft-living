@@ -15,7 +15,19 @@ struct MapContentBounds {
     int maxY;
 };
 
-MapContentBounds GetMapContentBounds(const GameMap *map) {
+bool ShouldShowBossArenaOnMap(const Player *player) {
+    return player != nullptr && Map_GetAreaAt(player->gridX, player->gridY) == MAP_AREA_BOSS_ARENA;
+}
+
+bool ShouldSkipMapTile(int gridX, int gridY, bool revealBossArena) {
+    return !revealBossArena
+        && gridX >= BOSS_ARENA_X
+        && gridX < BOSS_ARENA_X + BOSS_ARENA_WIDTH
+        && gridY >= BOSS_ARENA_Y
+        && gridY < BOSS_ARENA_Y + BOSS_ARENA_HEIGHT;
+}
+
+MapContentBounds GetMapContentBounds(const GameMap *map, bool revealBossArena) {
     MapContentBounds bounds{MAP_WIDTH - 1, MAP_HEIGHT - 1, 0, 0};
     bool found = false;
 
@@ -25,6 +37,9 @@ MapContentBounds GetMapContentBounds(const GameMap *map) {
 
     for (int y = 0; y < MAP_HEIGHT; ++y) {
         for (int x = 0; x < MAP_WIDTH; ++x) {
+            if (ShouldSkipMapTile(x, y, revealBossArena)) {
+                continue;
+            }
             if (Map_GetGroundTileAt(map, x, y) == TILE_VOID && Map_GetPropTileAt(map, x, y) == TILE_VOID) {
                 continue;
             }
@@ -103,7 +118,7 @@ Color GetPropTileColor(TileType propTile) {
         case TILE_BARRIER_RUINS:
             return Color{154, 146, 126, 255};
         case TILE_LOG_SITE:
-            return Color{104, 173, 255, 255};
+            return Color{255, 204, 140, 255};
         case TILE_CRASH_CLUE:
             return Color{255, 190, 126, 255};
         case TILE_VOID:
@@ -131,6 +146,50 @@ void DrawReserveFrame(Rectangle rect, Color fill, Color outline) {
     DrawRectangleLinesEx(rect, 2.0f, outline);
 }
 
+void DrawArchiveMarker(Rectangle rect, bool mainline, float elapsedSeconds) {
+    Rectangle iconRect;
+    Color accent;
+    float pulse;
+
+    pulse = 0.5f + 0.5f * std::sin(elapsedSeconds * 3.4f + rect.x * 0.01f + rect.y * 0.01f);
+    accent = mainline ? Color{255, 198, 118, 245} : Color{118, 226, 255, 245};
+    iconRect = Rectangle{
+        rect.x + rect.width * 0.12f,
+        rect.y + rect.height * 0.08f,
+        rect.width * 0.76f,
+        rect.height * 0.84f
+    };
+
+    DrawRectangleRounded(iconRect, 0.18f, 4, Color{36, 50, 70, 235});
+    DrawRectangleRoundedLinesEx(iconRect, 0.18f, 4, 1.2f, Color{255, 224, 180, (unsigned char)(95 + pulse * 40.0f)});
+    DrawRectangleRounded(Rectangle{iconRect.x + rect.width * 0.08f,
+                                   iconRect.y + rect.height * 0.08f,
+                                   iconRect.width - rect.width * 0.16f,
+                                   iconRect.height - rect.height * 0.18f},
+                         0.12f,
+                         3,
+                         Color{232, 238, 246, 240});
+    DrawRectangle((int)(iconRect.x + rect.width * 0.10f),
+                  (int)(iconRect.y + rect.height * 0.10f),
+                  (int)(iconRect.width - rect.width * 0.20f),
+                  (int)fmaxf(1.0f, rect.height * 0.10f),
+                  accent);
+    DrawRectangle((int)(iconRect.x + rect.width * 0.10f),
+                  (int)(iconRect.y + rect.height * 0.24f),
+                  (int)(iconRect.width - rect.width * 0.28f),
+                  (int)fmaxf(1.0f, rect.height * 0.06f),
+                  Color{126, 144, 166, 220});
+    DrawRectangle((int)(iconRect.x + rect.width * 0.10f),
+                  (int)(iconRect.y + rect.height * 0.34f),
+                  (int)(iconRect.width - rect.width * 0.18f),
+                  (int)fmaxf(1.0f, rect.height * 0.06f),
+                  Color{126, 144, 166, 200});
+    DrawCircle((int)(iconRect.x + iconRect.width - rect.width * 0.10f),
+               (int)(iconRect.y + rect.height * 0.12f),
+               fmaxf(1.0f, rect.width * 0.06f + pulse * rect.width * 0.02f),
+               accent);
+}
+
 }  // namespace
 
 void UI_DrawMapOverlay(const AssetBundle *assets,
@@ -154,7 +213,8 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         panel.width - 682.0f * scale,
         panel.height - 142.0f * scale,
     };
-    MapContentBounds contentBounds = GetMapContentBounds(map);
+    const bool revealBossArena = ShouldShowBossArenaOnMap(player);
+    MapContentBounds contentBounds = GetMapContentBounds(map, revealBossArena);
     int contentWidth = contentBounds.maxX - contentBounds.minX + 1;
     int contentHeight = contentBounds.maxY - contentBounds.minY + 1;
     float cellSize = std::fmin(mapPanel.width / static_cast<float>(contentWidth),
@@ -212,6 +272,9 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
 
     for (int y = contentBounds.minY; y <= contentBounds.maxY; ++y) {
         for (int x = contentBounds.minX; x <= contentBounds.maxX; ++x) {
+            if (ShouldSkipMapTile(x, y, revealBossArena)) {
+                continue;
+            }
             Rectangle tileRect{
                 TileScreenX(x),
                 TileScreenY(y),
@@ -251,6 +314,28 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         );
     }
 
+    if (tasks != nullptr) {
+        for (int index = 0; index < tasks->logCount; ++index) {
+            const ShipLog *log = &tasks->logs[index];
+
+            if (!log->active || log->collected) {
+                continue;
+            }
+            if (minimap != nullptr && !minimap->explored[log->gridY][log->gridX]) {
+                continue;
+            }
+
+            DrawArchiveMarker(Rectangle{
+                                  TileScreenX(log->gridX),
+                                  TileScreenY(log->gridY),
+                                  cellSize,
+                                  cellSize,
+                              },
+                              log->category == SHIP_LOG_MAINLINE,
+                              GetTime());
+        }
+    }
+
     DrawReserveFrame(westReserveRect, Color{86, 96, 110, 24}, Color{146, 162, 180, 78});
     DrawReserveFrame(southReserveRect, Color{110, 78, 68, 24}, Color{176, 134, 98, 84});
 
@@ -274,29 +359,30 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("West Frontier"), Vector2{TileScreenX(EXTERIOR_X(16)), TileScreenY(EXTERIOR_Y(62))}, 12.0f * scale, Color{196, 206, 220, 210});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("Survey Break"), Vector2{TileScreenX(EXTERIOR_X(35)), TileScreenY(EXTERIOR_Y(68))}, 11.5f * scale, Color{196, 206, 220, 198});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("Canopy Hollow"), Vector2{TileScreenX(EXTERIOR_X(42)), TileScreenY(EXTERIOR_Y(60))}, 11.0f * scale, Color{196, 206, 220, 188});
-    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Echo Basin"), Vector2{TileScreenX(EXTERIOR_X(47)), TileScreenY(EXTERIOR_Y(72))}, 10.8f * scale, Color{196, 206, 220, 180});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Echo Basin"), Vector2{TileScreenX(EXTERIOR_X(48)), TileScreenY(EXTERIOR_Y(73))}, 10.8f * scale, Color{196, 206, 220, 180});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("Last Camp"), Vector2{TileScreenX(EXTERIOR_X(47)), TileScreenY(EXTERIOR_Y(86))}, 10.8f * scale, Color{196, 206, 220, 174});
     UIRuntime_DrawText(assets, Loc_PickLiteral("Subsurface Sink", "地下沉降带"), Vector2{TileScreenX(EXTERIOR_X(58)), TileScreenY(EXTERIOR_Y(95))}, 13.0f * scale, Color{214, 190, 168, 220});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("South Collapse"), Vector2{TileScreenX(EXTERIOR_X(61)), TileScreenY(EXTERIOR_Y(98))}, 12.0f * scale, Color{198, 205, 214, 210});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("Vent Galleries"), Vector2{TileScreenX(EXTERIOR_X(83)), TileScreenY(EXTERIOR_Y(98))}, 11.5f * scale, Color{198, 205, 214, 198});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("Service Shafts"), Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(98))}, 11.0f * scale, Color{198, 205, 214, 188});
-    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Purifier Ring"), Vector2{TileScreenX(EXTERIOR_X(104)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 180});
+    UIRuntime_DrawText(assets, Loc_GetLocationNameText("Purifier Ring"), Vector2{TileScreenX(EXTERIOR_X(107)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 180});
     UIRuntime_DrawText(assets, Loc_GetLocationNameText("Root Vault"), Vector2{TileScreenX(EXTERIOR_X(112)), TileScreenY(EXTERIOR_Y(98))}, 10.8f * scale, Color{198, 205, 214, 174});
 
     UIRuntime_DrawText(assets, Loc_PickLiteral("Legend", "图例"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 18.0f * scale}, 24.0f * scale, WHITE);
     DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 56.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{88, 255, 180, 255}, Loc_PickLiteral("Player marker", "玩家位置"), scale);
     DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 84.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{255, 214, 154, 255}, Loc_PickLiteral("Objective marker", "目标位置"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 126.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{68, 98, 128, 255}, Loc_PickLiteral("Ship base", "飞船基地"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 154.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{58, 114, 78, 255}, Loc_PickLiteral("Crash forest", "坠毁森林"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 182.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{92, 121, 62, 255}, Loc_PickLiteral("East swamp route", "东侧沼泽路线"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 210.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{108, 111, 122, 255}, Loc_PickLiteral("Ruins", "遗迹"), scale);
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Current Objective", "当前目标"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 262.0f * scale}, 21.0f * scale, WHITE);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 112.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{255, 204, 140, 255}, Loc_PickLiteral("Archive log", "档案日志"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 148.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{68, 98, 128, 255}, Loc_PickLiteral("Ship base", "飞船基地"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 176.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{58, 114, 78, 255}, Loc_PickLiteral("Crash forest", "坠毁森林"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 204.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{92, 121, 62, 255}, Loc_PickLiteral("East swamp route", "东侧沼泽路线"), scale);
+    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 232.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{108, 111, 122, 255}, Loc_PickLiteral("Ruins", "遗迹"), scale);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Current Objective", "当前目标"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 274.0f * scale}, 21.0f * scale, WHITE);
     UIRuntime_DrawWrappedText(
         assets,
         tasks->objective,
         Rectangle{
             infoPanel.x + 18.0f * scale,
-            infoPanel.y + 294.0f * scale,
+            infoPanel.y + 306.0f * scale,
             infoPanel.width - 36.0f * scale,
             92.0f * scale,
         },
@@ -304,14 +390,14 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         17.0f * scale,
         Color{214, 226, 238, 255}
     );
-    UIRuntime_DrawPanel(Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 396.0f * scale, infoPanel.width - 36.0f * scale, 118.0f * scale}, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
+    UIRuntime_DrawPanel(Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 408.0f * scale, infoPanel.width - 36.0f * scale, 118.0f * scale}, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
     std::snprintf(buffer, sizeof(buffer), "%s  %d, %d", Loc_PickLiteral("Position", "坐标"), player->gridX, player->gridY);
-    UIRuntime_DrawText(assets, buffer, Vector2{infoPanel.x + 32.0f * scale, infoPanel.y + 414.0f * scale}, 16.0f * scale, Color{194, 224, 255, 255});
+    UIRuntime_DrawText(assets, buffer, Vector2{infoPanel.x + 32.0f * scale, infoPanel.y + 426.0f * scale}, 16.0f * scale, Color{194, 224, 255, 255});
     std::snprintf(buffer, sizeof(buffer), "%s  %s", Loc_PickLiteral("Current Area", "当前区域"), Loc_GetAreaNameText(Map_GetAreaName(Map_GetAreaAt(player->gridX, player->gridY))));
     UIRuntime_DrawWrappedText(
         assets,
         buffer,
-        Rectangle{infoPanel.x + 32.0f * scale, infoPanel.y + 436.0f * scale, infoPanel.width - 64.0f * scale, 22.0f * scale},
+        Rectangle{infoPanel.x + 32.0f * scale, infoPanel.y + 448.0f * scale, infoPanel.width - 64.0f * scale, 22.0f * scale},
         15.0f * scale,
         18.0f * scale,
         Color{174, 226, 255, 255}
@@ -320,14 +406,14 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
     UIRuntime_DrawWrappedText(
         assets,
         buffer,
-        Rectangle{infoPanel.x + 32.0f * scale, infoPanel.y + 458.0f * scale, infoPanel.width - 64.0f * scale, 24.0f * scale},
+        Rectangle{infoPanel.x + 32.0f * scale, infoPanel.y + 470.0f * scale, infoPanel.width - 64.0f * scale, 24.0f * scale},
         15.0f * scale,
         16.0f * scale,
         Color{198, 211, 224, 255}
     );
     UIRuntime_DrawWrappedText(assets,
                               Loc_PickLiteral("West frontier opens after the comm relay. The southern descent opens after the power bay. Ruins prep deepens as you bring back more field evidence.", "通讯中继修复后会开放西部前线；动力舱恢复后会开放南侧下行路线。随着你带回更多现场证据，遗迹推进也会继续加深。"),
-                              Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 498.0f * scale, infoPanel.width - 36.0f * scale, 92.0f * scale},
+                              Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 510.0f * scale, infoPanel.width - 36.0f * scale, 80.0f * scale},
                               13.0f * scale,
                               14.5f * scale,
                               Color{182, 199, 214, 255});

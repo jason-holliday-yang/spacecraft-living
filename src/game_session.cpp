@@ -2,14 +2,51 @@
 
 #include <cstring>
 
-static const int DEATH_FAILURE_THRESHOLD = 3;
-static const float DEATH_RECOVERY_HEALTH_FACTOR = 0.55f;
-static const float DEATH_RECOVERY_STAMINA_FACTOR = 0.55f;
-static const float DEATH_RECOVERY_OXYGEN = 62.0f;
-static const float DEATH_RECOVERY_POISON_FACTOR = 0.35f;
+void Game_BeginScreenTransition(Game *game, ScreenTransitionAction action, int slotIndex) {
+    if (game == NULL || action == SCREEN_TRANSITION_NONE || game->screenTransitionActive) {
+        return;
+    }
 
-static int AbsInt(int value) {
-    return value < 0 ? -value : value;
+    game->screenTransitionActive = true;
+    game->screenTransitionResolved = false;
+    game->screenTransitionElapsed = 0.0f;
+    game->screenTransitionAction = action;
+    game->screenTransitionSlotIndex = slotIndex;
+}
+
+void Game_ApplyLanguage(Game *game, GameLanguage language) {
+    GameLanguage normalized;
+
+    if (game == NULL) {
+        return;
+    }
+
+    normalized = Loc_NormalizeLanguage((int)language);
+    game->pendingLanguage = normalized;
+    if (game->settings.language == normalized) {
+        return;
+    }
+
+    game->settings.language = normalized;
+    game->settingsDirty = true;
+    Loc_SetLanguage(normalized);
+    Tasks_UpdateObjective(&game->tasks, &game->player);
+}
+
+void Game_BeginLanguageTransition(Game *game, GameLanguage language) {
+    GameLanguage normalized;
+
+    if (game == NULL) {
+        return;
+    }
+
+    normalized = Loc_NormalizeLanguage((int)language);
+    game->pendingLanguage = normalized;
+    if (game->screenTransitionActive || game->settings.language == normalized) {
+        return;
+    }
+
+    Game_BeginScreenTransition(game, SCREEN_TRANSITION_APPLY_LANGUAGE, -1);
 }
 
 static float ClampFloat(float value, float minValue, float maxValue) {
@@ -20,6 +57,10 @@ static float ClampFloat(float value, float minValue, float maxValue) {
         return maxValue;
     }
     return value;
+}
+
+static int AbsInt(int value) {
+    return value < 0 ? -value : value;
 }
 
 static bool IsSafeLoadedPlayerTile(const Game *game, int gridX, int gridY) {
@@ -73,45 +114,11 @@ bool Game_FindNearestSafeLoadedPlayerTile(const Game *game, int originX, int ori
     return false;
 }
 
-static bool FindDeathRecoveryTile(const Game *game, int *gridX, int *gridY, bool *usedCamp) {
-    if (gridX == NULL || gridY == NULL) {
-        return false;
-    }
-
-    if (usedCamp != NULL) {
-        *usedCamp = false;
-    }
-
-    if (Map_GetAreaAt(game->player.gridX, game->player.gridY) == MAP_AREA_BOSS_ARENA
-        && game->tasks.selectedEndingRoute == ENDING_HEROIC
-        && !game->tasks.bossDefeated) {
-        if (Game_FindNearestSafeLoadedPlayerTile(game, PLAYER_START_X, PLAYER_START_Y, gridX, gridY)) {
-            return true;
-        }
-    }
-
-    /* Recover at the field camp first, then fall back to the original base spawn. */
-    if (game->map.campPlaced
-        && Game_FindNearestSafeLoadedPlayerTile(game, game->map.campX, game->map.campY, gridX, gridY)) {
-        if (usedCamp != NULL) {
-            *usedCamp = true;
-        }
-        return true;
-    }
-
-    if (Game_FindNearestSafeLoadedPlayerTile(game, PLAYER_START_X, PLAYER_START_Y, gridX, gridY)) {
-        return true;
-    }
-
-    *gridX = game->player.gridX;
-    *gridY = game->player.gridY;
-    return true;
-}
-
 void Game_CloseTransientOverlays(Game *game) {
     game->pauseMenuOpen = false;
     game->settingsOpen = false;
     game->settingsSliderDragging = false;
+    game->settingsSliderDragIndex = -1;
     game->backpackOpen = false;
     game->craftOpen = false;
     game->mapOpen = false;
@@ -158,7 +165,14 @@ static void EnterGameplayFromOpening(Game *game) {
     game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
     Game_CloseStoryScene(game);
     Audio_SetScene(&game->audio, AUDIO_SCENE_BASE);
-    Game_PostMessage(game, Loc_PickLiteral("Start in the lower oxygen bay: restore the oxygen console. The terminal bay can sync Loxi when you need the link.", "从下层氧气舱开始：先修复氧气控制台。需要时可以去终端舱与洛希同步。"), 4.2f);
+    Game_PostMessage(game, Loc_PickLiteral("Wake in Loxi's cabin. Sync the uplink, then restore the lower oxygen console.", "先在洛希舱室醒来并完成同步，再去修复下层氧气控制台。"), 4.2f);
+}
+
+static void RestartGameplayAfterDeath(Game *game) {
+    Game_ResetGameplayWorld(game);
+    Game_RefreshSaveSlots(game);
+    MiniMap_Update(&game->miniMap, &game->player, &game->map);
+    EnterGameplayFromOpening(game);
 }
 
 void Game_ResetGameplayWorld(Game *game) {
@@ -182,6 +196,7 @@ void Game_ResetGameplayWorld(Game *game) {
     game->heldMoveY = 0;
     game->holdRepeatTimer = 0.0f;
     Game_CloseTransientOverlays(game);
+    game->communicatorTab = COMMUNICATOR_TAB_TASKS;
     game->selectedBackpackItem = 0;
     game->selectedCraftIndex = 0;
     game->savePanelMode = SAVE_PANEL_MODE_LOAD;
@@ -191,6 +206,8 @@ void Game_ResetGameplayWorld(Game *game) {
     game->storyScene = STORY_SCENE_NONE;
     std::memset(game->storySceneShown, 0, sizeof(game->storySceneShown));
     game->selectedLogIndex = 0;
+    game->communicatorFirstVisibleLogIndex = 0;
+    game->pendingLanguage = game->settings.language;
     game->requestClose = false;
     game->lastLocationName[0] = '\0';
     Game_SyncTrackedLocation(game);
@@ -231,78 +248,19 @@ void Game_HandlePlayerDeath(Game *game) {
     game->player.deathCount += 1;
     game->player.health = 0.0f;
     game->player.oxygen = ClampFloat(game->player.oxygen, 0.0f, MAX_OXYGEN);
-    game->showDeathPopup = false;
+    game->showDeathPopup = true;
     game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
     Game_ResetTransientGameplayState(game);
-
-    if (game->player.deathCount >= DEATH_FAILURE_THRESHOLD) {
-        game->tasks.ending = ENDING_FAILURE;
-        game->state = GAME_STATE_ENDING;
-        Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
-        Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
-        return;
-    }
-
-    game->showDeathPopup = true;
+    Game_RecordActiveAccountScore(game);
     Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
 }
 
 void Game_HandleDeathRecovery(Game *game) {
-    int safeGridX;
-    int safeGridY;
-    float staminaCap;
-    int remainingLives;
-    const char *message;
-    bool usedCampRecovery;
-
-    if (game->tasks.ending != ENDING_NONE) {
+    if (game == NULL) {
         return;
     }
 
-    safeGridX = game->player.gridX;
-    safeGridY = game->player.gridY;
-    usedCampRecovery = false;
-    FindDeathRecoveryTile(game, &safeGridX, &safeGridY, &usedCampRecovery);
-
-    game->player.gridX = safeGridX;
-    game->player.gridY = safeGridY;
-    game->player.facingX = 0;
-    game->player.facingY = 1;
-    Player_UpdateWorldPosition(&game->player);
-
-    game->player.health = ClampFloat(Player_GetMaxHealth(&game->player) * DEATH_RECOVERY_HEALTH_FACTOR,
-                                     22.0f,
-                                     Player_GetMaxHealth(&game->player));
-    staminaCap = Player_GetCurrentStaminaCap(&game->player);
-    game->player.stamina = ClampFloat(Player_GetMaxStamina(&game->player) * DEATH_RECOVERY_STAMINA_FACTOR, 18.0f, staminaCap);
-    game->player.oxygen = ClampFloat(DEATH_RECOVERY_OXYGEN, 0.0f, MAX_OXYGEN);
-    game->player.pressure = INITIAL_PRESSURE;
-    game->player.poison = ClampFloat(game->player.poison * DEATH_RECOVERY_POISON_FACTOR, 0.0f, MAX_POISON);
-    Game_ResetTransientGameplayState(game);
-    Game_TrySaveSettings(game);
-
-    Game_CloseTransientOverlays(game);
-    game->state = GAME_STATE_PLAYING;
-    game->openingSlideIndex = 0;
-    game->openingCutsceneElapsed = 0.0f;
-    Game_CloseStoryScene(game);
-    Game_ResetCameraToPlayer(game);
-    MiniMap_Update(&game->miniMap, &game->player, &game->map);
-    Tasks_UpdateObjective(&game->tasks, &game->player);
-    Game_SyncTrackedLocation(game);
-    Audio_SetScene(&game->audio, Game_SelectAudioScene(game));
-
-    remainingLives = DEATH_FAILURE_THRESHOLD - game->player.deathCount;
-    if (usedCampRecovery && remainingLives <= 1) {
-        message = Loc_PickLiteral("Emergency recovery returned you to the field camp. Progress is intact, but one more collapse ends the run.", "紧急回收把你送回了野外营地。进度仍在，但再倒下一次就会结束本次生存。");
-    } else if (usedCampRecovery) {
-        message = Loc_PickLiteral("Emergency recovery returned you to the field camp. Progress is intact, but repeated collapses will end the run.", "紧急回收把你送回了野外营地。进度仍在，但持续崩溃会终结本次生存。");
-    } else if (remainingLives <= 1) {
-        message = Loc_PickLiteral("Emergency recovery returned you to base. Progress is intact, but one more collapse ends the run.", "紧急回收把你送回了基地。进度仍在，但再倒下一次就会结束本次生存。");
-    } else {
-        message = Loc_PickLiteral("Emergency recovery returned you to base. Progress is intact, but repeated collapses will end the run.", "紧急回收把你送回了基地。进度仍在，但持续崩溃会终结本次生存。");
-    }
-    Game_PostMessage(game, message, 4.2f);
+    RestartGameplayAfterDeath(game);
 }
 
 void Game_ReturnToMenu(Game *game) {

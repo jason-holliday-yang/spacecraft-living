@@ -37,9 +37,13 @@ typedef enum AudioScene {
     AUDIO_SCENE_MENU,
     AUDIO_SCENE_BASE,
     AUDIO_SCENE_FOREST,
+    AUDIO_SCENE_FOREST_ROUTE,
     AUDIO_SCENE_SWAMP,
+    AUDIO_SCENE_SWAMP_DEEP,
     AUDIO_SCENE_RUINS,
+    AUDIO_SCENE_RUINS_FACILITY,
     AUDIO_SCENE_BOSS,
+    AUDIO_SCENE_BOSS_ARENA,
     AUDIO_SCENE_ENDING
 } AudioScene;
 
@@ -59,7 +63,11 @@ typedef struct AudioManager {
     bool sceneTransitionActive;
     bool activeSceneStopped;
     float masterVolume;
+    float musicVolume;
+    float sfxVolume;
     float sceneTransitionTimer;
+    int activeSceneVariant;
+    int pendingSceneVariant;
     AudioScene activeScene;
     AudioScene requestedScene;
     AudioScene pendingScene;
@@ -83,12 +91,19 @@ typedef struct AudioManager {
     OptionalSound endingPeaceful;
     OptionalSound endingSettlement;
     OptionalMusic menuLoop;
+    OptionalMusic menuLoopAlt;
     OptionalMusic baseLoop;
+    OptionalMusic baseLoopAlt;
     OptionalMusic forestLoop;
+    OptionalMusic forestRouteLoop;
     OptionalMusic swampLoop;
+    OptionalMusic swampDeepLoop;
     OptionalMusic ruinsLoop;
+    OptionalMusic ruinsFacilityLoop;
     OptionalMusic bossLoop;
+    OptionalMusic bossArenaLoop;
     OptionalMusic endingLoop;
+    OptionalMusic endingLoopAlt;
 } AudioManager;
 
 void Audio_Init(AudioManager *audio);
@@ -96,6 +111,8 @@ void Audio_Shutdown(AudioManager *audio);
 void Audio_Update(AudioManager *audio);
 void Audio_ApplySettings(AudioManager *audio, const GameSettings *settings);
 void Audio_SetMasterVolumeSetting(AudioManager *audio, float volume);
+void Audio_SetMusicVolumeSetting(AudioManager *audio, float volume);
+void Audio_SetSfxVolumeSetting(AudioManager *audio, float volume);
 void Audio_SetSfxEnabled(AudioManager *audio, bool enabled);
 void Audio_SetScene(AudioManager *audio, AudioScene scene);
 void Audio_PlayCue(AudioManager *audio, AudioCue cue);

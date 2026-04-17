@@ -92,16 +92,15 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     {
         RECIPE_SIGNAL_AMPLIFIER,
         LT("Signal Amplifier", "信号放大器"),
-        LT("1 Energy Core + 3 Relic Fragments. Peaceful tower activation.", "1 能源核心 + 3 遗迹碎片。用于和平方式启动塔楼。"),
+        LT("3 Relic Fragments. Peaceful tower activation.", "3 遗迹碎片。用于和平方式启动塔楼。"),
         LT("Final peaceful-route device for stabilizing the tower without the boss fight.", "和平路线的最终装置，可在不进行首领战的情况下稳定塔楼。"),
-        LT("1 Energy Core, 3 Relic Fragments", "1 能源核心，3 遗迹碎片"),
+        LT("3 Relic Fragments", "3 遗迹碎片"),
         0,
         true,
         true,
         true,
-        2,
+        1,
         {
-            {RESOURCE_ENERGY_CORE, 1},
             {RESOURCE_RELIC_FRAGMENT, 3}
         }
     },

@@ -48,8 +48,8 @@ static float SmoothStep(float t) {
 void Player_Init(Player *player) {
     int resourceIndex;
 
-    player->gridX = PLAYER_START_X;
-    player->gridY = PLAYER_START_Y;
+    player->gridX = PLAYER_RESPAWN_X;
+    player->gridY = PLAYER_RESPAWN_Y;
     player->facingX = 0;
     player->facingY = 1;
     player->worldPos = Map_GridToWorld(player->gridX, player->gridY);

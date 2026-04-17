@@ -21,6 +21,8 @@
   当前设计基线，定义固定玩法、世界布局、日志驱动推进与结局结构。
 - [`design/CURRENT_STATUS.md`](design/CURRENT_STATUS.md)
   当前代码真实落地状态，回答“已经做到哪里”，并核对日志解锁、Loxi 分支点、英雄路线气闸 Boss 战与战斗轻量化是否已落地。
+- [`design/STAGE_FLOW_CODE_VERIFIED.md`](design/STAGE_FLOW_CODE_VERIFIED.md)
+  代码校准版主线流程文档，逐阶段写清楚需要什么、在哪里完成、解锁什么，以及 objective marker 当前如何指向。
 - [`design/EXPANSION_MAP_DESIGN.md`](design/EXPANSION_MAP_DESIGN.md)
   西线 `Echo Wilds` 与南线 `Subsurface Sink` 的当前活动地图设计文档。
 - [`design/EXPANSION_STORY_TASKS.md`](design/EXPANSION_STORY_TASKS.md)
@@ -46,6 +48,8 @@
   西线 / 南线完整剧情正文，用于统一任务推进时的剧情事件与结局反哺语义。
 - [`design/WEST_SOUTH_RESOURCE_GAP.md`](design/WEST_SOUTH_RESOURCE_GAP.md)
   西线 / 南线资源缺口清单，用于统一图片和视频资产新增优先级。
+- [`design/STAGE_FLOW_CODE_VERIFIED.md`](design/STAGE_FLOW_CODE_VERIFIED.md)
+  当前代码版主线阶段说明，用于核对每一阶段的材料、交互点、坐标、解锁结果与终局开放条件。
 - [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](plans/MAP_STORY_ALIGNMENT_PLAN.md)
   地图与剧情联动补齐执行单，用来固定基地、东线、北线、西线与南线职责。
 

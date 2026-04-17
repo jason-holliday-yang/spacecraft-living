@@ -33,6 +33,7 @@ bool Map_IsWalkable(const GameMap *map, int gridX, int gridY) {
         && propTile != TILE_WORKBENCH
         && propTile != TILE_AIRLOCK_CONSOLE
         && propTile != TILE_AIRLOCK_DOOR
+        && propTile != TILE_LOXI_ROOM_DOOR
         && propTile != TILE_COMM_RELAY
         && propTile != TILE_CRASH_CLUE
         && propTile != TILE_ENERGY_CONSOLE
@@ -209,9 +210,9 @@ const char *Map_GetLocationNameAt(int gridX, int gridY) {
         return "Flooded Detour";
     }
     if (gridX >= WORLD_MIN_X && gridX <= WORLD_MAX_X && gridY >= WORLD_MIN_Y && gridY <= WORLD_MAX_Y) {
-        if (gridX >= EXTERIOR_X(22) && gridX < EXTERIOR_X(49) && gridY >= EXTERIOR_Y(34) && gridY <= EXTERIOR_Y(88)) {
-            if (gridX >= EXTERIOR_X(45)) {
-                if (gridY >= EXTERIOR_Y(84)) {
+        if (gridX >= EXTERIOR_X(22) && gridX < EXTERIOR_X(55) && gridY >= EXTERIOR_Y(34) && gridY <= EXTERIOR_Y(88)) {
+            if (gridX >= EXTERIOR_X(43) && gridY >= EXTERIOR_Y(62)) {
+                if (gridY >= EXTERIOR_Y(83)) {
                     return "Last Camp";
                 }
                 return "Echo Basin";
@@ -228,7 +229,7 @@ const char *Map_GetLocationNameAt(int gridX, int gridY) {
             if (gridX >= EXTERIOR_X(119)) {
                 return "Root Vault";
             }
-            if (gridX >= EXTERIOR_X(111)) {
+            if (gridX >= EXTERIOR_X(108)) {
                 return "Purifier Ring";
             }
             if (gridX >= EXTERIOR_X(103)) {
@@ -273,6 +274,34 @@ bool Map_IsSwampOuterUnlocked(const GameMap *map) {
 
     for (row = AIRLOCK_DOOR_TOP_Y; row < AIRLOCK_DOOR_TOP_Y + AIRLOCK_DOOR_HEIGHT; row++) {
         if (map->propTiles[row][AIRLOCK_DOOR_X] == TILE_AIRLOCK_DOOR) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Map_UnlockLoxiRoom(GameMap *map) {
+    int column;
+
+    for (column = LOXI_ROOM_DOOR_X; column < LOXI_ROOM_DOOR_X + LOXI_ROOM_DOOR_WIDTH; column++) {
+        map->propTiles[LOXI_ROOM_DOOR_Y][column] = TILE_VOID;
+    }
+}
+
+void Map_LockLoxiRoom(GameMap *map) {
+    int column;
+
+    for (column = LOXI_ROOM_DOOR_X; column < LOXI_ROOM_DOOR_X + LOXI_ROOM_DOOR_WIDTH; column++) {
+        map->propTiles[LOXI_ROOM_DOOR_Y][column] = TILE_LOXI_ROOM_DOOR;
+    }
+}
+
+bool Map_IsLoxiRoomUnlocked(const GameMap *map) {
+    int column;
+
+    for (column = LOXI_ROOM_DOOR_X; column < LOXI_ROOM_DOOR_X + LOXI_ROOM_DOOR_WIDTH; column++) {
+        if (map->propTiles[LOXI_ROOM_DOOR_Y][column] == TILE_LOXI_ROOM_DOOR) {
             return false;
         }
     }

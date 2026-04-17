@@ -29,6 +29,23 @@ typedef enum NarrativeTransitionAction {
     NARRATIVE_TRANSITION_STORY_CLOSE
 } NarrativeTransitionAction;
 
+typedef enum ScreenTransitionAction {
+    SCREEN_TRANSITION_NONE = 0,
+    SCREEN_TRANSITION_LOAD_GAME,
+    SCREEN_TRANSITION_RETURN_TO_MENU,
+    SCREEN_TRANSITION_LOGOUT_TO_AUTH,
+    SCREEN_TRANSITION_TOGGLE_AUTH_MODE,
+    SCREEN_TRANSITION_AUTH_SUCCESS,
+    SCREEN_TRANSITION_APPLY_LANGUAGE,
+    SCREEN_TRANSITION_SLEEP_REST
+} ScreenTransitionAction;
+
+typedef enum CommunicatorTab {
+    COMMUNICATOR_TAB_TASKS = 0,
+    COMMUNICATOR_TAB_LOGS,
+    COMMUNICATOR_TAB_COUNT
+} CommunicatorTab;
+
 typedef struct Game {
     GameState state;
     GameMap map;
@@ -55,6 +72,7 @@ typedef struct Game {
     bool settingsOpen;
     bool settingsDirty;
     bool settingsSliderDragging;
+    int settingsSliderDragIndex;
     bool backpackOpen;
     bool craftOpen;
     bool mapOpen;
@@ -64,6 +82,7 @@ typedef struct Game {
     bool storySceneOpen;
     StoryScene storyScene;
     bool storySceneShown[STORY_SCENE_COUNT];
+    CommunicatorTab communicatorTab;
     int selectedBackpackItem;
     int selectedCraftIndex;
     bool savePanelOpen;
@@ -71,6 +90,8 @@ typedef struct Game {
     int selectedSaveSlot;
     SaveSlotInfo saveSlots[SAVE_SLOT_COUNT];
     int saveSlotCount;
+    bool hasAccountBestScore;
+    int accountBestScore;
     bool authenticated;
     bool authHasAccounts;
     AuthScreenMode authMode;
@@ -84,7 +105,14 @@ typedef struct Game {
     bool narrativeTransitionActive;
     float narrativeTransitionElapsed;
     NarrativeTransitionAction narrativeTransitionAction;
+    bool screenTransitionActive;
+    bool screenTransitionResolved;
+    float screenTransitionElapsed;
+    ScreenTransitionAction screenTransitionAction;
+    int screenTransitionSlotIndex;
+    GameLanguage pendingLanguage;
     int selectedLogIndex;
+    int communicatorFirstVisibleLogIndex;
     bool showDeathPopup;
     int deathPopupSelection;
     bool settlementConfirmOpen;

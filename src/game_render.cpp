@@ -12,6 +12,14 @@ static float ClampUnit(float value) {
     return value;
 }
 
+static float GetScreenTransitionDuration(const Game *game) {
+    if (game != nullptr && game->screenTransitionAction == SCREEN_TRANSITION_SLEEP_REST) {
+        return 0.56f;
+    }
+
+    return 0.34f;
+}
+
 static float GetNarrativeOverlayAlpha(const Game *game) {
     static constexpr float kNarrativeFadeDuration = 0.22f;
     float fadeInAlpha;
@@ -37,6 +45,23 @@ static float GetNarrativeOverlayAlpha(const Game *game) {
     return fadeInAlpha > fadeOutAlpha ? fadeInAlpha : fadeOutAlpha;
 }
 
+static float GetScreenTransitionAlpha(const Game *game) {
+    const float totalDuration = GetScreenTransitionDuration(game);
+    const float halfDuration = totalDuration * 0.5f;
+    float elapsed;
+
+    if (game == nullptr || !game->screenTransitionActive) {
+        return 0.0f;
+    }
+
+    elapsed = game->screenTransitionElapsed;
+    if (elapsed <= halfDuration) {
+        return ClampUnit(elapsed / halfDuration);
+    }
+
+    return 1.0f - ClampUnit((elapsed - halfDuration) / halfDuration);
+}
+
 static float TileScale(float value) {
     return value * (static_cast<float>(TILE_SIZE) / 64.0f);
 }
@@ -51,8 +76,8 @@ static void SanitizeGameplayFrameState(Game *game, int screenWidth, int screenHe
     playerTileInvalid = !Map_IsWithinBounds(game->player.gridX, game->player.gridY)
         || !Map_IsWalkable(&game->map, game->player.gridX, game->player.gridY);
     if (playerTileInvalid) {
-        game->player.gridX = PLAYER_START_X;
-        game->player.gridY = PLAYER_START_Y;
+        game->player.gridX = PLAYER_RESPAWN_X;
+        game->player.gridY = PLAYER_RESPAWN_Y;
         game->player.facingX = 0;
         game->player.facingY = 1;
         Player_UpdateWorldPosition(&game->player);
@@ -197,6 +222,8 @@ void Game_Draw(Game *game) {
                             game->hasSaveFile,
                             game->saveSlotCount,
                             SaveSystem_GetActiveAccountName(),
+                            game->hasAccountBestScore,
+                            game->accountBestScore,
                             screenWidth,
                             screenHeight,
                             game->elapsedSeconds);
@@ -211,7 +238,13 @@ void Game_Draw(Game *game) {
                                         screenHeight);
             }
             if (game->settingsOpen) {
-                UI_DrawSettingsOverlay(&game->assets, &game->settings, screenWidth, screenHeight);
+                UI_DrawSettingsOverlay(&game->assets,
+                                       &game->settings,
+                                       SaveSystem_GetActiveAccountName(),
+                                       game->saveSlotCount,
+                                       true,
+                                       screenWidth,
+                                       screenHeight);
             }
             if (game->accountDeleteConfirmOpen) {
                 UI_DrawAccountDeleteConfirmPopup(&game->assets,
@@ -219,6 +252,12 @@ void Game_Draw(Game *game) {
                                                 screenWidth,
                                                 screenHeight,
                                                 game->accountDeleteConfirmSelection);
+            }
+        }
+        {
+            const float overlayAlpha = GetScreenTransitionAlpha(game);
+            if (overlayAlpha > 0.0f) {
+                DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
             }
         }
         EndDrawing();
@@ -269,11 +308,15 @@ void Game_Draw(Game *game) {
                                       screenHeight,
                                       game->settlementConfirmSelection);
     } else if (game->showDeathPopup) {
-        UI_DrawDeathPopup(&game->player, &game->assets, screenWidth, screenHeight, game->deathPopupSelection);
-    } else if (game->logReaderOpen) {
-        UI_DrawLogReader(&game->tasks, game->selectedLogIndex, &game->assets, screenWidth, screenHeight);
+        UI_DrawDeathPopup(&game->player, game->hasSaveFile, &game->assets, screenWidth, screenHeight, game->deathPopupSelection);
     } else if (game->settingsOpen) {
-        UI_DrawSettingsOverlay(&game->assets, &game->settings, screenWidth, screenHeight);
+        UI_DrawSettingsOverlay(&game->assets,
+                               &game->settings,
+                               SaveSystem_GetActiveAccountName(),
+                               game->saveSlotCount,
+                               false,
+                               screenWidth,
+                               screenHeight);
     } else if (game->savePanelOpen) {
         UI_DrawSaveSlotsOverlay(&game->assets,
                                 game->saveSlots,
@@ -297,10 +340,23 @@ void Game_Draw(Game *game) {
             UI_DrawBackpackOverlay(&game->assets, &game->player, game->selectedBackpackItem, screenWidth, screenHeight);
         }
         if (game->communicatorOpen) {
-            UI_DrawCommunicatorOverlay(&game->assets, &game->tasks, screenWidth, screenHeight);
+            UI_DrawCommunicatorOverlay(&game->assets,
+                                       &game->tasks,
+                                       game->communicatorTab,
+                                       game->selectedLogIndex,
+                                       game->communicatorFirstVisibleLogIndex,
+                                       screenWidth,
+                                       screenHeight);
         }
         if (game->helpOpen) {
             UI_DrawHelpOverlay(&game->assets, screenWidth, screenHeight);
+        }
+    }
+
+    {
+        const float overlayAlpha = GetScreenTransitionAlpha(game);
+        if (overlayAlpha > 0.0f) {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
         }
     }
 

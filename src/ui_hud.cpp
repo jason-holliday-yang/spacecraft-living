@@ -44,6 +44,7 @@ static void DrawBar(const AssetBundle *assets, Rectangle rect, const char *label
 void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage *message, const AssetBundle *assets, int screenWidth, int screenHeight) {
     float scale;
     float edgeInset;
+    float bottomLift;
     float sidePanelWidth;
     float topPanelHeight;
     float shortcutsPanelHeight;
@@ -72,17 +73,18 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     edgeInset = 18.0f * scale;
+    bottomLift = 22.0f * scale;
     sidePanelWidth = 316.0f * scale;
     topPanelHeight = 128.0f * scale;
     shortcutsPanelHeight = 106.0f * scale;
     vitalsPanelHeight = 214.0f * scale;
-    vitalsPanel = Rectangle{edgeInset, screenHeight - edgeInset - vitalsPanelHeight, sidePanelWidth, vitalsPanelHeight};
+    vitalsPanel = Rectangle{edgeInset, screenHeight - edgeInset - vitalsPanelHeight - bottomLift, sidePanelWidth, vitalsPanelHeight};
     statusBarRect = Rectangle{vitalsPanel.x + 10.0f * scale, vitalsPanel.y + 38.0f * scale, vitalsPanel.width - 20.0f * scale, 54.0f * scale};
     healthBarRect = Rectangle{vitalsPanel.x + 10.0f * scale, vitalsPanel.y + 98.0f * scale, vitalsPanel.width - 20.0f * scale, 56.0f * scale};
     oxygenBarRect = Rectangle{vitalsPanel.x + 10.0f * scale, vitalsPanel.y + 158.0f * scale, vitalsPanel.width - 20.0f * scale, 46.0f * scale};
     objectivePanel = Rectangle{edgeInset, edgeInset, sidePanelWidth, topPanelHeight};
     statusPanel = Rectangle{screenWidth - edgeInset - sidePanelWidth, edgeInset, sidePanelWidth, topPanelHeight};
-    shortcutsPanel = Rectangle{screenWidth - edgeInset - sidePanelWidth, screenHeight - edgeInset - shortcutsPanelHeight, sidePanelWidth, shortcutsPanelHeight};
+    shortcutsPanel = Rectangle{screenWidth - edgeInset - sidePanelWidth, screenHeight - edgeInset - shortcutsPanelHeight - bottomLift, sidePanelWidth, shortcutsPanelHeight};
     showLoxiGuidance = Tasks_IsCommunicatorUnlocked(tasks);
     messageFontSize = 25.0f * scale;
     messageLineSpacing = 30.0f * scale;

@@ -126,6 +126,70 @@ static void DrawResourceNode(const ResourceNode *node, const AssetBundle *assets
     }
 }
 
+static void DrawShipLogPickup(const ShipLog *log, float elapsedSeconds) {
+    Rectangle rect;
+    Rectangle iconRect;
+    Color body;
+    Color outline;
+    Color pageTint;
+    Color accent;
+    float pulse;
+    float bob;
+    float glowRadius;
+
+    rect = Map_GridToRect(log->gridX, log->gridY);
+    pulse = sinf(elapsedSeconds * 3.4f) * 0.5f + 0.5f;
+    bob = sinf(elapsedSeconds * 2.3f + (float)(log->gridX + log->gridY) * 0.17f) * 1.5f;
+    glowRadius = 12.0f + pulse * 4.0f;
+    body = Color{42, 56, 76, 240};
+    outline = Color{255, 212, 148, (unsigned char)(120 + pulse * 50.0f)};
+    pageTint = Color{232, 238, 246, 250};
+    accent = log->category == SHIP_LOG_MAINLINE
+        ? Color{255, 194, 116, 235}
+        : Color{118, 226, 255, 235};
+    iconRect = Rectangle{
+        rect.x + 18.0f,
+        rect.y + 14.0f + bob,
+        rect.width - 36.0f,
+        rect.height - 26.0f
+    };
+
+    DrawCircle((int)(rect.x + rect.width * 0.5f),
+               (int)(rect.y + rect.height * 0.48f + bob),
+               glowRadius,
+               Color{255, 212, 148, (unsigned char)(46 + pulse * 34.0f)});
+    DrawRectangleRounded(iconRect, 0.18f, 5, body);
+    DrawRectangleRoundedLinesEx(iconRect, 0.18f, 5, 2.0f, outline);
+    DrawRectangleRounded(Rectangle{iconRect.x + 9.0f, iconRect.y + 8.0f, iconRect.width - 18.0f, iconRect.height - 16.0f},
+                         0.12f,
+                         4,
+                         pageTint);
+    DrawRectangle((int)iconRect.x + 12,
+                  (int)iconRect.y + 12,
+                  (int)iconRect.width - 24,
+                  7,
+                  accent);
+    DrawRectangle((int)iconRect.x + 12,
+                  (int)iconRect.y + 24,
+                  (int)iconRect.width - 30,
+                  5,
+                  Color{126, 144, 166, 225});
+    DrawRectangle((int)iconRect.x + 12,
+                  (int)iconRect.y + 34,
+                  (int)iconRect.width - 22,
+                  5,
+                  Color{126, 144, 166, 205});
+    DrawRectangle((int)iconRect.x + 12,
+                  (int)iconRect.y + 44,
+                  (int)iconRect.width - 36,
+                  5,
+                  Color{126, 144, 166, 190});
+    DrawCircle((int)(iconRect.x + iconRect.width - 10.0f),
+               (int)(iconRect.y + 11.0f),
+               3.5f + pulse * 1.2f,
+               accent);
+}
+
 static const TextureAsset *GetMonsterTexture(const AssetBundle *assets, MonsterType type) {
     switch (type) {
         case MONSTER_THORN_LARVA:
@@ -331,16 +395,13 @@ void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float e
 
     for (index = 0; index < tasks->logCount; index++) {
         const ShipLog *log;
-        Vector2 pos;
 
         log = &tasks->logs[index];
         if (!log->active || log->collected) {
             continue;
         }
 
-        pos = Map_GridToWorld(log->gridX, log->gridY);
-        DrawRing(pos, 10.0f, 18.0f, 0.0f, 360.0f, 24, Color{120, 185, 255, 90});
-        DrawCircleV(pos, 9.0f, Color{92, 157, 255, 180});
+        DrawShipLogPickup(log, elapsedSeconds);
     }
 
     for (index = 0; index < tasks->monsterCount; index++) {
@@ -388,6 +449,22 @@ const ShipLog *Tasks_GetCollectedLogAt(const TaskSystem *tasks, int index) {
     }
 
     return NULL;
+}
+
+int Tasks_GetLogSceneIndex(const TaskSystem *tasks, const ShipLog *log) {
+    int logIndex;
+
+    if (tasks == NULL || log == NULL) {
+        return -1;
+    }
+
+    for (logIndex = 0; logIndex < tasks->logCount; logIndex++) {
+        if (&tasks->logs[logIndex] == log) {
+            return logIndex;
+        }
+    }
+
+    return -1;
 }
 
 int Tasks_GetVisibleRecipeCount(const TaskSystem *tasks) {

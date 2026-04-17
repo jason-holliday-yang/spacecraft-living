@@ -103,6 +103,19 @@ int main(void) {
     Require(strstr(Player_GetRecipeSummary(RECIPE_PROTECTION_SUIT), "filtered") != NULL
                 || strstr(Player_GetRecipeSummary(RECIPE_PROTECTION_SUIT), "Filtered") != NULL,
             "protection suit recipe summary should describe filtered protection");
+    tasks.amplifierUnlocked = true;
+    player.resources[RESOURCE_RELIC_FRAGMENT] = 3;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_IsRecipeVisible(&tasks, RECIPE_SIGNAL_AMPLIFIER),
+            "signal amplifier should become visible after Loxi unlocks the peaceful route");
+    Require(Tasks_CanCraftRecipe(&tasks, &player, RECIPE_SIGNAL_AMPLIFIER),
+            "signal amplifier should now craft from relic fragments alone once unlocked");
+    Require(strcmp(RecipeCatalog_Get(RECIPE_SIGNAL_AMPLIFIER)->ingredientText.english, "3 Relic Fragments") == 0,
+            "signal amplifier ingredient text should match the simplified relic-fragment recipe");
+    Require(Tasks_TryCraft(&tasks, &map, &player, RECIPE_SIGNAL_AMPLIFIER, message, sizeof(message)),
+            "signal amplifier crafting should succeed once three relic fragments are available");
+    Require(player.hasSignalAmplifier,
+            "signal amplifier crafting should grant the peaceful-route device");
 
     puts("task_recipe smoke ok");
     return 0;

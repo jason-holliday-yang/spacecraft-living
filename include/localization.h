@@ -64,7 +64,6 @@ const char *Loc_Translate(const char *english);
 const char *Loc_GetLanguageNativeName(GameLanguage language);
 const char *Loc_GetAreaNameText(const char *canonicalEnglish);
 const char *Loc_GetLocationNameText(const char *canonicalEnglish);
-const char *Loc_GetUIFontSampleText(void);
 
 #define LOC_UI_HEALTH Loc_GetText(LOC_TEXT_UI_HEALTH)
 #define LOC_UI_OXYGEN Loc_GetText(LOC_TEXT_UI_OXYGEN)

@@ -8,12 +8,12 @@
 
 ## 当前快照
 
-审计日期：`2026-04-14`
+审计日期：`2026-04-15`
 
-- 当前代码共引用 `111` 张 PNG 路径
-- 当前目录中存在 `108` 张对应 PNG
-- 当前剩余缺口为 `3` 张已接线但缺文件的 barrier 贴图
-- 当前目录中没有“已落盘但完全未接线”的 PNG 文件
+- 当前代码共引用 `119` 张 PNG 路径
+- 当前目录中存在 `119` 张 PNG，当前全部已被代码引用
+- 当前已接线 PNG 缺口为 `0`
+- 当前目录中没有“已落盘但未接线”的 PNG 文件
 
 ## 分类总览
 
@@ -26,21 +26,18 @@
 - 日志剧情图：`14`
 - 结局背景图：`7`
 
-玩法 / 地图 / 角色图片 `60` 张：
+玩法 / 地图 / 角色图片 `71` 张：
 
 - 角色与 NPC：`3`
-- 地表与场景物件：`26`
+- 地表与场景物件：`29`
 - 资源节点：`16`
 - 制作 / 装备图标：`7`
+- 状态图标：`8`
 - 怪物与 Boss：`8`
 
 ### B. 已接线但缺文件
 
-当前仅剩以下 `3` 张：
-
-- `tile_barrier_swamp.png`
-- `tile_barrier_deep.png`
-- `tile_barrier_ruins.png`
+- `0`
 
 ### C. 已入库未接线
 
@@ -165,7 +162,7 @@
 
 ### 地表与场景物件
 
-当前已接线且存在 `26` 张：
+当前已接线且存在 `29` 张：
 
 - `tile_base_floor.png`
 - `tile_ship_corridor_floor.png`
@@ -193,9 +190,6 @@
 - `tile_signal_tower.png`
 - `tile_crash_clue.png`
 - `tile_monolith.png`
-
-当前已接线但缺文件 `3` 张：
-
 - `tile_barrier_swamp.png`
 - `tile_barrier_deep.png`
 - `tile_barrier_ruins.png`
@@ -239,6 +233,25 @@
 - `icon_signal_amplifier.png`
 - `icon_field_camp.png`
 
+### 状态图标 `status_*.png`
+
+当前已接线 `8` 张：
+
+- `status_poisoned.png`
+- `status_oxygen_leak.png`
+- `status_low_oxygen.png`
+- `status_suffocating.png`
+- `status_critical_condition.png`
+- `status_filtered.png`
+- `status_oxygen_reserve.png`
+- `status_camp_recovery.png`
+
+当前状态：
+
+- 图片文件已经落盘并完成接线
+- 当前 HUD 优先显示状态图标；缺图时仍会回退到程序绘制的双色状态牌和两字母缩写
+- 主要接线位置见 [`include/assets.h`](/Users/jason/Documents/SpaceCraftLivng/include/assets.h)、[`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp) 与 [`src/ui_hud_status.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_hud_status.cpp)
+
 ### 怪物与 Boss
 
 当前已接线 `8` 张：
@@ -268,6 +281,8 @@
   负责结局背景图选择
 - [`src/map_render_ground_assets.c`](/Users/jason/Documents/SpaceCraftLivng/src/map_render_ground_assets.c)
   负责飞船、沼泽、遗迹和 Echo Basin 地表贴图选择
+- [`src/ui_hud_status.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_hud_status.cpp)
+  负责状态图标显示，并在缺图时回退到程序绘制的状态牌
 
 ## 维护规则
 

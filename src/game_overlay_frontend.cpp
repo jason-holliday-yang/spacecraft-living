@@ -26,6 +26,7 @@ static void ConfirmEndingChoice(Game *game, GameEnding ending) {
     game->settlementConfirmOpen = false;
     game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_PEACEFUL;
     if (game->tasks.ending == ENDING_SETTLEMENT) {
+        Game_RecordActiveAccountScore(game);
         game->state = GAME_STATE_ENDING;
         Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
         Audio_PlayCue(&game->audio, AUDIO_CUE_ENDING_SETTLEMENT);
@@ -47,6 +48,7 @@ static float ClampFloatLocal(float value, float minValue, float maxValue) {
 static void CloseSettingsOverlay(Game *game) {
     game->settingsOpen = false;
     game->settingsSliderDragging = false;
+    game->settingsSliderDragIndex = -1;
     Game_TrySaveSettings(game);
 }
 
@@ -63,22 +65,69 @@ static void ApplyMasterVolume(Game *game, float volume) {
     Audio_SetMasterVolumeSetting(&game->audio, clamped);
 }
 
-static void ApplyLanguage(Game *game, GameLanguage language) {
-    GameLanguage normalized;
+static void ApplyMusicVolume(Game *game, float volume) {
+    float clamped;
 
-    if (game == NULL) {
+    clamped = ClampFloatLocal(volume, 0.0f, 1.0f);
+    if (std::fabs(clamped - game->settings.musicVolume) < 0.001f) {
         return;
     }
 
-    normalized = Loc_NormalizeLanguage((int)language);
-    if (game->settings.language == normalized) {
-        return;
-    }
-
-    game->settings.language = normalized;
+    game->settings.musicVolume = clamped;
     game->settingsDirty = true;
-    Loc_SetLanguage(normalized);
-    Tasks_UpdateObjective(&game->tasks, &game->player);
+    Audio_SetMusicVolumeSetting(&game->audio, clamped);
+}
+
+static void ApplySfxVolume(Game *game, float volume) {
+    float clamped;
+
+    clamped = ClampFloatLocal(volume, 0.0f, 1.0f);
+    if (std::fabs(clamped - game->settings.sfxVolume) < 0.001f) {
+        return;
+    }
+
+    game->settings.sfxVolume = clamped;
+    game->settings.sfxEnabled = clamped > 0.001f;
+    game->settingsDirty = true;
+    Audio_SetSfxVolumeSetting(&game->audio, clamped);
+    Audio_SetSfxEnabled(&game->audio, game->settings.sfxEnabled);
+}
+
+static void ApplySettingsSliderValue(Game *game, int sliderIndex, float value) {
+    switch (sliderIndex) {
+        case 0:
+            ApplyMasterVolume(game, value);
+            return;
+        case 1:
+            ApplyMusicVolume(game, value);
+            return;
+        case 2:
+            ApplySfxVolume(game, value);
+            return;
+        default:
+            return;
+    }
+}
+
+static float GetSettingsSliderValue(const Game *game, int sliderIndex) {
+    if (game == NULL) {
+        return 0.0f;
+    }
+
+    switch (sliderIndex) {
+        case 0:
+            return game->settings.masterVolume;
+        case 1:
+            return game->settings.musicVolume;
+        case 2:
+            return game->settings.sfxVolume;
+        default:
+            return 0.0f;
+    }
+}
+
+static bool AreSettingsAccountActionsEnabled(const Game *game) {
+    return game != NULL && game->state == GAME_STATE_INTRO && game->authenticated;
 }
 
 static void ClearAuthMessage(Game *game) {
@@ -128,7 +177,7 @@ static void SetAuthenticatedState(Game *game, bool authenticated) {
     game->authHasAccounts = SaveSystem_HasRegisteredAccounts();
 }
 
-static void ToggleAuthMode(Game *game) {
+void Game_ToggleAuthMode(Game *game) {
     if (game == NULL) {
         return;
     }
@@ -137,7 +186,7 @@ static void ToggleAuthMode(Game *game) {
     ResetAuthScreen(game, true);
 }
 
-static void LogoutToAuthScreen(Game *game) {
+void Game_LogoutToAuthScreen(Game *game) {
     if (game == NULL) {
         return;
     }
@@ -147,6 +196,21 @@ static void LogoutToAuthScreen(Game *game) {
     game->authMode = game->authHasAccounts ? AUTH_SCREEN_MODE_LOGIN : AUTH_SCREEN_MODE_REGISTER;
     ResetAuthScreen(game, false);
     Game_CloseTransientOverlays(game);
+    Game_RefreshSaveSlots(game);
+}
+
+void Game_CompleteAuthSuccess(Game *game) {
+    if (game == NULL) {
+        return;
+    }
+
+    SetAuthenticatedState(game, true);
+    std::snprintf(game->settings.lastUsername, sizeof(game->settings.lastUsername), "%s", game->authUsername);
+    game->settingsDirty = true;
+    Game_TrySaveSettings(game);
+    ClearAuthPassword(game);
+    game->authSelectedField = AUTH_FIELD_USERNAME;
+    game->authPasswordVisible = false;
     Game_RefreshSaveSlots(game);
 }
 
@@ -172,7 +236,9 @@ static void OpenAuthAccountDeleteConfirm(Game *game) {
     if (game->authUsername[0] == '\0' || game->authPassword[0] == '\0') {
         std::snprintf(game->authMessage,
                       sizeof(game->authMessage),
-                      "Enter the username and password for the account you want to delete.");
+                      "%s",
+                      Loc_PickLiteral("Enter that account's username and password before deleting it.",
+                                      "删除账号前，请先输入该账号的用户名和密码。"));
         Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
         return;
     }
@@ -321,14 +387,7 @@ static void SubmitAuth(Game *game) {
     }
 
     Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
-    SetAuthenticatedState(game, true);
-    std::snprintf(game->settings.lastUsername, sizeof(game->settings.lastUsername), "%s", game->authUsername);
-    game->settingsDirty = true;
-    Game_TrySaveSettings(game);
-    ClearAuthPassword(game);
-    game->authSelectedField = AUTH_FIELD_USERNAME;
-    game->authPasswordVisible = false;
-    Game_RefreshSaveSlots(game);
+    Game_BeginScreenTransition(game, SCREEN_TRANSITION_AUTH_SUCCESS, -1);
 }
 
 static void DeleteActiveAccount(Game *game) {
@@ -512,8 +571,8 @@ static void UpdateAuthScreen(Game *game) {
         }
         if (CheckCollisionPointRec(mouse, switchRect)) {
             game->authSelectedField = AUTH_FIELD_SWITCH_MODE;
-            ToggleAuthMode(game);
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_TOGGLE_AUTH_MODE, -1);
             return;
         }
     }
@@ -543,8 +602,8 @@ static void UpdateAuthScreen(Game *game) {
             SubmitAuth(game);
             return;
         case AUTH_FIELD_SWITCH_MODE:
-            ToggleAuthMode(game);
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_TOGGLE_AUTH_MODE, -1);
             return;
         default:
             break;
@@ -562,17 +621,6 @@ static void UpdateMainMenu(Game *game) {
     }
 
     if (!GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
-        return;
-    }
-
-    if (CheckCollisionPointRec(mouse, UI_GetMainMenuSwitchAccountRect(GetScreenWidth(), GetScreenHeight()))) {
-        Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
-        LogoutToAuthScreen(game);
-        return;
-    }
-    if (CheckCollisionPointRec(mouse, UI_GetMainMenuDeleteAccountRect(GetScreenWidth(), GetScreenHeight()))) {
-        Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
-        OpenAccountDeleteConfirm(game);
         return;
     }
 
@@ -693,7 +741,8 @@ static void UpdatePauseMenu(Game *game) {
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             return;
         case PAUSE_MENU_BUTTON_MENU:
-            Game_ReturnToMenu(game);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_RETURN_TO_MENU, -1);
             return;
         default:
             break;
@@ -701,32 +750,24 @@ static void UpdatePauseMenu(Game *game) {
 }
 
 static void UpdateSettingsOverlay(Game *game) {
-    float scale;
-    Rectangle sliderRect;
-    Rectangle decreaseRect;
-    Rectangle increaseRect;
     Rectangle closeRect;
     Rectangle languageEnglishRect;
     Rectangle languageChineseRect;
-    Rectangle handleRect;
+    Rectangle accountSwitchRect;
+    Rectangle accountDeleteRect;
     Vector2 mouse;
-    float handleCenterX;
+    float scale;
     float nextVolume;
+    bool accountActionsEnabled;
+    int sliderIndex;
 
     scale = UIRuntime_GetScale(GetScreenWidth(), GetScreenHeight());
-    sliderRect = UI_GetSettingsSliderRect(GetScreenWidth(), GetScreenHeight());
-    decreaseRect = UI_GetSettingsDecreaseButtonRect(GetScreenWidth(), GetScreenHeight());
-    increaseRect = UI_GetSettingsIncreaseButtonRect(GetScreenWidth(), GetScreenHeight());
     closeRect = UI_GetSettingsCloseButtonRect(GetScreenWidth(), GetScreenHeight());
     languageEnglishRect = UI_GetSettingsLanguageButtonRect(GetScreenWidth(), GetScreenHeight(), 0);
     languageChineseRect = UI_GetSettingsLanguageButtonRect(GetScreenWidth(), GetScreenHeight(), 1);
-    handleCenterX = sliderRect.x + sliderRect.width * game->settings.masterVolume;
-    handleRect = Rectangle{
-        handleCenterX - 14.0f * scale,
-        sliderRect.y - 8.0f * scale,
-        28.0f * scale,
-        sliderRect.height + 16.0f * scale
-    };
+    accountSwitchRect = UI_GetSettingsAccountButtonRect(GetScreenWidth(), GetScreenHeight(), 0);
+    accountDeleteRect = UI_GetSettingsAccountButtonRect(GetScreenWidth(), GetScreenHeight(), 1);
+    accountActionsEnabled = AreSettingsAccountActionsEnabled(game);
 
     if (IsKeyPressed(KEY_ESCAPE)) {
         CloseSettingsOverlay(game);
@@ -735,13 +776,13 @@ static void UpdateSettingsOverlay(Game *game) {
     }
 
     if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
-        ApplyMasterVolume(game, game->settings.masterVolume - 0.05f);
+        ApplySettingsSliderValue(game, 0, game->settings.masterVolume - 0.05f);
     }
     if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
-        ApplyMasterVolume(game, game->settings.masterVolume + 0.05f);
+        ApplySettingsSliderValue(game, 0, game->settings.masterVolume + 0.05f);
     }
     if (IsKeyPressed(KEY_TAB)) {
-        ApplyLanguage(game, game->settings.language == GAME_LANGUAGE_EN ? GAME_LANGUAGE_ZH_CN : GAME_LANGUAGE_EN);
+        Game_BeginLanguageTransition(game, game->settings.language == GAME_LANGUAGE_EN ? GAME_LANGUAGE_ZH_CN : GAME_LANGUAGE_EN);
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
     }
 
@@ -752,39 +793,83 @@ static void UpdateSettingsOverlay(Game *game) {
             Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
             return;
         }
-        if (CheckCollisionPointRec(mouse, decreaseRect)) {
-            ApplyMasterVolume(game, game->settings.masterVolume - 0.05f);
-            return;
-        }
-        if (CheckCollisionPointRec(mouse, increaseRect)) {
-            ApplyMasterVolume(game, game->settings.masterVolume + 0.05f);
-            return;
-        }
         if (CheckCollisionPointRec(mouse, languageEnglishRect)) {
-            ApplyLanguage(game, GAME_LANGUAGE_EN);
+            Game_BeginLanguageTransition(game, GAME_LANGUAGE_EN);
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             return;
         }
         if (CheckCollisionPointRec(mouse, languageChineseRect)) {
-            ApplyLanguage(game, GAME_LANGUAGE_ZH_CN);
+            Game_BeginLanguageTransition(game, GAME_LANGUAGE_ZH_CN);
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             return;
         }
-        if (CheckCollisionPointRec(mouse, sliderRect) || CheckCollisionPointRec(mouse, handleRect)) {
-            game->settingsSliderDragging = true;
+        if (accountActionsEnabled && CheckCollisionPointRec(mouse, accountSwitchRect)) {
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_LOGOUT_TO_AUTH, -1);
+            return;
+        }
+        if (accountActionsEnabled && CheckCollisionPointRec(mouse, accountDeleteRect)) {
+            Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
+            OpenAccountDeleteConfirm(game);
+            return;
+        }
+        for (sliderIndex = 0; sliderIndex < 3; ++sliderIndex) {
+            Rectangle sliderRect;
+            Rectangle decreaseRect;
+            Rectangle increaseRect;
+            Rectangle handleRect;
+            float handleCenterX;
+
+            sliderRect = UI_GetSettingsSliderRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+            decreaseRect = UI_GetSettingsDecreaseButtonRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+            increaseRect = UI_GetSettingsIncreaseButtonRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+            handleCenterX = sliderRect.x + sliderRect.width * GetSettingsSliderValue(game, sliderIndex);
+            if (handleCenterX < sliderRect.x + 14.0f * scale) {
+                handleCenterX = sliderRect.x + 14.0f * scale;
+            }
+            if (handleCenterX > sliderRect.x + sliderRect.width - 14.0f * scale) {
+                handleCenterX = sliderRect.x + sliderRect.width - 14.0f * scale;
+            }
+            handleRect = Rectangle{
+                handleCenterX - 14.0f * scale,
+                sliderRect.y - 8.0f * scale,
+                28.0f * scale,
+                sliderRect.height + 16.0f * scale
+            };
+
+            if (CheckCollisionPointRec(mouse, decreaseRect)) {
+                ApplySettingsSliderValue(game, sliderIndex, GetSettingsSliderValue(game, sliderIndex) - 0.05f);
+                return;
+            }
+            if (CheckCollisionPointRec(mouse, increaseRect)) {
+                ApplySettingsSliderValue(game, sliderIndex, GetSettingsSliderValue(game, sliderIndex) + 0.05f);
+                return;
+            }
+            if (CheckCollisionPointRec(mouse, sliderRect) || CheckCollisionPointRec(mouse, handleRect)) {
+                game->settingsSliderDragging = true;
+                game->settingsSliderDragIndex = sliderIndex;
+                break;
+            }
         }
     }
 
     if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
         game->settingsSliderDragging = false;
+        game->settingsSliderDragIndex = -1;
     }
 
-    if (!game->settingsSliderDragging) {
+    if (!game->settingsSliderDragging || game->settingsSliderDragIndex < 0 || game->settingsSliderDragIndex > 2) {
         return;
     }
 
-    nextVolume = (mouse.x - sliderRect.x) / sliderRect.width;
-    ApplyMasterVolume(game, nextVolume);
+    sliderIndex = game->settingsSliderDragIndex;
+    {
+        Rectangle sliderRect;
+
+        sliderRect = UI_GetSettingsSliderRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+        nextVolume = (mouse.x - sliderRect.x) / sliderRect.width;
+    }
+    ApplySettingsSliderValue(game, sliderIndex, nextVolume);
 }
 
 static void UpdateSettlementConfirm(Game *game) {
@@ -868,6 +953,14 @@ static void UpdateSavePanel(Game *game) {
     }
 
     if (GameOverlay_IsConfirmPressed()) {
+        if (game->savePanelMode == SAVE_PANEL_MODE_LOAD
+            && game->selectedSaveSlot >= 0
+            && game->selectedSaveSlot < SAVE_SLOT_COUNT
+            && game->saveSlots[game->selectedSaveSlot].exists) {
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_LOAD_GAME, game->selectedSaveSlot);
+            return;
+        }
         Game_ActivateSelectedSaveSlot(game);
         return;
     }
@@ -891,6 +984,14 @@ static void UpdateSavePanel(Game *game) {
     }
 
     if (CheckCollisionPointRec(mouse, UI_GetSavePrimaryButtonRect(GetScreenWidth(), GetScreenHeight()))) {
+        if (game->savePanelMode == SAVE_PANEL_MODE_LOAD
+            && game->selectedSaveSlot >= 0
+            && game->selectedSaveSlot < SAVE_SLOT_COUNT
+            && game->saveSlots[game->selectedSaveSlot].exists) {
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_LOAD_GAME, game->selectedSaveSlot);
+            return;
+        }
         Game_ActivateSelectedSaveSlot(game);
         return;
     }

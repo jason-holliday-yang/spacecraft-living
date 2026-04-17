@@ -7,14 +7,34 @@
 #include <cstdio>
 #include <cstring>
 
+static bool TextContainsNonAscii(const char *text) {
+    const unsigned char *cursor;
+
+    if (text == NULL) {
+        return false;
+    }
+
+    cursor = (const unsigned char *)text;
+    while (*cursor != '\0') {
+        if ((*cursor & 0x80u) != 0) {
+            return true;
+        }
+        cursor++;
+    }
+
+    return false;
+}
+
 static void DrawPixelTitleText(const AssetBundle *assets, const char *text, Vector2 center, float fontSize, float scale, Color fill) {
     Font font;
     float spacing;
     float outlineOffset;
     float shadowOffset;
+    float highlightOffset;
     Vector2 textSize;
     Vector2 position;
     bool useDefaultFont;
+    bool useCjkTitleStyle;
 
     useDefaultFont = assets == NULL || !assets->uiFontLoaded;
     font = useDefaultFont ? GetFontDefault() : assets->uiFont;
@@ -22,26 +42,48 @@ static void DrawPixelTitleText(const AssetBundle *assets, const char *text, Vect
         return;
     }
 
-    if (useDefaultFont) {
+    useCjkTitleStyle = TextContainsNonAscii(text);
+
+    if (useDefaultFont || useCjkTitleStyle) {
         SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
     }
 
-    spacing = useDefaultFont ? std::floor(fontSize * 0.12f) : fontSize * 0.05f;
-    outlineOffset = std::round(3.0f * scale);
-    shadowOffset = std::round(7.0f * scale);
+    spacing = useCjkTitleStyle ? 0.0f : (useDefaultFont ? std::floor(fontSize * 0.12f) : fontSize * 0.05f);
+    outlineOffset = std::round((useCjkTitleStyle ? 2.0f : 3.0f) * scale);
+    shadowOffset = std::round((useCjkTitleStyle ? 4.0f : 7.0f) * scale);
+    highlightOffset = std::round((useCjkTitleStyle ? 1.0f : 2.0f) * scale);
     textSize = MeasureTextEx(font, text, fontSize, spacing);
     position = Vector2{
         std::round(center.x - textSize.x * 0.5f),
         std::round(center.y - textSize.y * 0.5f)
     };
 
-    DrawTextEx(font, text, Vector2{position.x + shadowOffset, position.y + shadowOffset}, fontSize, spacing, Color{3, 7, 12, 180});
-    DrawTextEx(font, text, Vector2{position.x - outlineOffset, position.y}, fontSize, spacing, Color{8, 18, 30, 255});
-    DrawTextEx(font, text, Vector2{position.x + outlineOffset, position.y}, fontSize, spacing, Color{8, 18, 30, 255});
-    DrawTextEx(font, text, Vector2{position.x, position.y - outlineOffset}, fontSize, spacing, Color{8, 18, 30, 255});
-    DrawTextEx(font, text, Vector2{position.x, position.y + outlineOffset}, fontSize, spacing, Color{8, 18, 30, 255});
+    DrawTextEx(font,
+               text,
+               Vector2{position.x + shadowOffset, position.y + shadowOffset},
+               fontSize,
+               spacing,
+               Color{3, 7, 12, (unsigned char)(useCjkTitleStyle ? 150 : 180)});
+    if (useCjkTitleStyle) {
+        DrawTextEx(font, text, Vector2{position.x, position.y + outlineOffset}, fontSize, spacing, Color{8, 18, 30, 220});
+        DrawTextEx(font, text, Vector2{position.x + outlineOffset, position.y}, fontSize, spacing, Color{8, 18, 30, 200});
+    } else {
+        DrawTextEx(font, text, Vector2{position.x - outlineOffset, position.y}, fontSize, spacing, Color{8, 18, 30, 255});
+        DrawTextEx(font, text, Vector2{position.x + outlineOffset, position.y}, fontSize, spacing, Color{8, 18, 30, 255});
+        DrawTextEx(font, text, Vector2{position.x, position.y - outlineOffset}, fontSize, spacing, Color{8, 18, 30, 255});
+        DrawTextEx(font, text, Vector2{position.x, position.y + outlineOffset}, fontSize, spacing, Color{8, 18, 30, 255});
+    }
     DrawTextEx(font, text, position, fontSize, spacing, fill);
-    DrawTextEx(font, text, Vector2{position.x, position.y - std::round(2.0f * scale)}, fontSize, spacing, Color{255, 255, 255, 96});
+    DrawTextEx(font,
+               text,
+               Vector2{position.x, position.y - highlightOffset},
+               fontSize,
+               spacing,
+               Color{255, 255, 255, (unsigned char)(useCjkTitleStyle ? 76 : 96)});
+
+    if (!useDefaultFont && useCjkTitleStyle) {
+        SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+    }
 }
 
 static void DrawVolumePreviewBars(Rectangle rect, float volume) {
@@ -68,40 +110,89 @@ static void DrawVolumePreviewBars(Rectangle rect, float volume) {
     }
 }
 
-static void DrawSettingsSlider(const AssetBundle *assets, const GameSettings *settings, int screenWidth, int screenHeight) {
+static float GetSettingsVolumeValue(const GameSettings *settings, int sliderIndex) {
+    if (settings == NULL) {
+        return 0.0f;
+    }
+
+    switch (sliderIndex) {
+        case 0:
+            return settings->masterVolume;
+        case 1:
+            return settings->musicVolume;
+        case 2:
+            return settings->sfxVolume;
+        default:
+            return 0.0f;
+    }
+}
+
+static void DrawSettingsSliderRow(const AssetBundle *assets,
+                                  const GameSettings *settings,
+                                  int sliderIndex,
+                                  const char *title,
+                                  const char *description,
+                                  int screenWidth,
+                                  int screenHeight) {
     float scale;
+    Rectangle rowRect;
     Rectangle sliderRect;
+    Rectangle decreaseRect;
+    Rectangle increaseRect;
     Rectangle handleRect;
+    Rectangle previewRect;
     float filledWidth;
-    char volumeBuffer[64];
+    float value;
+    char valueBuffer[16];
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    sliderRect = UI_GetSettingsSliderRect(screenWidth, screenHeight);
-    filledWidth = sliderRect.width * settings->masterVolume;
+    rowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, sliderIndex);
+    sliderRect = UI_GetSettingsSliderRect(screenWidth, screenHeight, sliderIndex);
+    decreaseRect = UI_GetSettingsDecreaseButtonRect(screenWidth, screenHeight, sliderIndex);
+    increaseRect = UI_GetSettingsIncreaseButtonRect(screenWidth, screenHeight, sliderIndex);
+    value = GetSettingsVolumeValue(settings, sliderIndex);
+    filledWidth = sliderRect.width * value;
     handleRect = Rectangle{
         sliderRect.x + filledWidth - 14.0f * scale,
         sliderRect.y - 8.0f * scale,
         28.0f * scale,
         sliderRect.height + 16.0f * scale
     };
+    previewRect = Rectangle{
+        rowRect.x + 190.0f * scale,
+        rowRect.y + 18.0f * scale,
+        42.0f * scale,
+        36.0f * scale
+    };
 
+    UIRuntime_DrawPanel(rowRect, Color{12, 24, 39, 225}, Color{104, 196, 222, 50});
+    UIRuntime_DrawText(assets, title, Vector2{rowRect.x + 22.0f * scale, rowRect.y + 15.0f * scale}, 23.0f * scale, WHITE);
+    UIRuntime_DrawWrappedText(assets,
+                              description,
+                              Rectangle{rowRect.x + 22.0f * scale, rowRect.y + 42.0f * scale, 220.0f * scale, 18.0f * scale},
+                              12.5f * scale,
+                              13.5f * scale,
+                              Color{194, 224, 255, 255});
+    DrawVolumePreviewBars(previewRect, value);
     UIRuntime_DrawPanel(sliderRect, Color{18, 30, 46, 235}, Color{104, 196, 222, 70});
     if (filledWidth > 6.0f * scale) {
         DrawRectangleRounded(Rectangle{sliderRect.x + 3.0f * scale, sliderRect.y + 3.0f * scale, filledWidth - 6.0f * scale, sliderRect.height - 6.0f * scale}, 0.35f, 8, Color{94, 217, 199, 255});
     }
     UIRuntime_DrawPanel(handleRect, Color{255, 214, 154, 245}, Color{255, 255, 255, 90});
+    UIRuntime_DrawButton(assets, decreaseRect, "-", true);
+    UIRuntime_DrawButton(assets, increaseRect, "+", true);
 
-    std::snprintf(volumeBuffer, sizeof(volumeBuffer), "%d%%", (int)std::round(settings->masterVolume * 100.0f));
-    UIRuntime_DrawText(
-        assets,
-        volumeBuffer,
-        Vector2{
-            sliderRect.x + sliderRect.width - UIRuntime_MeasureText(assets, volumeBuffer, 18.0f * scale).x,
-            sliderRect.y - 36.0f * scale
-        },
-        18.0f * scale,
-        Color{255, 214, 154, 255}
-    );
+    std::snprintf(valueBuffer, sizeof(valueBuffer), "%d", (int)std::round(value * 100.0f));
+    UIRuntime_DrawText(assets,
+                       valueBuffer,
+                       Vector2{rowRect.x + rowRect.width - 95.0f * scale, rowRect.y + 25.0f * scale},
+                       21.0f * scale,
+                       Color{255, 214, 154, 255});
+    UIRuntime_DrawText(assets,
+                       "%",
+                       Vector2{rowRect.x + rowRect.width - 63.0f * scale, rowRect.y + 26.0f * scale},
+                       18.0f * scale,
+                       Color{194, 224, 255, 255});
 }
 
 static void DrawAuthInputField(const AssetBundle *assets,
@@ -182,13 +273,13 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
     switchRect = UI_GetAuthSwitchModeRect(screenWidth, screenHeight);
     title = mode == AUTH_SCREEN_MODE_REGISTER
         ? Loc_PickLiteral("Create Local Account", "创建本地账号")
-        : Loc_PickLiteral("Account Login", "账号登录");
+        : Loc_PickLiteral("Local Sign-In", "账号登录");
     body = mode == AUTH_SCREEN_MODE_REGISTER
         ? Loc_PickLiteral("Create a local account to continue.", "创建本地账号以继续。")
-        : Loc_PickLiteral("Sign in with your local account.", "使用本地账号登录。");
-    submitLabel = mode == AUTH_SCREEN_MODE_REGISTER ? Loc_PickLiteral("Register and Enter", "注册并进入") : Loc_PickLiteral("Login", "登录");
-    switchLabel = mode == AUTH_SCREEN_MODE_REGISTER ? Loc_PickLiteral("Use Existing Account", "使用已有账号") : Loc_PickLiteral("Create New Account", "创建新账号");
-    accountsHint = hasAccounts ? Loc_PickLiteral("Local accounts found on this device.", "此设备上已存在本地账号。") : Loc_PickLiteral("No local account yet. Register one to continue.", "当前还没有本地账号，请先注册。");
+        : Loc_PickLiteral("Sign in with a local account to continue.", "使用本地账号登录。");
+    submitLabel = mode == AUTH_SCREEN_MODE_REGISTER ? Loc_PickLiteral("Create and Continue", "注册并进入") : Loc_PickLiteral("Sign In", "登录");
+    switchLabel = mode == AUTH_SCREEN_MODE_REGISTER ? Loc_PickLiteral("Sign In Instead", "使用已有账号") : Loc_PickLiteral("Create Account", "创建新账号");
+    accountsHint = hasAccounts ? Loc_PickLiteral("Local accounts are already available on this device.", "此设备上已存在本地账号。") : Loc_PickLiteral("No local account is saved on this device yet.", "当前还没有本地账号，请先注册。");
     deleteEnabled = mode == AUTH_SCREEN_MODE_LOGIN && hasAccounts;
     messageColor = Color{255, 214, 154, 255};
     if (message != NULL
@@ -241,7 +332,7 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
     }
     UIRuntime_DrawWrappedText(
         assets,
-        Loc_PickLiteral("TAB switch field. ENTER confirm.", "按 TAB 切换输入项，按 ENTER 确认。"),
+        Loc_PickLiteral("TAB switches fields. ENTER confirms.", "按 TAB 切换输入项，按 ENTER 确认。"),
         Rectangle{panel.x + 52.0f * scale, panel.y + panel.height - 176.0f * scale, panel.width - 104.0f * scale, 38.0f * scale},
         14.0f * scale,
         16.0f * scale,
@@ -253,6 +344,8 @@ void UI_DrawMainMenu(const AssetBundle *assets,
                      bool hasSave,
                      int saveCount,
                      const char *accountName,
+                     bool hasBestScore,
+                     int bestScore,
                      int screenWidth,
                      int screenHeight,
                      float elapsedSeconds) {
@@ -264,26 +357,44 @@ void UI_DrawMainMenu(const AssetBundle *assets,
         LOC_UI_MENU_EXIT
     };
     float scale;
-    Rectangle switchAccountRect;
-    Rectangle deleteAccountRect;
     char accountBuffer[96];
+    char bestScoreBuffer[64];
     char saveCountBuffer[64];
+    float accountWidth;
+    float bestScoreWidth;
+    float saveWidth;
+    float rightTextX;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    switchAccountRect = UI_GetMainMenuSwitchAccountRect(screenWidth, screenHeight);
-    deleteAccountRect = UI_GetMainMenuDeleteAccountRect(screenWidth, screenHeight);
 
     UIRuntime_DrawBackdrop(screenWidth, screenHeight, elapsedSeconds);
     DrawCircleGradient((int)(screenWidth * 0.5f - 210.0f * scale), (int)(184.0f * scale), 156.0f * scale, Color{65, 164, 214, 56}, Color{65, 164, 214, 0});
     DrawCircleGradient((int)(screenWidth * 0.5f + 210.0f * scale), (int)(188.0f * scale), 156.0f * scale, Color{110, 227, 196, 44}, Color{110, 227, 196, 0});
-    DrawPixelTitleText(assets, Loc_PickLiteral("SPACECRAFT LIVING", "飞船求生"), Vector2{screenWidth * 0.5f, 214.0f * scale}, 96.0f * scale, scale, Color{232, 248, 255, 255});
+    DrawPixelTitleText(assets, Loc_PickLiteral("SPACECRAFT LIVING", "飞船生存"), Vector2{screenWidth * 0.5f, 214.0f * scale}, 96.0f * scale, scale, Color{232, 248, 255, 255});
 
-    std::snprintf(accountBuffer, sizeof(accountBuffer), "%s: %s", Loc_PickLiteral("Account", "账号"), (accountName != NULL && accountName[0] != '\0') ? accountName : Loc_PickLiteral("Unknown", "未知"));
-    std::snprintf(saveCountBuffer, sizeof(saveCountBuffer), "%s: %d", Loc_PickLiteral("Visible saves", "可见存档"), saveCount);
-    UIRuntime_DrawText(assets, accountBuffer, Vector2{screenWidth * 0.5f - 154.0f * scale, 126.0f * scale}, 18.0f * scale, Color{166, 255, 226, 255});
-    UIRuntime_DrawText(assets, saveCountBuffer, Vector2{screenWidth * 0.5f - 154.0f * scale, 151.0f * scale}, 15.0f * scale, Color{194, 224, 255, 255});
-    UIRuntime_DrawButton(assets, switchAccountRect, Loc_PickLiteral("Switch Account", "切换账号"), true);
-    UIRuntime_DrawButton(assets, deleteAccountRect, Loc_PickLiteral("Delete Account", "删除账号"), true);
+    std::snprintf(accountBuffer, sizeof(accountBuffer), "%s", (accountName != NULL && accountName[0] != '\0') ? accountName : Loc_PickLiteral("Unknown", "未知"));
+    if (hasBestScore) {
+        std::snprintf(bestScoreBuffer, sizeof(bestScoreBuffer), "%s %d", Loc_PickLiteral("Best Score", "最高得分"), bestScore);
+    } else {
+        bestScoreBuffer[0] = '\0';
+    }
+    std::snprintf(saveCountBuffer, sizeof(saveCountBuffer), "%s %d", Loc_PickLiteral("Saves", "存档"), saveCount);
+    accountWidth = UIRuntime_MeasureText(assets, accountBuffer, 18.5f * scale).x;
+    bestScoreWidth = bestScoreBuffer[0] != '\0' ? UIRuntime_MeasureText(assets, bestScoreBuffer, 15.5f * scale).x : 0.0f;
+    saveWidth = UIRuntime_MeasureText(assets, saveCountBuffer, 15.5f * scale).x;
+    rightTextX = screenWidth - 36.0f * scale - accountWidth;
+    if (bestScoreWidth > accountWidth && bestScoreWidth > saveWidth) {
+        rightTextX = screenWidth - 36.0f * scale - bestScoreWidth;
+    } else if (saveWidth > accountWidth && saveWidth > bestScoreWidth) {
+        rightTextX = screenWidth - 36.0f * scale - saveWidth;
+    }
+    UIRuntime_DrawText(assets, accountBuffer, Vector2{rightTextX, 112.0f * scale}, 18.5f * scale, Color{166, 255, 226, 255});
+    if (bestScoreBuffer[0] != '\0') {
+        UIRuntime_DrawText(assets, bestScoreBuffer, Vector2{rightTextX, 136.0f * scale}, 15.5f * scale, Color{255, 214, 154, 255});
+        UIRuntime_DrawText(assets, saveCountBuffer, Vector2{rightTextX, 158.0f * scale}, 15.5f * scale, Color{194, 224, 255, 255});
+    } else {
+        UIRuntime_DrawText(assets, saveCountBuffer, Vector2{rightTextX, 138.0f * scale}, 15.5f * scale, Color{194, 224, 255, 255});
+    }
 
     for (buttonIndex = 0; buttonIndex < MAIN_MENU_BUTTON_COUNT; buttonIndex++) {
         bool enabled;
@@ -314,50 +425,53 @@ void UI_DrawPauseMenu(const AssetBundle *assets, int screenWidth, int screenHeig
     }
 }
 
-void UI_DrawSettingsOverlay(const AssetBundle *assets, const GameSettings *settings, int screenWidth, int screenHeight) {
+void UI_DrawSettingsOverlay(const AssetBundle *assets,
+                            const GameSettings *settings,
+                            const char *accountName,
+                            int saveCount,
+                            bool accountActionsEnabled,
+                            int screenWidth,
+                            int screenHeight) {
     float scale;
     Rectangle panel;
-    Rectangle volumeCard;
-    Rectangle sliderRect;
-    Rectangle decreaseRect;
-    Rectangle increaseRect;
     Rectangle closeRect;
+    Rectangle languageRowRect;
+    Rectangle accountRowRect;
     Rectangle languageEnglishRect;
     Rectangle languageChineseRect;
-    Rectangle previewPanel;
-    Rectangle previewBars;
-    Rectangle notesPanel;
-    float cardGap;
-    float innerPadding;
-    float sectionWidth;
+    Rectangle accountSwitchRect;
+    Rectangle accountDeleteRect;
+    char accountBuffer[128];
+    const char *accountHint;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
-    volumeCard = Rectangle{panel.x + 34.0f * scale, panel.y + 118.0f * scale, panel.width - 68.0f * scale, 212.0f * scale};
-    sliderRect = UI_GetSettingsSliderRect(screenWidth, screenHeight);
-    decreaseRect = UI_GetSettingsDecreaseButtonRect(screenWidth, screenHeight);
-    increaseRect = UI_GetSettingsIncreaseButtonRect(screenWidth, screenHeight);
     closeRect = UI_GetSettingsCloseButtonRect(screenWidth, screenHeight);
+    languageRowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, 3);
+    accountRowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, 4);
     languageEnglishRect = UI_GetSettingsLanguageButtonRect(screenWidth, screenHeight, 0);
     languageChineseRect = UI_GetSettingsLanguageButtonRect(screenWidth, screenHeight, 1);
-    cardGap = 18.0f * scale;
-    innerPadding = 22.0f * scale;
-    sectionWidth = (panel.width - 68.0f * scale - cardGap) * 0.5f;
-    previewPanel = Rectangle{panel.x + 34.0f * scale, panel.y + 356.0f * scale, sectionWidth, 152.0f * scale};
-    notesPanel = Rectangle{previewPanel.x + previewPanel.width + cardGap, previewPanel.y, sectionWidth, previewPanel.height};
-    previewBars = Rectangle{previewPanel.x + innerPadding, previewPanel.y + 52.0f * scale, previewPanel.width - innerPadding * 2.0f, 60.0f * scale};
+    accountSwitchRect = UI_GetSettingsAccountButtonRect(screenWidth, screenHeight, 0);
+    accountDeleteRect = UI_GetSettingsAccountButtonRect(screenWidth, screenHeight, 1);
+    std::snprintf(accountBuffer,
+                  sizeof(accountBuffer),
+                  "%s  |  %s %d",
+                  (accountName != NULL && accountName[0] != '\0') ? accountName : Loc_PickLiteral("Unknown", "未知"),
+                  Loc_PickLiteral("Saves", "存档"),
+                  saveCount);
+    accountHint = accountActionsEnabled
+        ? Loc_PickLiteral("Manage the active local account here.", "在这里管理当前本地账号。")
+        : Loc_PickLiteral("Account actions are available from the main menu settings.", "账号操作仅在主界面的设置页中可用。");
 
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{5, 9, 16, 208});
     UIRuntime_DrawPanel(panel, Color{8, 18, 30, 245}, Color{153, 226, 255, 75});
     UIRuntime_DrawText(assets, LOC_UI_SETTINGS_TITLE, Vector2{panel.x + 34.0f * scale, panel.y + 28.0f * scale}, 34.0f * scale, WHITE);
     UIRuntime_DrawButton(assets, closeRect, LOC_UI_CLOSE, true);
-    UIRuntime_DrawText(
-        assets,
-        Loc_PickLiteral("Volume applies immediately.", "音量会立即生效。"),
-        Vector2{panel.x + 34.0f * scale, panel.y + 72.0f * scale},
-        17.0f * scale,
-        Color{194, 224, 255, 255}
-    );
+    UIRuntime_DrawText(assets,
+                       Loc_PickLiteral("Audio, language, and account options all live here now.", "音频、语言与账号选项现在统一放在这里。"),
+                       Vector2{panel.x + 34.0f * scale, panel.y + 72.0f * scale},
+                       16.0f * scale,
+                       Color{194, 224, 255, 255});
     UIRuntime_DrawText(
         assets,
         LOC_UI_PRESS_ESC_CLOSE,
@@ -369,32 +483,36 @@ void UI_DrawSettingsOverlay(const AssetBundle *assets, const GameSettings *setti
         Color{182, 199, 214, 255}
     );
 
-    UIRuntime_DrawPanel(volumeCard, Color{12, 24, 39, 225}, Color{104, 196, 222, 50});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Master Volume", "主音量"), Vector2{volumeCard.x + 20.0f * scale, volumeCard.y + 22.0f * scale}, 28.0f * scale, WHITE);
-    UIRuntime_DrawWrappedText(
-        assets,
-        Loc_PickLiteral("Use slider or +/- buttons.", "可使用滑杆或 +/- 按钮调节。"),
-        Rectangle{volumeCard.x + 20.0f * scale, volumeCard.y + 62.0f * scale, volumeCard.width - 40.0f * scale, 40.0f * scale},
-        15.0f * scale,
-        17.0f * scale,
-        Color{190, 207, 222, 255}
-    );
+    DrawSettingsSliderRow(assets,
+                          settings,
+                          0,
+                          Loc_PickLiteral("Master Volume", "总音量"),
+                          Loc_PickLiteral("Controls the full game mix.", "控制整个游戏的总体音量。"),
+                          screenWidth,
+                          screenHeight);
+    DrawSettingsSliderRow(assets,
+                          settings,
+                          1,
+                          Loc_PickLiteral("Music Volume", "音乐音量"),
+                          Loc_PickLiteral("Adjusts background music only.", "只调整背景音乐。"),
+                          screenWidth,
+                          screenHeight);
+    DrawSettingsSliderRow(assets,
+                          settings,
+                          2,
+                          Loc_PickLiteral("SFX Volume", "音效音量"),
+                          Loc_PickLiteral("Adjusts UI, combat, and ambient cues.", "调整界面、战斗与环境音效。"),
+                          screenWidth,
+                          screenHeight);
 
-    DrawSettingsSlider(assets, settings, screenWidth, screenHeight);
-    UIRuntime_DrawButton(assets, decreaseRect, "-", true);
-    UIRuntime_DrawButton(assets, increaseRect, "+", true);
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Arrow keys / A-D: 5% step.", "方向键 / A-D：每次调整 5%。"), Rectangle{sliderRect.x, sliderRect.y + 96.0f * scale, sliderRect.width, 18.0f * scale}, 14.0f * scale, 15.0f * scale, Color{166, 255, 226, 255});
-    UIRuntime_DrawText(assets, "0%", Vector2{sliderRect.x, sliderRect.y - 34.0f * scale}, 14.0f * scale, Color{168, 180, 196, 255});
-    UIRuntime_DrawText(assets, "100%", Vector2{sliderRect.x + sliderRect.width - UIRuntime_MeasureText(assets, "100%", 14.0f * scale).x, sliderRect.y - 34.0f * scale}, 14.0f * scale, Color{168, 180, 196, 255});
-
-    UIRuntime_DrawPanel(previewPanel, Color{12, 24, 39, 225}, Color{255, 255, 255, 22});
-    UIRuntime_DrawPanel(notesPanel, Color{12, 24, 39, 225}, Color{255, 255, 255, 22});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Live Meter", "实时电平"), Vector2{previewPanel.x + innerPadding, previewPanel.y + 18.0f * scale}, 22.0f * scale, WHITE);
-    DrawVolumePreviewBars(previewBars, settings->masterVolume);
-    UIRuntime_DrawText(assets, settings->masterVolume > 0.65f ? Loc_PickLiteral("High output", "高输出") : (settings->masterVolume > 0.30f ? Loc_PickLiteral("Balanced", "均衡") : Loc_PickLiteral("Quiet mode", "安静模式")), Vector2{previewPanel.x + innerPadding, previewPanel.y + previewPanel.height - 34.0f * scale}, 15.0f * scale, Color{194, 224, 255, 255});
-
-    UIRuntime_DrawText(assets, LOC_UI_LANGUAGE, Vector2{notesPanel.x + innerPadding, notesPanel.y + 18.0f * scale}, 22.0f * scale, WHITE);
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("English stays the source text. Update both options in one place when editing copy.", "英文仍然是源文本。后续改文案时，请在同一处同时更新两种语言。"), Rectangle{notesPanel.x + innerPadding, notesPanel.y + 54.0f * scale, notesPanel.width - innerPadding * 2.0f, 58.0f * scale}, 15.0f * scale, 16.0f * scale, Color{194, 224, 255, 255});
+    UIRuntime_DrawPanel(languageRowRect, Color{12, 24, 39, 225}, Color{104, 196, 222, 50});
+    UIRuntime_DrawText(assets, LOC_UI_LANGUAGE, Vector2{languageRowRect.x + 22.0f * scale, languageRowRect.y + 15.0f * scale}, 23.0f * scale, WHITE);
+    UIRuntime_DrawWrappedText(assets,
+                              Loc_PickLiteral("Switch between English and Simplified Chinese.", "在英文和简体中文之间切换。"),
+                              Rectangle{languageRowRect.x + 22.0f * scale, languageRowRect.y + 42.0f * scale, 230.0f * scale, 18.0f * scale},
+                              12.5f * scale,
+                              13.5f * scale,
+                              Color{194, 224, 255, 255});
     UIRuntime_DrawButton(assets, languageEnglishRect, Loc_GetLanguageNativeName(GAME_LANGUAGE_EN), true);
     UIRuntime_DrawButton(assets, languageChineseRect, "简体中文", true);
     if (Loc_NormalizeLanguage((int)settings->language) == GAME_LANGUAGE_EN) {
@@ -402,20 +520,29 @@ void UI_DrawSettingsOverlay(const AssetBundle *assets, const GameSettings *setti
     } else {
         DrawRectangleRoundedLinesEx(languageChineseRect, 0.16f, 8, 2.0f, Color{255, 214, 154, 220});
     }
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Saved automatically on close. Press TAB here to switch language quickly.", "关闭时会自动保存。也可以按 TAB 快速切换语言。"), Rectangle{notesPanel.x + innerPadding, notesPanel.y + 118.0f * scale, notesPanel.width - innerPadding * 2.0f, 44.0f * scale}, 14.0f * scale, 15.0f * scale, Color{166, 255, 226, 255});
+
+    UIRuntime_DrawPanel(accountRowRect, Color{12, 24, 39, 225}, Color{104, 196, 222, 50});
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Account", "账号"), Vector2{accountRowRect.x + 22.0f * scale, accountRowRect.y + 15.0f * scale}, 23.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, accountBuffer, Vector2{accountRowRect.x + 22.0f * scale, accountRowRect.y + 42.0f * scale}, 13.5f * scale, Color{166, 255, 226, 255});
+    UIRuntime_DrawButton(assets, accountSwitchRect, Loc_PickLiteral("Switch Account", "切换账号"), accountActionsEnabled);
+    UIRuntime_DrawButton(assets, accountDeleteRect, Loc_PickLiteral("Delete Account", "删除账号"), accountActionsEnabled);
+    UIRuntime_DrawWrappedText(assets,
+                              accountHint,
+                              Rectangle{accountRowRect.x + 248.0f * scale, accountRowRect.y + 52.0f * scale, accountRowRect.width - 618.0f * scale, 14.0f * scale},
+                              11.6f * scale,
+                              13.0f * scale,
+                              accountActionsEnabled ? Color{194, 224, 255, 255} : Color{150, 166, 184, 255});
 }
 
-void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton) {
-    const int deathFailureThreshold = 3;
+void UI_DrawDeathPopup(const Player *player, bool hasSave, const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton) {
     float scale;
     Rectangle panel;
     Rectangle bodyRect;
     Rectangle hintRect;
     char deathBuffer[128];
-    char hintBuffer[160];
     const char *buttonLabels[DEATH_POPUP_BUTTON_COUNT] = {
         Loc_PickLiteral("Restart", "重新开始"),
-        Loc_PickLiteral("Exit", "退出")
+        Loc_PickLiteral("Load", "读档")
     };
     int buttonIndex;
 
@@ -430,25 +557,36 @@ void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int scre
 
     UIRuntime_DrawText(assets, Loc_PickLiteral("YOU DIED", "你已死亡"), Vector2{panel.x + panel.width * 0.5f - UIRuntime_MeasureText(assets, Loc_PickLiteral("YOU DIED", "你已死亡"), 38.0f * scale).x * 0.5f, panel.y + 35.0f * scale}, 38.0f * scale, Color{255, 80, 80, 255});
 
-    std::snprintf(deathBuffer, sizeof(deathBuffer), "%s %d / %d", Loc_PickLiteral("Deaths", "死亡次数"), player->deathCount, deathFailureThreshold);
+    std::snprintf(deathBuffer, sizeof(deathBuffer), "%s %d", Loc_PickLiteral("Deaths", "死亡次数"), player->deathCount);
     UIRuntime_DrawText(assets, deathBuffer, Vector2{panel.x + panel.width * 0.5f - UIRuntime_MeasureText(assets, deathBuffer, 22.0f * scale).x * 0.5f, panel.y + 95.0f * scale}, 22.0f * scale, Color{200, 200, 200, 255});
 
-    if (player->deathCount >= deathFailureThreshold - 1) {
-        std::snprintf(hintBuffer, sizeof(hintBuffer), "%s", Loc_PickLiteral("Restart at recovery point. One more death ends the run.", "将在恢复点重来。再死一次，本轮就会结束。"));
-    } else {
-        std::snprintf(hintBuffer, sizeof(hintBuffer), "%s", Loc_PickLiteral("Restart at recovery point. Repeated deaths end the run.", "将在恢复点重来。反复死亡会导致本轮结束。"));
-    }
-
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Suit vitals collapsed.", "防护服生命体征系统已经崩溃。"), bodyRect, 19.0f * scale, 22.0f * scale, Color{180, 180, 180, 255});
-    UIRuntime_DrawWrappedText(assets, hintBuffer, hintRect, 16.0f * scale, 18.0f * scale, Color{196, 184, 184, 255});
+    UIRuntime_DrawWrappedText(assets,
+                              Loc_PickLiteral("Suit vital systems have failed. This run is over as soon as your health is depleted.",
+                                              "防护服生命体征系统已经崩溃。生命值归零后，本轮会立刻结束。"),
+                              bodyRect,
+                              19.0f * scale,
+                              22.0f * scale,
+                              Color{180, 180, 180, 255});
+    UIRuntime_DrawWrappedText(assets,
+                              hasSave
+                                ? Loc_PickLiteral("Restart begins a fresh run immediately from Loxi's room and skips the opening crash recap. Load lets you return to an existing save.",
+                                                  "重新开始会直接从洛希房间重新开局，并跳过开场坠毁剧情。读档可以返回已有存档。")
+                                : Loc_PickLiteral("Restart begins a fresh run immediately from Loxi's room and skips the opening crash recap. No save is available to load for this account.",
+                                                  "重新开始会直接从洛希房间重新开局，并跳过开场坠毁剧情。当前账号没有可读取的存档。"),
+                              hintRect,
+                              16.0f * scale,
+                              18.0f * scale,
+                              Color{196, 184, 184, 255});
 
     DrawLine(panel.x + 40.0f * scale, panel.y + 212.0f * scale, panel.x + panel.width - 40.0f * scale, panel.y + 212.0f * scale, Color{255, 100, 100, 120});
 
     for (buttonIndex = 0; buttonIndex < DEATH_POPUP_BUTTON_COUNT; buttonIndex++) {
         Rectangle buttonRect;
+        bool enabled;
 
         buttonRect = UI_GetDeathPopupButtonRect(screenWidth, screenHeight, buttonIndex);
-        UIRuntime_DrawButton(assets, buttonRect, buttonLabels[buttonIndex], true);
+        enabled = buttonIndex != DEATH_POPUP_BUTTON_LOAD || hasSave;
+        UIRuntime_DrawButton(assets, buttonRect, buttonLabels[buttonIndex], enabled);
         if (buttonIndex == selectedButton) {
             DrawRectangleRoundedLinesEx(buttonRect, 0.16f, 8, 2.0f, Color{255, 214, 154, 220});
         }
@@ -481,20 +619,39 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
     bodyRect = Rectangle{panel.x + 34.0f * scale, panel.y + 96.0f * scale, panel.width - 68.0f * scale, 62.0f * scale};
     noteRect = Rectangle{panel.x + 34.0f * scale, panel.y + 166.0f * scale, panel.width - 68.0f * scale, 50.0f * scale};
     titleText = Loc_PickLiteral("Confirm Final Route", "确认最终路线");
-    bodyText = Loc_PickLiteral("Loxi has finished the final archive review. Commit to the route you want before the tower or airlock turns that choice into a point of no return.",
+    bodyText = Loc_PickLiteral("Loxi has finished the final archive review. Commit to the route you want here, before the tower or airlock turns that choice into a point of no return.",
                                "洛希已经完成最终档案复核。请先在这里确认你要走的路线，再去触发塔楼或气闸里的不可回头步骤。");
     if (tasks != NULL && tasks->bossDefeated) {
-        noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful still requires the Signal Amplifier. Settlement still ends the run here at the ship.",
-                                   "强行救援现在可以直接去信号塔完成。和平救援仍需要信号放大器。异星定居仍会在飞船处结束本轮。");
+        if (player != NULL && player->hasSignalAmplifier) {
+            noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful can also finish there now with the Signal Amplifier. Settlement still ends the run here at the ship.",
+                                       "强行救援现在可以直接去信号塔完成。和平救援现在也可以带着信号放大器去塔楼完成。异星定居仍会在飞船处结束本轮。");
+        } else if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
+            noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful still needs the Signal Amplifier, but the fragment set is ready for workshop assembly. Settlement still ends the run here at the ship.",
+                                       "强行救援现在可以直接去信号塔完成。和平救援仍需要信号放大器，但碎片已经齐备，可以回工坊组装。异星定居仍会在飞船处结束本轮。");
+        } else {
+            noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful still needs 3 Relic Fragments and the Signal Amplifier. Settlement still ends the run here at the ship.",
+                                       "强行救援现在可以直接去信号塔完成。和平救援仍需要先找回 3 枚遗迹碎片并制作信号放大器。异星定居仍会在飞船处结束本轮。");
+        }
     } else if (tasks != NULL && tasks->selectedEndingRoute == ENDING_HEROIC) {
-        noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful requires the Signal Amplifier. Settlement still closes both rescue routes.",
-                                   "强行救援已经锁定为守卫战场路线。和平救援仍需要信号放大器。异星定居仍会关闭两条救援路线。");
+        if (player != NULL && player->hasSignalAmplifier) {
+            noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful can still finish at the tower with the Signal Amplifier. Settlement still closes both rescue routes.",
+                                       "强行救援已经锁定为守卫战场路线。和平救援仍可以带着信号放大器去塔楼完成。异星定居仍会关闭两条救援路线。");
+        } else if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
+            noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful still needs the Signal Amplifier, but the fragment set is ready for workshop assembly. Settlement still closes both rescue routes.",
+                                       "强行救援已经锁定为守卫战场路线。和平救援仍需要信号放大器，但碎片已经齐备，可以回工坊组装。异星定居仍会关闭两条救援路线。");
+        } else {
+            noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful still needs 3 Relic Fragments and the Signal Amplifier. Settlement still closes both rescue routes.",
+                                       "强行救援已经锁定为守卫战场路线。和平救援仍需要先找回 3 枚遗迹碎片并制作信号放大器。异星定居仍会关闭两条救援路线。");
+        }
     } else if (player != NULL && player->hasSignalAmplifier) {
         noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful can now finish at the tower with the Signal Amplifier. Settlement still closes both rescue routes.",
                                    "强行救援需要进入守卫战场。和平救援现在可以带着信号放大器去塔楼完成。异星定居仍会关闭两条救援路线。");
+    } else if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
+        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful still needs the Signal Amplifier, but the fragment set is ready for workshop assembly. Settlement still closes both rescue routes and ends the run at the ship.",
+                                   "强行救援需要进入守卫战场。和平救援仍需要信号放大器，但碎片已经齐备，可以回工坊组装。异星定居仍会关闭两条救援路线，并在飞船处结束本轮。");
     } else {
-        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful requires the Signal Amplifier. Settlement still closes both rescue routes and ends the run at the ship.",
-                                   "强行救援需要进入守卫战场。和平救援需要信号放大器。异星定居仍会关闭两条救援路线，并在飞船处结束本轮。");
+        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful needs 3 Relic Fragments and the Signal Amplifier. Settlement still closes both rescue routes and ends the run at the ship.",
+                                   "强行救援需要进入守卫战场。和平救援需要先找回 3 枚遗迹碎片并制作信号放大器。异星定居仍会关闭两条救援路线，并在飞船处结束本轮。");
     }
 
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{6, 10, 18, 200});
@@ -542,7 +699,7 @@ void UI_DrawAccountDeleteConfirmPopup(const AssetBundle *assets,
     UIRuntime_DrawText(assets, titleBuffer, Vector2{panel.x + 34.0f * scale, panel.y + 28.0f * scale}, 32.0f * scale, WHITE);
     UIRuntime_DrawText(assets, Loc_PickLiteral("ESC cancels", "按 ESC 取消"), Vector2{panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("ESC cancels", "按 ESC 取消"), 16.0f * scale).x - 30.0f * scale, panel.y + 34.0f * scale}, 16.0f * scale, Color{205, 188, 188, 255});
     UIRuntime_DrawWrappedText(assets,
-                              Loc_PickLiteral("Delete this account and all saves.", "删除这个账号及其全部存档。"),
+                              Loc_PickLiteral("Delete this account and every save tied to it.", "删除这个账号及其全部存档。"),
                               bodyRect,
                               18.0f * scale,
                               22.0f * scale,

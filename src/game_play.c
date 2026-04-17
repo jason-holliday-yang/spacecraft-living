@@ -124,6 +124,9 @@ void Game_UpdatePlayingState(Game *game, float deltaTime) {
     }
 
     if (!game->storySceneOpen && game->tasks.ending != ENDING_NONE) {
+        if (endingBeforeUpdate == ENDING_NONE) {
+            Game_RecordActiveAccountScore(game);
+        }
         game->state = GAME_STATE_ENDING;
         Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
         Audio_PlayCue(&game->audio, endingBeforeUpdate == ENDING_NONE ? GetEndingCue(game->tasks.ending) : AUDIO_CUE_ENDING);

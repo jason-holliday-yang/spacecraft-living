@@ -20,6 +20,8 @@ SCL_EXTERN_C_BEGIN
 
 typedef struct GameSettings {
     float masterVolume;
+    float musicVolume;
+    float sfxVolume;
     bool sfxEnabled;
     GameLanguage language;
     char lastUsername[SAVE_ACCOUNT_NAME_MAX];
@@ -140,6 +142,8 @@ bool SaveSystem_SaveSettings(const GameSettings *settings);
 bool SaveSystem_HasRegisteredAccounts(void);
 bool SaveSystem_IsAccountAuthenticated(void);
 const char *SaveSystem_GetActiveAccountName(void);
+bool SaveSystem_GetActiveAccountBestScore(int *scoreOut);
+bool SaveSystem_UpdateActiveAccountBestScore(int score);
 void SaveSystem_Logout(void);
 bool SaveSystem_Login(const char *username, const char *password, char *message, size_t messageSize);
 bool SaveSystem_Register(const char *username, const char *password, char *message, size_t messageSize);

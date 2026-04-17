@@ -50,7 +50,7 @@ static void AddLog(TaskSystem *tasks,
 
     if (tasks->logCount >= MAX_LOGS
         || map == NULL
-        || !TasksRuntime_FindNodeSpawnTile(tasks, map, gridX, gridY, &resolvedX, &resolvedY)) {
+        || !TasksRuntime_FindLogSpawnTile(tasks, map, gridX, gridY, &resolvedX, &resolvedY)) {
         return;
     }
 

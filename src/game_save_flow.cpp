@@ -3,6 +3,7 @@
 #include "localization.h"
 
 #include <cstdio>
+#include <cstring>
 
 static int FindFirstOccupiedSlot(const Game *game) {
     int slotIndex;
@@ -43,6 +44,121 @@ static void RefreshAuthState(Game *game) {
     game->authHasAccounts = SaveSystem_HasRegisteredAccounts();
 }
 
+static bool SnapshotShouldPublishBestScore(const SaveSnapshot *snapshot) {
+    return snapshot != NULL && (snapshot->deathCount > 0 || snapshot->ending != ENDING_NONE);
+}
+
+static int CalculateSnapshotEndingScore(const SaveSnapshot *snapshot) {
+    GameMap map;
+    TaskSystem tasks;
+    Player player;
+    int index;
+
+    if (!SnapshotShouldPublishBestScore(snapshot)) {
+        return 0;
+    }
+
+    Map_Init(&map);
+    Player_Init(&player);
+    Tasks_Init(&tasks, &map);
+
+    player.health = snapshot->health;
+    player.oxygen = snapshot->oxygen;
+    player.deathCount = snapshot->deathCount;
+    player.hasSignalAmplifier = snapshot->hasSignalAmplifier;
+    for (index = 0; index < RESOURCE_COUNT; index++) {
+        player.resources[index] = snapshot->resources[index];
+    }
+
+    tasks.stage = snapshot->stage;
+    tasks.oxygenRepairLevel = snapshot->oxygenRepairLevel;
+    tasks.commRepairLevel = snapshot->commRepairLevel;
+    tasks.energyRepairLevel = snapshot->energyRepairLevel;
+    tasks.crashClueFound = snapshot->crashClueFound;
+    tasks.amplifierUnlocked = snapshot->amplifierUnlocked;
+    tasks.bossDefeated = snapshot->bossDefeated;
+    tasks.signalTowerActivated = snapshot->signalTowerActivated;
+    tasks.selectedEndingRoute = (GameEnding)snapshot->selectedEndingRoute;
+    tasks.endingArchiveReviewed = snapshot->endingArchiveReviewed;
+    tasks.westW1Started = snapshot->westW1Started;
+    tasks.westW1Completed = snapshot->westW1Completed;
+    tasks.westW2Started = snapshot->westW2Started;
+    tasks.westW2Completed = snapshot->westW2Completed;
+    tasks.westW3Started = snapshot->westW3Started;
+    tasks.westW3Completed = snapshot->westW3Completed;
+    tasks.westW4Started = snapshot->westW4Started;
+    tasks.westW4Completed = snapshot->westW4Completed;
+    tasks.westW5Started = snapshot->westW5Started;
+    tasks.westW5Completed = snapshot->westW5Completed;
+    tasks.southS1Started = snapshot->southS1Started;
+    tasks.southS1Completed = snapshot->southS1Completed;
+    tasks.southS2Started = snapshot->southS2Started;
+    tasks.southS2Completed = snapshot->southS2Completed;
+    tasks.southS3Started = snapshot->southS3Started;
+    tasks.southS3Completed = snapshot->southS3Completed;
+    tasks.southS4Started = snapshot->southS4Started;
+    tasks.southS4Completed = snapshot->southS4Completed;
+    tasks.southS5Started = snapshot->southS5Started;
+    tasks.southS5Completed = snapshot->southS5Completed;
+    tasks.monolithActivated[0] = snapshot->monolithActivated[0];
+    tasks.monolithActivated[1] = snapshot->monolithActivated[1];
+    tasks.monolithActivated[2] = snapshot->monolithActivated[2];
+    tasks.monolithsLit = snapshot->monolithsLit;
+    tasks.ending = (GameEnding)snapshot->ending;
+
+    for (index = 0; index < tasks.logCount && index < MAX_LOGS; index++) {
+        tasks.logs[index].collected = snapshot->logs[index].collected;
+    }
+
+    return Tasks_CalculateEndingScore(&tasks, &player);
+}
+
+static void RefreshAccountBestScore(Game *game) {
+    int bestScore;
+
+    if (game == NULL) {
+        return;
+    }
+
+    game->hasAccountBestScore = false;
+    game->accountBestScore = 0;
+    if (SaveSystem_GetActiveAccountBestScore(&bestScore)) {
+        game->hasAccountBestScore = true;
+        game->accountBestScore = bestScore;
+    }
+}
+
+static void BackfillAccountBestScoreFromSaveSlots(Game *game) {
+    int slotIndex;
+    int bestScore;
+
+    if (game == NULL || !game->authenticated || game->hasAccountBestScore) {
+        return;
+    }
+
+    bestScore = 0;
+    for (slotIndex = 0; slotIndex < SAVE_SLOT_COUNT; slotIndex++) {
+        SaveSnapshot snapshot;
+        int snapshotScore;
+
+        if (!game->saveSlots[slotIndex].exists || !SaveSystem_LoadGame(slotIndex, &snapshot)) {
+            continue;
+        }
+
+        snapshotScore = CalculateSnapshotEndingScore(&snapshot);
+        if (snapshotScore > bestScore) {
+            bestScore = snapshotScore;
+        }
+    }
+
+    if (bestScore <= 0 || !SaveSystem_UpdateActiveAccountBestScore(bestScore)) {
+        return;
+    }
+
+    game->hasAccountBestScore = true;
+    game->accountBestScore = bestScore;
+}
+
 void Game_TrySaveSettings(Game *game) {
     if (game == NULL || !game->settingsDirty) {
         return;
@@ -61,6 +177,7 @@ void Game_RefreshSaveSlots(Game *game) {
     }
 
     RefreshAuthState(game);
+    RefreshAccountBestScore(game);
     SaveSystem_ListSlots(game->saveSlots, SAVE_SLOT_COUNT);
     game->saveSlotCount = 0;
     for (slotIndex = 0; slotIndex < SAVE_SLOT_COUNT; slotIndex++) {
@@ -69,12 +186,29 @@ void Game_RefreshSaveSlots(Game *game) {
         }
     }
     game->hasSaveFile = game->saveSlotCount > 0;
+    if (game->hasSaveFile) {
+        BackfillAccountBestScoreFromSaveSlots(game);
+    }
     if (game->selectedSaveSlot < 0) {
         game->selectedSaveSlot = 0;
     }
     if (game->selectedSaveSlot >= SAVE_SLOT_COUNT) {
         game->selectedSaveSlot = SAVE_SLOT_COUNT - 1;
     }
+}
+
+void Game_RecordActiveAccountScore(Game *game) {
+    int score;
+
+    if (game == NULL || !game->authenticated) {
+        return;
+    }
+
+    score = Tasks_CalculateEndingScore(&game->tasks, &game->player);
+    if (score > 0) {
+        SaveSystem_UpdateActiveAccountBestScore(score);
+    }
+    RefreshAccountBestScore(game);
 }
 
 void Game_CloseSavePanel(Game *game) {

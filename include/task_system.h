@@ -172,6 +172,7 @@ bool Tasks_GetObjectiveMarker(const TaskSystem *tasks, const Player *player, int
 void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float elapsedSeconds);
 int Tasks_GetCollectedLogCount(const TaskSystem *tasks);
 const ShipLog *Tasks_GetCollectedLogAt(const TaskSystem *tasks, int index);
+int Tasks_GetLogSceneIndex(const TaskSystem *tasks, const ShipLog *log);
 const char *Tasks_GetLogTitle(const ShipLog *log);
 const char *Tasks_GetLogStoryText(const ShipLog *log);
 const char *Tasks_GetLogRewardDescription(const ShipLog *log);
@@ -192,6 +193,8 @@ void Tasks_CommitSettlement(TaskSystem *tasks);
 GameEnding Tasks_GetEnding(const TaskSystem *tasks);
 const char *Tasks_GetEndingTitle(GameEnding ending);
 const char *Tasks_GetEndingBody(GameEnding ending);
+int Tasks_CalculateEndingScore(const TaskSystem *tasks, const Player *player);
+const char *Tasks_GetEndingScoreRank(int score);
 
 SCL_EXTERN_C_END
 

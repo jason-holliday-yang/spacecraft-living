@@ -81,6 +81,56 @@ static void DrawBeacon(Rectangle rect, Color base, Color glow, float elapsedSeco
     DrawCircle((int)(rect.x + rect.width * 0.5f), (int)(rect.y + TileScale(20.0f)), radius, glow);
 }
 
+static void DrawArchiveIcon(Rectangle rect, Color accent, float elapsedSeconds) {
+    Rectangle iconRect;
+    float pulse;
+    float glowRadius;
+
+    pulse = 0.5f + 0.5f * sinf(elapsedSeconds * 3.2f);
+    glowRadius = TileScale(11.0f) + pulse * TileScale(3.0f);
+    iconRect = (Rectangle){
+        rect.x + TileScale(16.0f),
+        rect.y + TileScale(14.0f),
+        rect.width - TileScale(32.0f),
+        rect.height - TileScale(28.0f)
+    };
+
+    DrawCircle((int)(rect.x + rect.width * 0.5f),
+               (int)(rect.y + rect.height * 0.46f),
+               glowRadius,
+               (Color){255, 210, 148, (unsigned char)(50 + pulse * 30.0f)});
+    DrawRectangleRounded(iconRect, 0.18f, 5, (Color){42, 56, 76, 240});
+    DrawRectangleRoundedLinesEx(iconRect, 0.18f, 5, 2.0f, (Color){255, 214, 154, (unsigned char)(95 + pulse * 40.0f)});
+    DrawRectangleRounded((Rectangle){iconRect.x + TileScale(8.0f), iconRect.y + TileScale(7.0f), iconRect.width - TileScale(16.0f), iconRect.height - TileScale(14.0f)},
+                         0.12f,
+                         4,
+                         (Color){230, 238, 246, 245});
+    DrawRectangle((int)(iconRect.x + TileScale(10.0f)),
+                  (int)(iconRect.y + TileScale(11.0f)),
+                  (int)(iconRect.width - TileScale(20.0f)),
+                  (int)TileScale(7.0f),
+                  accent);
+    DrawRectangle((int)(iconRect.x + TileScale(10.0f)),
+                  (int)(iconRect.y + TileScale(23.0f)),
+                  (int)(iconRect.width - TileScale(26.0f)),
+                  (int)TileScale(4.0f),
+                  (Color){128, 146, 168, 225});
+    DrawRectangle((int)(iconRect.x + TileScale(10.0f)),
+                  (int)(iconRect.y + TileScale(31.0f)),
+                  (int)(iconRect.width - TileScale(18.0f)),
+                  (int)TileScale(4.0f),
+                  (Color){128, 146, 168, 205});
+    DrawRectangle((int)(iconRect.x + TileScale(10.0f)),
+                  (int)(iconRect.y + TileScale(39.0f)),
+                  (int)(iconRect.width - TileScale(30.0f)),
+                  (int)TileScale(4.0f),
+                  (Color){128, 146, 168, 190});
+    DrawCircle((int)(iconRect.x + iconRect.width - TileScale(8.0f)),
+               (int)(iconRect.y + TileScale(11.0f)),
+               TileScale(3.0f) + pulse * TileScale(1.0f),
+               accent);
+}
+
 void MapInternal_DrawPropCell(const GameMap *map,
                               const AssetBundle *assets,
                               int gridX,
@@ -195,6 +245,11 @@ void MapInternal_DrawPropCell(const GameMap *map,
                 DrawRectangleLinesEx(rect, 2.0f, (Color){209, 234, 255, 85});
             }
             break;
+        case TILE_LOXI_ROOM_DOOR:
+            DrawRectangleRounded((Rectangle){rect.x + 4.0f, rect.y + 10.0f, rect.width - 8.0f, rect.height - 20.0f}, 0.18f, 3, (Color){88, 115, 138, 255});
+            DrawRectangle((int)rect.x + 10, (int)rect.y + 18, (int)rect.width - 20, (int)rect.height - 36, (Color){53, 82, 103, 255});
+            DrawRectangleLinesEx(rect, 2.0f, (Color){124, 214, 226, 72});
+            break;
         case TILE_COMM_RELAY:
             if (!ResolvePropDrawRect(propTile, gridX, gridY, &rect)) {
                 break;
@@ -299,7 +354,7 @@ void MapInternal_DrawPropCell(const GameMap *map,
             DrawRectangleLinesEx(rect, 2.0f, (Color){168, 154, 132, 120});
             break;
         case TILE_LOG_SITE:
-            DrawCircle((int)(rect.x + rect.width * 0.5f), (int)(rect.y + rect.height * 0.5f), TileScale(12.0f), (Color){104, 173, 255, 120});
+            DrawArchiveIcon(rect, (Color){118, 226, 255, 235}, elapsedSeconds);
             break;
         case TILE_VOID:
         default:

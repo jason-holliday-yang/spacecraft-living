@@ -44,6 +44,23 @@ void TasksRuntime_ClearNegativeSurvivalStatuses(Player *player) {
     Player_ClearStatus(player, PLAYER_STATUS_CRITICAL_CONDITION);
 }
 
+static int GetExpandedRectInteractionScore(const Player *player,
+                                           int gridX,
+                                           int gridY,
+                                           int width,
+                                           int height,
+                                           int extraRange) {
+    if (extraRange <= 0) {
+        return TasksRuntime_GetRectInteractionScore(player, gridX, gridY, width, height);
+    }
+
+    return TasksRuntime_GetRectInteractionScore(player,
+                                                gridX - extraRange,
+                                                gridY - extraRange,
+                                                width + extraRange * 2,
+                                                height + extraRange * 2);
+}
+
 TaskInteractionTarget TasksRuntime_GetPreferredInteractionTarget(const Player *player) {
     struct Candidate {
         TaskInteractionTarget target;
@@ -51,15 +68,15 @@ TaskInteractionTarget TasksRuntime_GetPreferredInteractionTarget(const Player *p
     };
     const Candidate candidates[] = {
         {TASK_INTERACTION_OXYGEN_CONSOLE, TasksRuntime_GetRectInteractionScore(player, OXYGEN_CONSOLE_X, OXYGEN_CONSOLE_Y, STATION_FOOTPRINT_WIDTH, STATION_FOOTPRINT_HEIGHT)},
-        {TASK_INTERACTION_LOXI_TERMINAL, TasksRuntime_GetRectInteractionScore(player, LOXI_TERMINAL_X, LOXI_TERMINAL_Y, STATION_FOOTPRINT_WIDTH, STATION_FOOTPRINT_HEIGHT)},
+        {TASK_INTERACTION_LOXI_TERMINAL, GetExpandedRectInteractionScore(player, LOXI_TERMINAL_X, LOXI_TERMINAL_Y, STATION_FOOTPRINT_WIDTH, STATION_FOOTPRINT_HEIGHT, 1)},
         {TASK_INTERACTION_WORKBENCH, TasksRuntime_GetRectInteractionScore(player, WORKBENCH_X, WORKBENCH_Y, STATION_FOOTPRINT_WIDTH, STATION_FOOTPRINT_HEIGHT)},
         {TASK_INTERACTION_AIRLOCK_CONSOLE, TasksRuntime_GetRectInteractionScore(player, AIRLOCK_CONSOLE_X, AIRLOCK_CONSOLE_Y, STATION_FOOTPRINT_WIDTH, STATION_FOOTPRINT_HEIGHT)},
         {TASK_INTERACTION_COMM_RELAY, TasksRuntime_GetRectInteractionScore(player, COMM_RELAY_X, COMM_RELAY_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE)},
         {TASK_INTERACTION_CRASH_CLUE, TasksRuntime_GetRectInteractionScore(player, CRASH_CLUE_X, CRASH_CLUE_Y, CRASH_CLUE_FOOTPRINT_SIZE, CRASH_CLUE_FOOTPRINT_SIZE)},
         {TASK_INTERACTION_ENERGY_CONSOLE, TasksRuntime_GetRectInteractionScore(player, ENERGY_CONSOLE_X, ENERGY_CONSOLE_Y, STATION_FOOTPRINT_WIDTH, STATION_FOOTPRINT_HEIGHT)},
-        {TASK_INTERACTION_MONOLITH_A, TasksRuntime_GetRectInteractionScore(player, MONOLITH_A_X, MONOLITH_A_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE)},
-        {TASK_INTERACTION_MONOLITH_B, TasksRuntime_GetRectInteractionScore(player, MONOLITH_B_X, MONOLITH_B_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE)},
-        {TASK_INTERACTION_MONOLITH_C, TasksRuntime_GetRectInteractionScore(player, MONOLITH_C_X, MONOLITH_C_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE)},
+        {TASK_INTERACTION_MONOLITH_A, GetExpandedRectInteractionScore(player, MONOLITH_A_X, MONOLITH_A_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, 1)},
+        {TASK_INTERACTION_MONOLITH_B, GetExpandedRectInteractionScore(player, MONOLITH_B_X, MONOLITH_B_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, 1)},
+        {TASK_INTERACTION_MONOLITH_C, GetExpandedRectInteractionScore(player, MONOLITH_C_X, MONOLITH_C_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, 1)},
         {TASK_INTERACTION_SIGNAL_TOWER, TasksRuntime_GetRectInteractionScore(player, SIGNAL_TOWER_X, SIGNAL_TOWER_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE)}
     };
     TaskInteractionTarget bestTarget;
@@ -81,33 +98,15 @@ TaskInteractionTarget TasksRuntime_GetPreferredInteractionTarget(const Player *p
 static bool ShouldPrioritizeLoxiTerminal(const TaskSystem *tasks,
                                          const Player *player,
                                          TaskInteractionTarget target) {
-    GameEnding selectedRoute;
-
     if (tasks == NULL || player == NULL || target != TASK_INTERACTION_LOXI_TERMINAL) {
         return false;
     }
 
-    if (tasks->stage == 6 && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
-        return true;
-    }
-
-    if (tasks->stage != 7) {
-        return false;
-    }
-
-    selectedRoute = Tasks_GetSelectedEndingRoute(tasks);
-    if (Tasks_IsEndingBranchReady(tasks) && selectedRoute == ENDING_NONE) {
-        return true;
-    }
-
-    return selectedRoute == ENDING_HEROIC
-        || selectedRoute == ENDING_PEACEFUL
-        || Tasks_CanChooseSettlement(tasks);
+    return true;
 }
 
 bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize) {
     ResourceNode *node;
-    ResourceNode *nearbyNode;
     ShipLog *log;
     TaskInteractionTarget target;
 
@@ -141,12 +140,8 @@ bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, ch
         return true;
     }
 
-    nearbyNode = TasksRuntime_FindNearbyNodeAnyState(tasks, player);
-    if (nearbyNode != NULL) {
-        TasksRuntime_DescribeNodeStatus(nearbyNode, message, messageSize);
-        return true;
+    if (message != NULL && messageSize > 0) {
+        message[0] = '\0';
     }
-
-    TasksRuntime_WriteMessage(message, messageSize, "There is nothing useful to interact with here right now.");
     return false;
 }

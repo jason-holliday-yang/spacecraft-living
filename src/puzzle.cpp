@@ -30,7 +30,7 @@ void Puzzle_Init(MonolithPuzzle *puzzle) {
         puzzle->solutionClue,
         sizeof(puzzle->solutionClue),
         "%s",
-        Loc_PickLiteral("A-B-C: East, North, South", "A-B-C：东、北、南"));
+        Loc_PickLiteral("A-B-C: East, North, South", "顺序提示：东、北、南"));
 }
 
 bool Puzzle_TryActivate(MonolithPuzzle *puzzle, int monolithIndex) {

@@ -20,6 +20,7 @@ static void Require(bool condition, const char *message) {
 static void PrepareGame(Game *game) {
     memset(game, 0, sizeof(*game));
     Game_ResetGameplayWorld(game);
+    Game_RefreshSaveSlots(game);
     game->state = GAME_STATE_PLAYING;
 }
 
@@ -75,10 +76,14 @@ int main(void) {
     Require(game.hudMessage.text[0] == '\0', "opening cutscene should not post the gameplay hint early");
     Require(game.tasks.ending == ENDING_NONE, "start new game should begin without an ending state");
     Require(game.tasks.objective[0] != '\0', "start new game should initialize the opening objective text");
+    Require(game.player.gridX == PLAYER_RESPAWN_X && game.player.gridY == PLAYER_RESPAWN_Y,
+            "start new game should place the player in the Loxi room");
     Require(Map_IsWalkable(&game.map, game.player.gridX, game.player.gridY), "start new game should place the player on a walkable tile");
     Require(game.camera.zoom > 0.0f, "start new game should initialize a positive camera zoom");
     Require(game.camera.target.x == game.player.worldPos.x && game.camera.target.y == game.player.worldPos.y,
             "start new game should center the camera on the player");
+    Require(!Map_IsLoxiRoomUnlocked(&game.map),
+            "new game should keep the player sealed in the Loxi room until the first interaction");
     Require(!game.pauseMenuOpen && !game.settingsOpen && !game.backpackOpen && !game.craftOpen
                 && !game.mapOpen && !game.communicatorOpen && !game.helpOpen && !game.logReaderOpen
                 && !game.savePanelOpen && !game.showDeathPopup,
@@ -86,8 +91,44 @@ int main(void) {
 
     Game_CompleteOpeningCutscene(&game);
     Require(game.state == GAME_STATE_PLAYING, "completing the opening cutscene should enter playing state");
-    Require(strstr(game.hudMessage.text, "restore the oxygen console") != NULL,
+    Require(strstr(game.hudMessage.text, "Sync the uplink") != NULL
+                || strstr(game.hudMessage.text, "Wake in Loxi's cabin") != NULL
+                || strstr(game.hudMessage.text, "完成同步") != NULL,
             "entering gameplay should post the opening objective hint");
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BASE,
+            "ship cabin opening should use base music");
+
+    game.player.gridX = EXTERIOR_X(94);
+    game.player.gridY = EXTERIOR_Y(57);
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST,
+            "general crash forest should keep the standard forest music");
+
+    game.player.gridX = EXTERIOR_X(24);
+    game.player.gridY = EXTERIOR_Y(72);
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST_ROUTE,
+            "west-route investigation shelves should use the alternate forest music");
+
+    game.player.gridX = EXTERIOR_X(114);
+    game.player.gridY = EXTERIOR_Y(72);
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_SWAMP_DEEP,
+            "deep swamp objectives should use the deeper swamp music variant");
+
+    game.player.gridX = EXTERIOR_X(92);
+    game.player.gridY = EXTERIOR_Y(98);
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_RUINS_FACILITY,
+            "southern facility route should no longer fall back to forest music");
+
+    game.tasks.stage = 7;
+    game.tasks.bossDefeated = false;
+    game.player.gridX = SIGNAL_TOWER_X;
+    game.player.gridY = SIGNAL_TOWER_Y + 4;
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BOSS,
+            "late tower plateau should use the pre-boss tension track");
+
+    game.player.gridX = BOSS_ARENA_BOSS_X;
+    game.player.gridY = BOSS_ARENA_BOSS_Y;
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BOSS_ARENA,
+            "isolated boss arena should use the dedicated arena music variant");
 
     {
         StoryTriggerSnapshot storyBefore;
@@ -102,6 +143,21 @@ int main(void) {
         Require(game.storyScene == STORY_SCENE_LOG_THE_CRASH,
                 "the first collected log should map to the first log story scene");
         Game_CloseStoryScene(&game);
+    }
+
+    {
+        StoryTriggerSnapshot storyBefore;
+        const int purifierRingControlBriefIndex =
+            STORY_SCENE_LOG_PURIFIER_RING_CONTROL_BRIEF - STORY_SCENE_LOG_THE_CRASH;
+
+        Game_CloseStoryScene(&game);
+        game.storySceneShown[STORY_SCENE_LOG_PURIFIER_RING_CONTROL_BRIEF] = false;
+        game.tasks.logs[purifierRingControlBriefIndex].collected = false;
+        GamePlay_CaptureStoryTriggerSnapshot(&game, &storyBefore);
+        game.tasks.logs[purifierRingControlBriefIndex].collected = true;
+        GamePlay_TryOpenStorySceneFromSnapshot(&game, &storyBefore);
+        Require(!game.storySceneOpen,
+                "collecting the purifier ring control brief should archive it quietly instead of forcing a full-screen story image");
     }
 
     {
@@ -169,12 +225,41 @@ int main(void) {
     Player_UpdateWorldPosition(&game.player);
     Tasks_UpdateObjective(&game.tasks, &game.player);
 
+    game.player.deathCount = 0;
+    Game_OpenSavePanel(&game, SAVE_PANEL_MODE_SAVE);
+    Require(game.selectedSaveSlot == 0, "first save should target the first empty slot");
+    Game_ActivateSelectedSaveSlot(&game);
+    Require(!game.hasAccountBestScore,
+            "unfinished runs without a recorded death or ending should not backfill a best score into the account panel");
+    Require(SaveSystem_DeleteGame(0), "session smoke should be able to delete the temporary no-death save");
+    Game_RefreshSaveSlots(&game);
+
+    game.tasks.stage = 5;
+    game.tasks.dayCount = 3;
+    game.tasks.westW1Started = true;
+    game.tasks.westW1Completed = true;
+    game.tasks.westW2Started = true;
+    game.tasks.westW2Completed = false;
+    game.tasks.southS1Started = true;
+    game.tasks.southS1Completed = false;
+    game.player.resources[RESOURCE_WOOD] = 5;
+    game.player.resources[RESOURCE_FRUIT] = 2;
+    game.player.deathCount = 1;
+    game.player.hasFieldCamp = true;
+    game.map.campPlaced = true;
+    game.map.campX = PLAYER_START_X + 2;
+    game.map.campY = PLAYER_START_Y - 1;
+    Player_UpdateWorldPosition(&game.player);
+    Tasks_UpdateObjective(&game.tasks, &game.player);
+
     Game_OpenSavePanel(&game, SAVE_PANEL_MODE_SAVE);
     Require(game.selectedSaveSlot == 0, "first save should target the first empty slot");
     Game_ActivateSelectedSaveSlot(&game);
     Require(game.hasSaveFile, "saving should refresh save-slot availability");
     Require(!game.savePanelOpen, "successful save should close the panel");
     Require(game.saveSlots[0].exists, "saved slot should be listed after saving");
+    Require(game.hasAccountBestScore && game.accountBestScore > 0,
+            "death-marked legacy saves should backfill the menu best score for the active account");
     Require(strstr(game.hudMessage.text, "Progress saved") != NULL, "save flow should publish success feedback");
 
     game.player.gridX = PLAYER_START_X + 17;
@@ -272,43 +357,30 @@ int main(void) {
     Require(game.showDeathPopup, "first death should open the recovery popup");
     Require(game.player.deathCount == 1, "first death should increment death count");
     Require(game.player.health == 0.0f, "death handling should clamp health to zero");
-    Require(game.tasks.ending == ENDING_NONE, "first death should not immediately fail the run");
+    Require(game.tasks.ending == ENDING_NONE, "death popup flow should not route through the legacy failure ending");
+    Require(game.hasAccountBestScore && game.accountBestScore > 0,
+            "a completed death should immediately update the authenticated account's best score");
 
     Game_HandleDeathRecovery(&game);
     Require(!game.showDeathPopup, "recovery should close the popup");
     Require(game.state == GAME_STATE_PLAYING, "recovery should return to playing state");
-    Require(game.tasks.stage == 5, "recovery should preserve stage progress");
-    Require(game.player.resources[RESOURCE_FRUIT] == 4, "recovery should preserve collected resources");
-    Require(game.player.resources[RESOURCE_ENERGY_CORE] == 1, "recovery should preserve crafted progression resources");
-    Require(game.player.gridX == game.map.campX && game.player.gridY == game.map.campY, "recovery should prefer the placed field camp");
-    Require(game.player.health > 28.0f, "recovery should restore health in the new survival model");
-    Require(game.player.stamina > 0.0f, "recovery should restore some stamina");
-    Require(game.player.oxygen > 0.0f, "recovery should restore oxygen");
-    Require(game.player.pressure == INITIAL_PRESSURE, "recovery should normalize retired pressure state");
-    Require(game.player.poison < 50.0f, "recovery should reduce poison");
+    Require(game.tasks.stage == 1, "restart after death should begin a fresh run from stage 1");
+    Require(game.player.resources[RESOURCE_FRUIT] == 0, "restart after death should clear carried resources");
+    Require(game.player.resources[RESOURCE_ENERGY_CORE] == 0, "restart after death should clear crafted progression resources");
+    Require(game.player.gridX == PLAYER_RESPAWN_X && game.player.gridY == PLAYER_RESPAWN_Y,
+            "restart after death should place the player back in Loxi's room");
+    Require(game.player.health == INITIAL_HEALTH, "restart after death should reset player health");
+    Require(game.player.stamina == INITIAL_STAMINA, "restart after death should reset player stamina");
+    Require(game.player.oxygen == INITIAL_OXYGEN, "restart after death should reset player oxygen");
+    Require(game.player.pressure == INITIAL_PRESSURE, "restart after death should reset pressure");
+    Require(game.player.poison == 0.0f, "restart after death should clear poison");
     Require(game.camera.zoom > 0.0f
                 && game.camera.target.x == game.player.worldPos.x
                 && game.camera.target.y == game.player.worldPos.y,
-            "recovery should rebuild a sane camera state");
-    Require(strstr(game.hudMessage.text, "field camp") != NULL, "recovery should explain when the field camp is used");
-
-    Game_HandlePlayerDeath(&game);
-    Require(game.showDeathPopup, "second death should still allow recovery");
-    Require(game.player.deathCount == 2, "second death should increment death count");
-
-    Game_HandleDeathRecovery(&game);
-    Require(strstr(game.hudMessage.text, "one more collapse") != NULL, "second recovery should warn about the final remaining attempt");
-
-    game.map.campPlaced = false;
-    game.player.gridX = PLAYER_START_X + 10;
-    game.player.gridY = PLAYER_START_Y + 5;
-    Player_UpdateWorldPosition(&game.player);
-    game.player.oxygen = 0.0f;
-    Game_HandlePlayerDeath(&game);
-    Require(!game.showDeathPopup, "third death should skip the recovery popup");
-    Require(game.player.deathCount == 3, "third death should increment death count");
-    Require(game.tasks.ending == ENDING_FAILURE, "third death should trigger the failure ending");
-    Require(game.state == GAME_STATE_ENDING, "third death should transition to ending state");
+            "restart after death should rebuild a sane camera state");
+    Require(strstr(game.hudMessage.text, "Wake in Loxi's cabin") != NULL
+                || strstr(game.hudMessage.text, "先在洛希舱室醒来") != NULL,
+            "restart after death should skip the opening recap and go straight to the first gameplay objective");
 
     PrepareGame(&game);
     game.tasks.stage = 4;
@@ -319,10 +391,13 @@ int main(void) {
     Player_UpdateWorldPosition(&game.player);
 
     Game_HandlePlayerDeath(&game);
-    Require(game.showDeathPopup, "base fallback run should still open the recovery popup");
-    Game_HandleDeathRecovery(&game);
-    Require(game.player.gridX == PLAYER_START_X && game.player.gridY == PLAYER_START_Y, "recovery should fall back to base when no field camp is placed");
-    Require(strstr(game.hudMessage.text, "returned you to base") != NULL, "base fallback should explain the recovery destination");
+    Require(game.showDeathPopup, "single-life runs should still route through the death popup");
+    Require(game.deathPopupSelection == DEATH_POPUP_BUTTON_RESTART,
+            "death popup should default to restart");
+    game.deathPopupSelection = DEATH_POPUP_BUTTON_LOAD;
+    Game_OpenSavePanel(&game, SAVE_PANEL_MODE_LOAD);
+    Require(game.savePanelOpen && game.savePanelMode == SAVE_PANEL_MODE_LOAD,
+            "death flow should allow loading directly instead of only restarting");
 
     PrepareGame(&game);
     game.tasks.stage = 7;
@@ -330,8 +405,8 @@ int main(void) {
     game.player.gridY = SIGNAL_TOWER_Y + 6;
     Player_UpdateWorldPosition(&game.player);
     Game_MaybePostNorthRouteTransitionHint(&game);
-    Require(strstr(game.hudMessage.text, "final climb") != NULL,
-            "entering the tower plateau without prep should post a commitment warning");
+    Require(game.hudMessage.text[0] == '\0',
+            "entering the tower plateau without prep should no longer force a location-entry warning");
 
     PrepareGame(&game);
     game.tasks.stage = 7;
@@ -340,8 +415,8 @@ int main(void) {
     game.player.gridY = SIGNAL_TOWER_Y + 6;
     Player_UpdateWorldPosition(&game.player);
     Game_MaybePostNorthRouteTransitionHint(&game);
-    Require(strstr(game.hudMessage.text, "peaceful route is live") != NULL,
-            "entering the tower plateau with the amplifier should post the peaceful-route commitment hint");
+    Require(game.hudMessage.text[0] == '\0',
+            "entering the tower plateau with the amplifier should stay quiet until a real interaction or milestone happens");
 
     {
         Game reviewGame;
@@ -359,9 +434,8 @@ int main(void) {
         CollectAllMainlineLogs(&reviewGame.tasks);
         snprintf(reviewGame.lastLocationName, sizeof(reviewGame.lastLocationName), "%s", "Signal Tower Plateau");
         MovePlayerAndUpdate(&reviewGame, SHIP_CORRIDOR_X + 1, SHIP_CORRIDOR_Y + 1);
-        Require(strstr(reviewGame.hudMessage.text, "final review") != NULL
-                    || strstr(reviewGame.hudMessage.text, "Loxi") != NULL,
-                "returning from the ruins with the full archive but no review should send the player back to Loxi for final review");
+        Require(reviewGame.hudMessage.text[0] == '\0',
+                "returning from the ruins with the full archive but no review should now stay quiet and leave guidance to the objective panel");
     }
 
     {
@@ -382,9 +456,8 @@ int main(void) {
         CollectAllMainlineLogs(&heroicReturnGame.tasks);
         snprintf(heroicReturnGame.lastLocationName, sizeof(heroicReturnGame.lastLocationName), "%s", "Guardian Arena");
         MovePlayerAndUpdate(&heroicReturnGame, SHIP_CORRIDOR_X + 1, SHIP_CORRIDOR_Y + 1);
-        Require(strstr(heroicReturnGame.hudMessage.text, "Signal Tower") != NULL
-                    && strstr(heroicReturnGame.hudMessage.text, "heroic route") != NULL,
-                "returning from the guardian arena after locking the heroic route should point straight to the Signal Tower finale");
+        Require(heroicReturnGame.hudMessage.text[0] == '\0',
+                "returning from the guardian arena after locking the heroic route should no longer auto-post a summary");
     }
 
     PrepareGame(&game);
@@ -396,8 +469,8 @@ int main(void) {
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(!game.tasks.westW1Completed,
             "returning to base from West Frontier without the record should keep W1 open");
-    Require(strstr(game.hudMessage.text, "West Frontier record") != NULL,
-            "missing west evidence should explain which record still needs to be recovered");
+    Require(game.hudMessage.text[0] == '\0',
+            "missing west evidence should now stay quiet instead of auto-posting a reminder");
     CollectArchiveEvidence(&game.tasks, 3);
     MovePlayerAndUpdate(&game, EXTERIOR_X(24), EXTERIOR_Y(72));
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
@@ -423,6 +496,23 @@ int main(void) {
         Game archiveRoomGame;
 
         PrepareGame(&archiveRoomGame);
+        archiveRoomGame.tasks.stage = 4;
+        archiveRoomGame.tasks.commRepairLevel = 1;
+        archiveRoomGame.tasks.westW1Completed = true;
+        archiveRoomGame.tasks.westW2Started = true;
+        archiveRoomGame.tasks.westW2Completed = false;
+        CollectArchiveEvidence(&archiveRoomGame.tasks, 4);
+        snprintf(archiveRoomGame.lastLocationName, sizeof(archiveRoomGame.lastLocationName), "%s", "Survey Break");
+        MovePlayerAndUpdate(&archiveRoomGame, EXTERIOR_X(24), EXTERIOR_Y(72));
+        MovePlayerAndUpdate(&archiveRoomGame, SHIP_WORKSHOP_X + 1, SHIP_WORKSHOP_Y + 1);
+        Require(archiveRoomGame.tasks.westW2Completed,
+                "returning from Survey Break through West Frontier should still archive W2 and unlock Canopy Hollow");
+    }
+
+    {
+        Game archiveRoomGame;
+
+        PrepareGame(&archiveRoomGame);
         archiveRoomGame.tasks.stage = 5;
         archiveRoomGame.tasks.energyRepairLevel = 1;
         archiveRoomGame.tasks.southS1Started = true;
@@ -433,6 +523,24 @@ int main(void) {
         Require(archiveRoomGame.tasks.southS1Completed,
             "returning through Diagnostics with the record should still count as a valid base archive hand-in");
     }
+
+    {
+        Game archiveRoomGame;
+
+        PrepareGame(&archiveRoomGame);
+        archiveRoomGame.tasks.stage = 5;
+        archiveRoomGame.tasks.energyRepairLevel = 1;
+        archiveRoomGame.tasks.southS1Completed = true;
+        archiveRoomGame.tasks.southS2Started = true;
+        archiveRoomGame.tasks.southS2Completed = false;
+        CollectArchiveEvidence(&archiveRoomGame.tasks, 10);
+        snprintf(archiveRoomGame.lastLocationName, sizeof(archiveRoomGame.lastLocationName), "%s", "Vent Galleries");
+        MovePlayerAndUpdate(&archiveRoomGame, EXTERIOR_X(82), EXTERIOR_Y(96));
+        MovePlayerAndUpdate(&archiveRoomGame, SHIP_DIAGNOSTICS_X + 1, SHIP_DIAGNOSTICS_Y + 1);
+        Require(archiveRoomGame.tasks.southS2Completed,
+                "returning from Vent Galleries through South Collapse should still archive S2 and unlock Service Shafts");
+    }
+
     MovePlayerAndUpdate(&game, EXTERIOR_X(34), EXTERIOR_Y(68));
     Require(game.tasks.westW2Started && !game.tasks.westW2Completed,
             "entering Survey Break after W1 should transition to W2");
@@ -487,8 +595,8 @@ int main(void) {
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(!game.tasks.southS1Completed,
             "returning to base from South Collapse without the record should keep S1 open");
-    Require(strstr(game.hudMessage.text, "South Collapse record") != NULL,
-            "missing south evidence should explain which record still needs to be recovered");
+    Require(game.hudMessage.text[0] == '\0',
+            "missing south evidence should now stay quiet instead of auto-posting a reminder");
     CollectArchiveEvidence(&game.tasks, 9);
     MovePlayerAndUpdate(&game, EXTERIOR_X(82), EXTERIOR_Y(96));
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);

@@ -1,4 +1,5 @@
 #include "game_manager_internal.h"
+#include "game_session_internal.h"
 
 #include <cstdio>
 #include <cstring>
@@ -21,6 +22,16 @@ static float SanitizeDeltaTime(float deltaTime) {
 }
 
 static constexpr float kNarrativeFadeDuration = 0.22f;
+static constexpr float kScreenFadeDuration = 0.34f;
+static constexpr float kSleepFadeDuration = 0.56f;
+
+static float GetScreenTransitionDuration(const Game *game) {
+    if (game != nullptr && game->screenTransitionAction == SCREEN_TRANSITION_SLEEP_REST) {
+        return kSleepFadeDuration;
+    }
+
+    return kScreenFadeDuration;
+}
 
 static void ResolveNarrativeTransition(Game *game) {
     NarrativeTransitionAction action;
@@ -46,6 +57,44 @@ static void ResolveNarrativeTransition(Game *game) {
             Game_CloseStoryScene(game);
             return;
         case NARRATIVE_TRANSITION_NONE:
+        default:
+            return;
+    }
+}
+
+static void ResolveScreenTransition(Game *game) {
+    ScreenTransitionAction action;
+
+    if (game == nullptr) {
+        return;
+    }
+
+    action = game->screenTransitionAction;
+    game->screenTransitionResolved = true;
+
+    switch (action) {
+        case SCREEN_TRANSITION_LOAD_GAME:
+            Game_LoadSavedGame(game, game->screenTransitionSlotIndex);
+            return;
+        case SCREEN_TRANSITION_RETURN_TO_MENU:
+            Game_ReturnToMenu(game);
+            return;
+        case SCREEN_TRANSITION_LOGOUT_TO_AUTH:
+            Game_LogoutToAuthScreen(game);
+            return;
+        case SCREEN_TRANSITION_TOGGLE_AUTH_MODE:
+            Game_ToggleAuthMode(game);
+            return;
+        case SCREEN_TRANSITION_AUTH_SUCCESS:
+            Game_CompleteAuthSuccess(game);
+            return;
+        case SCREEN_TRANSITION_APPLY_LANGUAGE:
+            Game_ApplyLanguage(game, game->pendingLanguage);
+            return;
+        case SCREEN_TRANSITION_SLEEP_REST:
+            Game_ResetTransientGameplayState(game);
+            return;
+        case SCREEN_TRANSITION_NONE:
         default:
             return;
     }
@@ -78,6 +127,28 @@ static void UpdateNarrativePresentation(Game *game, float deltaTime) {
     }
 }
 
+static void UpdateScreenTransition(Game *game, float deltaTime) {
+    const float totalDuration = GetScreenTransitionDuration(game);
+    const float halfDuration = totalDuration * 0.5f;
+
+    if (game == nullptr || !game->screenTransitionActive) {
+        return;
+    }
+
+    game->screenTransitionElapsed += deltaTime;
+    if (!game->screenTransitionResolved && game->screenTransitionElapsed >= halfDuration) {
+        ResolveScreenTransition(game);
+    }
+
+    if (game->screenTransitionElapsed >= totalDuration) {
+        game->screenTransitionActive = false;
+        game->screenTransitionResolved = false;
+        game->screenTransitionElapsed = 0.0f;
+        game->screenTransitionAction = SCREEN_TRANSITION_NONE;
+        game->screenTransitionSlotIndex = -1;
+    }
+}
+
 void Game_Init(Game *game) {
     std::memset(game, 0, sizeof(*game));
 
@@ -99,6 +170,8 @@ void Game_Init(Game *game) {
     std::snprintf(game->authUsername, sizeof(game->authUsername), "%s", game->settings.lastUsername);
     Game_RefreshSaveSlots(game);
     Audio_SetScene(&game->audio, AUDIO_SCENE_MENU);
+    game->screenTransitionSlotIndex = -1;
+    game->pendingLanguage = game->settings.language;
 }
 
 void Game_Update(Game *game, float deltaTime) {
@@ -125,6 +198,11 @@ void Game_Update(Game *game, float deltaTime) {
     }
 
     UpdateNarrativePresentation(game, deltaTime);
+    UpdateScreenTransition(game, deltaTime);
+
+    if (game->screenTransitionActive) {
+        return;
+    }
 
     if (Game_UpdateOverlayState(game)) {
         return;

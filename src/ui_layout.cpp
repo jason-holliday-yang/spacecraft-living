@@ -33,30 +33,6 @@ int UI_GetMainMenuButtonIndexAtPoint(int screenWidth, int screenHeight, Vector2 
     return -1;
 }
 
-Rectangle UI_GetMainMenuSwitchAccountRect(int screenWidth, int screenHeight) {
-    float scale;
-
-    scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    return Rectangle{
-        screenWidth * 0.5f + 38.0f * scale,
-        122.0f * scale,
-        200.0f * scale,
-        44.0f * scale
-    };
-}
-
-Rectangle UI_GetMainMenuDeleteAccountRect(int screenWidth, int screenHeight) {
-    float scale;
-
-    scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    return Rectangle{
-        screenWidth * 0.5f + 250.0f * scale,
-        122.0f * scale,
-        200.0f * scale,
-        44.0f * scale
-    };
-}
-
 Rectangle UI_GetAuthPanelRect(int screenWidth, int screenHeight) {
     float scale;
 
@@ -328,6 +304,152 @@ Rectangle UI_GetCraftActionButtonRect(int screenWidth, int screenHeight) {
     };
 }
 
+Rectangle UI_GetCommunicatorOverlayRect(int screenWidth, int screenHeight) {
+    return UI_GetStandardOverlayRect(screenWidth, screenHeight);
+}
+
+Rectangle UI_GetCommunicatorTabRect(int screenWidth, int screenHeight, int tabIndex) {
+    float scale;
+    Rectangle panel;
+    float tabWidth;
+    float tabHeight;
+    float gap;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetCommunicatorOverlayRect(screenWidth, screenHeight);
+    gap = 12.0f * scale;
+    tabWidth = (panel.width - 52.0f * scale - gap) * 0.5f;
+    tabHeight = 52.0f * scale;
+
+    return Rectangle{
+        panel.x + 20.0f * scale + tabIndex * (tabWidth + gap),
+        panel.y + 78.0f * scale,
+        tabWidth,
+        tabHeight
+    };
+}
+
+Rectangle UI_GetCommunicatorLogListRect(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetCommunicatorOverlayRect(screenWidth, screenHeight);
+    return Rectangle{
+        panel.x + 20.0f * scale,
+        panel.y + 146.0f * scale,
+        258.0f * scale,
+        panel.height - 178.0f * scale,
+    };
+}
+
+Rectangle UI_GetCommunicatorLogContentRect(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+    Rectangle listPanel;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetCommunicatorOverlayRect(screenWidth, screenHeight);
+    listPanel = UI_GetCommunicatorLogListRect(screenWidth, screenHeight);
+    return Rectangle{
+        listPanel.x + listPanel.width + 18.0f * scale,
+        listPanel.y,
+        panel.x + panel.width - 22.0f * scale - (listPanel.x + listPanel.width + 18.0f * scale),
+        listPanel.height,
+    };
+}
+
+Rectangle UI_GetCommunicatorVisibleLogEntryRect(int screenWidth, int screenHeight, int visibleIndex) {
+    float scale;
+    Rectangle listPanel;
+    float rowHeight;
+    float gap;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    listPanel = UI_GetCommunicatorLogListRect(screenWidth, screenHeight);
+    rowHeight = 60.0f * scale;
+    gap = 9.0f * scale;
+
+    return Rectangle{
+        listPanel.x + 14.0f * scale,
+        listPanel.y + 86.0f * scale + visibleIndex * (rowHeight + gap),
+        listPanel.width - 28.0f * scale,
+        rowHeight
+    };
+}
+
+int UI_GetCommunicatorVisibleLogCount(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle listPanel;
+    float availableHeight;
+    float rowHeight;
+    float gap;
+    int visibleCount;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    listPanel = UI_GetCommunicatorLogListRect(screenWidth, screenHeight);
+    rowHeight = 60.0f * scale;
+    gap = 9.0f * scale;
+    availableHeight = listPanel.height - 124.0f * scale;
+    visibleCount = (int)((availableHeight + gap) / (rowHeight + gap));
+
+    if (visibleCount < 1) {
+        visibleCount = 1;
+    }
+
+    return visibleCount;
+}
+
+int UI_ClampCommunicatorFirstVisibleLogIndex(int screenWidth, int screenHeight, int firstVisibleLogIndex, int totalLogCount) {
+    int visibleCount;
+    int maxFirstIndex;
+
+    if (totalLogCount <= 0) {
+        return 0;
+    }
+
+    visibleCount = UI_GetCommunicatorVisibleLogCount(screenWidth, screenHeight);
+    if (totalLogCount <= visibleCount) {
+        return 0;
+    }
+
+    maxFirstIndex = totalLogCount - visibleCount;
+    if (firstVisibleLogIndex < 0) {
+        return 0;
+    }
+    if (firstVisibleLogIndex > maxFirstIndex) {
+        return maxFirstIndex;
+    }
+
+    return firstVisibleLogIndex;
+}
+
+int UI_GetCommunicatorFirstVisibleLogIndex(int screenWidth, int screenHeight, int selectedLogIndex, int totalLogCount) {
+    int visibleCount;
+    int maxFirstIndex;
+    int firstIndex;
+
+    if (totalLogCount <= 0) {
+        return 0;
+    }
+
+    visibleCount = UI_GetCommunicatorVisibleLogCount(screenWidth, screenHeight);
+    if (totalLogCount <= visibleCount) {
+        return 0;
+    }
+
+    maxFirstIndex = totalLogCount - visibleCount;
+    firstIndex = selectedLogIndex - visibleCount / 2;
+    if (firstIndex < 0) {
+        firstIndex = 0;
+    }
+    if (firstIndex > maxFirstIndex) {
+        firstIndex = maxFirstIndex;
+    }
+
+    return firstIndex;
+}
+
 Rectangle UI_GetLogEntryRect(int screenWidth, int screenHeight, int entryIndex) {
     float scale;
     Rectangle panel;
@@ -345,45 +467,66 @@ Rectangle UI_GetLogEntryRect(int screenWidth, int screenHeight, int entryIndex) 
     };
 }
 
-Rectangle UI_GetSettingsSliderRect(int screenWidth, int screenHeight) {
+Rectangle UI_GetSettingsRowRect(int screenWidth, int screenHeight, int rowIndex) {
     float scale;
     Rectangle panel;
+    float rowHeight;
+    float rowGap;
+    float startY;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
+    rowHeight = 76.0f * scale;
+    rowGap = 14.0f * scale;
+    startY = panel.y + 108.0f * scale;
+
     return Rectangle{
-        panel.x + 52.0f * scale,
-        panel.y + 246.0f * scale,
-        panel.width - 104.0f * scale,
-        16.0f * scale
+        panel.x + 34.0f * scale,
+        startY + rowIndex * (rowHeight + rowGap),
+        panel.width - 68.0f * scale,
+        rowHeight
     };
 }
 
-Rectangle UI_GetSettingsDecreaseButtonRect(int screenWidth, int screenHeight) {
+Rectangle UI_GetSettingsSliderRect(int screenWidth, int screenHeight, int sliderIndex) {
     float scale;
-    Rectangle slider;
+    Rectangle rowRect;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    slider = UI_GetSettingsSliderRect(screenWidth, screenHeight);
+    rowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, sliderIndex);
     return Rectangle{
-        slider.x,
-        slider.y + 40.0f * scale,
-        72.0f * scale,
-        44.0f * scale
+        rowRect.x + 250.0f * scale,
+        rowRect.y + 31.0f * scale,
+        rowRect.width - 430.0f * scale,
+        14.0f * scale
     };
 }
 
-Rectangle UI_GetSettingsIncreaseButtonRect(int screenWidth, int screenHeight) {
+Rectangle UI_GetSettingsDecreaseButtonRect(int screenWidth, int screenHeight, int sliderIndex) {
     float scale;
-    Rectangle slider;
+    Rectangle rowRect;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    slider = UI_GetSettingsSliderRect(screenWidth, screenHeight);
+    rowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, sliderIndex);
     return Rectangle{
-        slider.x + slider.width - 72.0f * scale,
-        slider.y + 40.0f * scale,
-        72.0f * scale,
-        44.0f * scale
+        rowRect.x + rowRect.width - 156.0f * scale,
+        rowRect.y + 18.0f * scale,
+        40.0f * scale,
+        40.0f * scale
+    };
+}
+
+Rectangle UI_GetSettingsIncreaseButtonRect(int screenWidth, int screenHeight, int sliderIndex) {
+    float scale;
+    Rectangle rowRect;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    rowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, sliderIndex);
+    return Rectangle{
+        rowRect.x + rowRect.width - 44.0f * scale,
+        rowRect.y + 18.0f * scale,
+        40.0f * scale,
+        40.0f * scale
     };
 }
 
@@ -403,19 +546,39 @@ Rectangle UI_GetSettingsCloseButtonRect(int screenWidth, int screenHeight) {
 
 Rectangle UI_GetSettingsLanguageButtonRect(int screenWidth, int screenHeight, int buttonIndex) {
     float scale;
-    Rectangle panel;
+    Rectangle rowRect;
     float width;
     float gap;
-    float x;
+    float startX;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
-    width = 180.0f * scale;
-    gap = 16.0f * scale;
-    x = panel.x + panel.width - 34.0f * scale - width * 2.0f - gap;
+    rowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, 3);
+    width = 154.0f * scale;
+    gap = 14.0f * scale;
+    startX = rowRect.x + rowRect.width - width * 2.0f - gap - 18.0f * scale;
     return Rectangle{
-        x + buttonIndex * (width + gap),
-        panel.y + 442.0f * scale,
+        startX + buttonIndex * (width + gap),
+        rowRect.y + 14.0f * scale,
+        width,
+        48.0f * scale
+    };
+}
+
+Rectangle UI_GetSettingsAccountButtonRect(int screenWidth, int screenHeight, int buttonIndex) {
+    float scale;
+    Rectangle rowRect;
+    float width;
+    float gap;
+    float startX;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    rowRect = UI_GetSettingsRowRect(screenWidth, screenHeight, 4);
+    width = 164.0f * scale;
+    gap = 14.0f * scale;
+    startX = rowRect.x + rowRect.width - width * 2.0f - gap - 18.0f * scale;
+    return Rectangle{
+        startX + buttonIndex * (width + gap),
+        rowRect.y + 14.0f * scale,
         width,
         48.0f * scale
     };
@@ -423,6 +586,7 @@ Rectangle UI_GetSettingsLanguageButtonRect(int screenWidth, int screenHeight, in
 
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex) {
     float scale;
+    float bottomLift;
     Rectangle shortcutsPanel;
     float width;
     float gap;
@@ -430,9 +594,10 @@ Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutI
     float startX;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    bottomLift = 22.0f * scale;
     shortcutsPanel = Rectangle{
         screenWidth - 334.0f * scale,
-        screenHeight - 130.0f * scale,
+        screenHeight - 130.0f * scale - bottomLift,
         316.0f * scale,
         106.0f * scale
     };

@@ -81,6 +81,14 @@ typedef struct AssetBundle {
     TextureAsset iconProtectionSuit;
     TextureAsset iconSignalAmplifier;
     TextureAsset iconFieldCamp;
+    TextureAsset statusPoisoned;
+    TextureAsset statusOxygenLeak;
+    TextureAsset statusLowOxygen;
+    TextureAsset statusSuffocating;
+    TextureAsset statusCriticalCondition;
+    TextureAsset statusFiltered;
+    TextureAsset statusOxygenReserve;
+    TextureAsset statusCampRecovery;
     TextureAsset mobThornLarva;
     TextureAsset mobWingBug;
     TextureAsset mobRaptor;

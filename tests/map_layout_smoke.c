@@ -119,8 +119,10 @@ static void RequireVoidHullBoundary(const GameMap *map, int gridX, int gridY, co
 }
 
 static bool IsWithinPlayableWorldEnvelope(int gridX, int gridY) {
-    return gridX >= WORLD_MIN_X && gridX <= WORLD_MAX_X
-        && gridY >= WORLD_MIN_Y && gridY <= WORLD_MAX_Y;
+    return (gridX >= WORLD_MIN_X && gridX <= WORLD_MAX_X
+            && gridY >= WORLD_MIN_Y && gridY <= WORLD_MAX_Y)
+        || (gridX >= BOSS_ARENA_X && gridX < BOSS_ARENA_X + BOSS_ARENA_WIDTH
+            && gridY >= BOSS_ARENA_Y && gridY < BOSS_ARENA_Y + BOSS_ARENA_HEIGHT);
 }
 
 int main(void) {
@@ -152,6 +154,8 @@ int main(void) {
 
     Require(Map_GetGroundTileAt(&map, PLAYER_START_X, PLAYER_START_Y) == TILE_BASE_FLOOR,
             "player start should remain on ship floor");
+    Require(Map_IsWalkable(&map, PLAYER_RESPAWN_X, PLAYER_RESPAWN_Y),
+            "player respawn should stay on a walkable tile inside the Loxi room");
     Require(SHIP_CREW_QUARTERS_X == SHIP_DIAGNOSTICS_X
                 && SHIP_TERMINAL_BAY_X == SHIP_LIFE_SUPPORT_X
                 && SHIP_WORKSHOP_X == SHIP_POWER_BAY_X,
@@ -175,8 +179,10 @@ int main(void) {
             "central corridor should stay connected to the cargo hold");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, SHIP_CREW_QUARTERS_X + SHIP_CREW_QUARTERS_WIDTH - 1, SHIP_CREW_QUARTERS_Y + SHIP_CREW_QUARTERS_HEIGHT - 1),
             "central corridor should connect into crew quarters");
-    Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, SHIP_TERMINAL_BAY_X, SHIP_TERMINAL_BAY_Y + SHIP_TERMINAL_BAY_HEIGHT - 1),
-            "central corridor should connect into the terminal bay");
+    Require(!CanReach(&map, PLAYER_START_X, PLAYER_START_Y, PLAYER_RESPAWN_X, PLAYER_RESPAWN_Y),
+            "central corridor should not reach the Loxi room before the uplink door is removed");
+    Require(!CanReach(&map, PLAYER_RESPAWN_X, PLAYER_RESPAWN_Y, SHIP_CORRIDOR_X + 10, SHIP_CORRIDOR_Y + 1),
+            "the player should not be able to leave the Loxi room before the first terminal sync");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, SHIP_WORKSHOP_X, SHIP_WORKSHOP_Y + SHIP_WORKSHOP_HEIGHT - 1),
             "central corridor should connect into the workshop");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, SHIP_DIAGNOSTICS_X + SHIP_DIAGNOSTICS_WIDTH - 1, SHIP_DIAGNOSTICS_Y),
@@ -220,6 +226,17 @@ int main(void) {
         Require(Map_GetPropTileAt(&map, AIRLOCK_DOOR_X, AIRLOCK_DOOR_TOP_Y + offsetY) == TILE_AIRLOCK_DOOR,
                 "airlock door footprint should remain initialized across its full height before unlocking");
     }
+    for (offsetX = 0; offsetX < LOXI_ROOM_DOOR_WIDTH; offsetX++) {
+        Require(Map_GetPropTileAt(&map, LOXI_ROOM_DOOR_X + offsetX, LOXI_ROOM_DOOR_Y) == TILE_LOXI_ROOM_DOOR,
+                "Loxi room door should seal the terminal cabin before the first sync");
+    }
+    Map_UnlockLoxiRoom(&map);
+    Require(Map_IsLoxiRoomUnlocked(&map),
+            "unlocking the Loxi room should clear the cabin door");
+    Require(CanReach(&map, PLAYER_RESPAWN_X, PLAYER_RESPAWN_Y, SHIP_CORRIDOR_X + 10, SHIP_CORRIDOR_Y + 1),
+            "once unlocked, the Loxi room should reconnect to the central corridor");
+    Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, SHIP_TERMINAL_BAY_X, SHIP_TERMINAL_BAY_Y + SHIP_TERMINAL_BAY_HEIGHT - 1),
+            "central corridor should reconnect into the terminal bay after the cabin door unlocks");
     Map_UnlockSwampOuter(&map);
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, AIRLOCK_DOOR_X + 1, AIRLOCK_DOOR_Y),
             "unlocking the airlock should connect the ship interior to the exterior approach");
@@ -233,6 +250,10 @@ int main(void) {
             "airlock exit should reconnect into the ruins approach");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, EXTERIOR_X(34), EXTERIOR_Y(78)),
             "airlock exit should reconnect into the western forest route");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(53), EXTERIOR_Y(74)), "Echo Basin") == 0,
+            "echo basin should now occupy a broad west-line basin instead of a thin edge pocket");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(108), EXTERIOR_Y(98)), "Purifier Ring") == 0,
+            "purifier ring should claim a slightly wider south-deck footprint after the late-map polish");
     for (offsetY = 0; offsetY < STATION_FOOTPRINT_HEIGHT; offsetY++) {
         for (offsetX = 0; offsetX < STATION_FOOTPRINT_WIDTH; offsetX++) {
             Require(Map_GetPropTileAt(&map, WORKBENCH_X + offsetX, WORKBENCH_Y + offsetY) == TILE_WORKBENCH,
@@ -338,14 +359,8 @@ int main(void) {
             "crew quarters should keep exactly one bunk focal prop");
     Require(CountPropTiles(&map, TILE_TECH_TABLE) == SHIP_FURNITURE_FOOTPRINT_SIZE * SHIP_FURNITURE_FOOTPRINT_SIZE,
             "diagnostics should keep exactly one tech-table focal prop");
-    Require(CountPropTiles(&map, TILE_LOG_SITE) == 3,
-            "world archive markers should expose the first west and south record anchors");
-    Require(Map_GetPropTileAt(&map, EXTERIOR_X(24), EXTERIOR_Y(63)) == TILE_LOG_SITE,
-            "west frontier should expose a record anchor marker");
-    Require(Map_GetPropTileAt(&map, EXTERIOR_X(48), EXTERIOR_Y(86)) == TILE_LOG_SITE,
-            "last camp should expose a record anchor marker");
-    Require(Map_GetPropTileAt(&map, EXTERIOR_X(122), EXTERIOR_Y(102)) == TILE_LOG_SITE,
-            "root vault should expose a record anchor marker");
+    Require(CountPropTiles(&map, TILE_LOG_SITE) == 0,
+            "legacy archive marker props should be removed so only real collectible logs remain");
 
     puts("map_layout smoke ok");
     return 0;

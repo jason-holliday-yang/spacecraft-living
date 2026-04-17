@@ -166,8 +166,10 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
 void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds) {
     char detail[256];
     char contextBuffer[256];
+    const char *scoreRank;
     const char *routeContext;
     int endingBackdropIndex;
+    int endingScore;
     const IntroSlideDef *endingBackdrop;
     const TextureAsset *endingTexture;
     float scale;
@@ -198,6 +200,8 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
         20.0f * scale
     };
     routeContext = GetEndingRouteContext(ending, tasks);
+    endingScore = Tasks_CalculateEndingScore(tasks, player);
+    scoreRank = Tasks_GetEndingScoreRank(endingScore);
     TasksRuntime_SanitizeDisplayText(routeContext, contextBuffer, sizeof(contextBuffer));
 
     UIStory_DrawBackdropTexture(endingTexture, endingBackdrop, endingBackdropIndex + 40, screenWidth, screenHeight, elapsedSeconds, scale);
@@ -210,7 +214,11 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
     }
     std::snprintf(detail,
                   sizeof(detail),
-                  "%s %.0f  %s %.0f  %s %d",
+                  "%s %d  %s %s  %s %.0f  %s %.0f  %s %d",
+                  Loc_PickLiteral("Score", "得分"),
+                  endingScore,
+                  Loc_PickLiteral("Rank", "评级"),
+                  scoreRank,
                   Loc_PickLiteral("Health", "生命"),
                   player->health,
                   Loc_PickLiteral("Oxygen", "氧气"),

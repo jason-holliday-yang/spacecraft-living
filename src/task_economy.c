@@ -170,11 +170,15 @@ void TasksRuntime_DescribeNodeStatus(const ResourceNode *node, char *message, si
             snprintf(message, messageSize, "%s ship supply: ready for one collection.", resourceLabel);
             break;
         case RESOURCE_NODE_INFO_SHIP_SUPPLY_EMPTY:
-            snprintf(message, messageSize, "%s ship supply: exhausted. Interior supply caches do not replenish.", resourceLabel);
+            if (message != NULL && messageSize > 0) {
+                message[0] = '\0';
+            }
             break;
         case RESOURCE_NODE_INFO_DEPLETED:
         default:
-            snprintf(message, messageSize, "%s node: depleted for now. Leave this area and return later.", resourceLabel);
+            if (message != NULL && messageSize > 0) {
+                message[0] = '\0';
+            }
             break;
     }
 }

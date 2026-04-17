@@ -125,7 +125,7 @@ static bool IsLogOccupyingTile(const TaskSystem *tasks, int gridX, int gridY) {
         const ShipLog *log;
 
         log = &tasks->logs[index];
-        if (log->active && !log->collected && log->gridX == gridX && log->gridY == gridY) {
+        if (!log->collected && log->gridX == gridX && log->gridY == gridY) {
             return true;
         }
     }
@@ -205,6 +205,14 @@ static int LimitDistanceBonus(int distance, int cap) {
     return distance;
 }
 
+static bool IsSameLocationName(const char *lhs, const char *rhs) {
+    if (lhs == NULL || rhs == NULL) {
+        return false;
+    }
+
+    return strcmp(lhs, rhs) == 0;
+}
+
 static bool IsSharedSpawnTileValid(const GameMap *map, int gridX, int gridY) {
     return map != NULL && Map_IsWalkable(map, gridX, gridY) && HasWalkableNeighbor(map, gridX, gridY);
 }
@@ -280,67 +288,82 @@ static bool FindNearestSpawnTile(const TaskSystem *tasks,
                                  int *resolvedY) {
     int radius;
     MapArea preferredArea;
+    const char *preferredLocationName;
     bool foundCandidate;
     int bestScore;
     int bestDistance;
     int bestX;
     int bestY;
+    int locationPass;
 
     if (tasks == NULL || map == NULL || validator == NULL || resolvedX == NULL || resolvedY == NULL) {
         return false;
     }
 
     preferredArea = Map_GetAreaAt(preferredX, preferredY);
+    preferredLocationName = Map_GetLocationNameAt(preferredX, preferredY);
     foundCandidate = false;
     bestScore = 0;
     bestDistance = MAP_WIDTH + MAP_HEIGHT + 1;
     bestX = preferredX;
     bestY = preferredY;
 
-    for (radius = 0; radius <= maxRadius; radius++) {
-        int gridY;
+    for (locationPass = 0; locationPass < 2; locationPass++) {
+        const bool requireLocationMatch = preferredLocationName != NULL && locationPass == 0;
 
-        for (gridY = preferredY - radius; gridY <= preferredY + radius; gridY++) {
-            int gridX;
+        for (radius = 0; radius <= maxRadius; radius++) {
+            int gridY;
 
-            for (gridX = preferredX - radius; gridX <= preferredX + radius; gridX++) {
-                int distance;
+            for (gridY = preferredY - radius; gridY <= preferredY + radius; gridY++) {
+                int gridX;
 
-                if (!Map_IsWithinBounds(gridX, gridY)) {
-                    continue;
-                }
-                if (AbsInt(gridX - preferredX) != radius && AbsInt(gridY - preferredY) != radius) {
-                    continue;
-                }
-                if (preferredArea != MAP_AREA_UNKNOWN && Map_GetAreaAt(gridX, gridY) != preferredArea) {
-                    continue;
-                }
-                if (!validator(tasks, map, gridX, gridY)) {
-                    continue;
-                }
+                for (gridX = preferredX - radius; gridX <= preferredX + radius; gridX++) {
+                    int distance;
 
-                distance = DistanceManhattan(preferredX, preferredY, gridX, gridY);
-                if (!foundCandidate) {
-                    bestDistance = distance;
-                    bestScore = scorer != NULL ? scorer(tasks, map, preferredX, preferredY, gridX, gridY) : distance;
-                    bestX = gridX;
-                    bestY = gridY;
-                    foundCandidate = true;
-                    continue;
-                }
+                    if (!Map_IsWithinBounds(gridX, gridY)) {
+                        continue;
+                    }
+                    if (AbsInt(gridX - preferredX) != radius && AbsInt(gridY - preferredY) != radius) {
+                        continue;
+                    }
+                    if (preferredArea != MAP_AREA_UNKNOWN && Map_GetAreaAt(gridX, gridY) != preferredArea) {
+                        continue;
+                    }
+                    if (requireLocationMatch
+                        && !IsSameLocationName(Map_GetLocationNameAt(gridX, gridY), preferredLocationName)) {
+                        continue;
+                    }
+                    if (!validator(tasks, map, gridX, gridY)) {
+                        continue;
+                    }
 
-                if (distance <= bestDistance + 1) {
-                    int candidateScore;
-
-                    candidateScore = scorer != NULL ? scorer(tasks, map, preferredX, preferredY, gridX, gridY) : distance;
-                    if (distance < bestDistance || candidateScore < bestScore) {
+                    distance = DistanceManhattan(preferredX, preferredY, gridX, gridY);
+                    if (!foundCandidate) {
                         bestDistance = distance;
-                        bestScore = candidateScore;
+                        bestScore = scorer != NULL ? scorer(tasks, map, preferredX, preferredY, gridX, gridY) : distance;
                         bestX = gridX;
                         bestY = gridY;
+                        foundCandidate = true;
+                        continue;
+                    }
+
+                    if (distance <= bestDistance + 1) {
+                        int candidateScore;
+
+                        candidateScore = scorer != NULL ? scorer(tasks, map, preferredX, preferredY, gridX, gridY) : distance;
+                        if (distance < bestDistance || candidateScore < bestScore) {
+                            bestDistance = distance;
+                            bestScore = candidateScore;
+                            bestX = gridX;
+                            bestY = gridY;
+                        }
                     }
                 }
             }
+        }
+
+        if (foundCandidate) {
+            break;
         }
     }
 
@@ -360,6 +383,25 @@ bool TasksRuntime_FindNodeSpawnTile(const TaskSystem *tasks,
                                     int *resolvedX,
                                     int *resolvedY) {
     return FindNearestSpawnTile(tasks, map, preferredX, preferredY, IsNodeSpawnTileValid, ScoreNodeSpawnTile, 10, resolvedX, resolvedY);
+}
+
+bool TasksRuntime_FindLogSpawnTile(const TaskSystem *tasks,
+                                   const GameMap *map,
+                                   int preferredX,
+                                   int preferredY,
+                                   int *resolvedX,
+                                   int *resolvedY) {
+    if (tasks == NULL || map == NULL || resolvedX == NULL || resolvedY == NULL) {
+        return false;
+    }
+
+    if (IsNodeSpawnTileValid(tasks, map, preferredX, preferredY)) {
+        *resolvedX = preferredX;
+        *resolvedY = preferredY;
+        return true;
+    }
+
+    return FindNearestSpawnTile(tasks, map, preferredX, preferredY, IsNodeSpawnTileValid, NULL, 3, resolvedX, resolvedY);
 }
 
 bool TasksRuntime_FindMonsterSpawnTile(const TaskSystem *tasks,

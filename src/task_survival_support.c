@@ -31,9 +31,12 @@ bool TasksRuntime_IsMonolithRing(const Player *player) {
 }
 
 bool TasksRuntime_IsInSafeRecoveryZone(const GameMap *map, const Player *player, MapArea area) {
-    return area == MAP_AREA_BASE
-        || (map->campPlaced
-            && DistanceManhattanLocal(player->gridX, player->gridY, map->campX, map->campY) <= 1);
+    (void)area;
+
+    return map != NULL
+        && player != NULL
+        && map->campPlaced
+        && DistanceManhattanLocal(player->gridX, player->gridY, map->campX, map->campY) <= 1;
 }
 
 float TasksRuntime_GetRuinsPreparationFactor(const TaskSystem *tasks, const Player *player) {

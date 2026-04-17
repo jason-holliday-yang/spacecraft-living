@@ -12,11 +12,12 @@
 
 1. [`design/GAME_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/GAME_DESIGN.md)
 2. [`design/CURRENT_STATUS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/CURRENT_STATUS.md)
-3. [`plans/NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
-4. [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md)
-5. [`plans/BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
-6. [`engineering/ARCHITECTURE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/engineering/ARCHITECTURE.md)
-7. [`design/PLAY_GUIDE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/PLAY_GUIDE.md)
+3. [`design/STAGE_FLOW_CODE_VERIFIED.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/STAGE_FLOW_CODE_VERIFIED.md)
+4. [`plans/NEXT_STEPS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/NEXT_STEPS.md)
+5. [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/MAP_STORY_ALIGNMENT_PLAN.md)
+6. [`plans/BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
+7. [`engineering/ARCHITECTURE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/engineering/ARCHITECTURE.md)
+8. [`design/PLAY_GUIDE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/PLAY_GUIDE.md)
 
 ## 任务扩展阅读（按需）
 

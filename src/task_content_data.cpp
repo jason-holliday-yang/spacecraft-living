@@ -13,7 +13,6 @@ const std::array<TaskNodeSeed, 71> kNodeSeeds = {{
     {RESOURCE_WOOD, EXTERIOR_X(82), EXTERIOR_Y(79), 2, 4, false},
     {RESOURCE_WOOD, EXTERIOR_X(96), EXTERIOR_Y(77), 2, 4, false},
     {RESOURCE_WOOD, EXTERIOR_X(47), EXTERIOR_Y(59), 2, 4, false},
-    {RESOURCE_WOOD, EXTERIOR_X(52), EXTERIOR_Y(42), 2, 4, false},
     {RESOURCE_WOOD, EXTERIOR_X(93), EXTERIOR_Y(30), 2, 4, false},
     {RESOURCE_WOOD, EXTERIOR_X(104), EXTERIOR_Y(65), 2, 4, false},
     {RESOURCE_WOOD, EXTERIOR_X(68), EXTERIOR_Y(96), 2, 4, false},
@@ -73,20 +72,23 @@ const std::array<TaskNodeSeed, 71> kNodeSeeds = {{
     {RESOURCE_ALIEN_SLIME, EXTERIOR_X(60), EXTERIOR_Y(23), 1, 2, true},
     {RESOURCE_ALIEN_SLIME, EXTERIOR_X(73), EXTERIOR_Y(14), 1, 2, true},
     {RESOURCE_WOOD, EXTERIOR_X(24), EXTERIOR_Y(72), 2, 4, false},
-    {RESOURCE_WOOD, SHIP_CARGO_HOLD_X + 1, SHIP_CARGO_HOLD_Y + 1, 2, 0, false},
-    {RESOURCE_WOOD, SHIP_CREW_QUARTERS_X + 3, SHIP_CREW_QUARTERS_Y + 1, 2, 0, false},
+    {RESOURCE_WOOD, SHIP_CARGO_HOLD_X + 1, SHIP_CARGO_HOLD_Y + 1, 4, 0, false},
     {RESOURCE_GLOW_MOSS, SHIP_AIRLOCK_LINK_X + 2, SHIP_AIRLOCK_LINK_Y + 2, 3, 0, false},
     {RESOURCE_METAL_SCRAP, SHIP_WORKSHOP_X + 3, SHIP_WORKSHOP_Y + 3, 2, 0, false},
     {RESOURCE_ORE, SHIP_POWER_BAY_X + 3, SHIP_POWER_BAY_Y + 3, 1, 0, false}
 }};
 
-const std::array<TaskMonsterSeed, 8> kMonsterSeeds = {{
-    {MONSTER_THORN_LARVA, EXTERIOR_X(26), EXTERIOR_Y(74), 4},
-    {MONSTER_WING_BUG, EXTERIOR_X(37), EXTERIOR_Y(76), 4},
-    {MONSTER_RAPTOR, EXTERIOR_X(44), EXTERIOR_Y(69), 4},
-    {MONSTER_SWAMP_STALKER, EXTERIOR_X(91), EXTERIOR_Y(98), 5},
-    {MONSTER_SENTINEL_JELLY, EXTERIOR_X(114), EXTERIOR_Y(98), 6},
-    {MONSTER_FOG_WORM, EXTERIOR_X(121), EXTERIOR_Y(100), 6},
+const std::array<TaskMonsterSeed, 12> kMonsterSeeds = {{
+    {MONSTER_THORN_LARVA, EXTERIOR_X(25), EXTERIOR_Y(78), 4},
+    {MONSTER_WING_BUG, EXTERIOR_X(32), EXTERIOR_Y(64), 4},
+    {MONSTER_RAPTOR, EXTERIOR_X(40), EXTERIOR_Y(70), 4},
+    {MONSTER_THORN_LARVA, EXTERIOR_X(46), EXTERIOR_Y(66), 4},
+    {MONSTER_RAPTOR, EXTERIOR_X(48), EXTERIOR_Y(87), 4},
+    {MONSTER_SWAMP_STALKER, EXTERIOR_X(78), EXTERIOR_Y(98), 5},
+    {MONSTER_SWAMP_STALKER, EXTERIOR_X(96), EXTERIOR_Y(101), 5},
+    {MONSTER_SENTINEL_JELLY, EXTERIOR_X(106), EXTERIOR_Y(97), 6},
+    {MONSTER_FOG_WORM, EXTERIOR_X(112), EXTERIOR_Y(103), 6},
+    {MONSTER_SENTINEL_JELLY, EXTERIOR_X(121), EXTERIOR_Y(99), 6},
     {MONSTER_RELIC_GUARD, EXTERIOR_X(74), EXTERIOR_Y(18), 7},
     {MONSTER_FINAL_BOSS, BOSS_ARENA_BOSS_X, BOSS_ARENA_BOSS_Y, 7}
 }};
@@ -124,7 +126,7 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
     },
     {
         EXTERIOR_X(24),
-        EXTERIOR_Y(63),
+        EXTERIOR_Y(74),
         SHIP_LOG_MAINLINE,
         3,
         LT("Field Record: West Signal Fragment 01", "现场记录：西部信号残片 01"),
@@ -133,8 +135,8 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         LT("Instant oxygen +22", "立即恢复氧气 +22")
     },
     {
-        EXTERIOR_X(34),
-        EXTERIOR_Y(72),
+        EXTERIOR_X(35),
+        EXTERIOR_Y(76),
         SHIP_LOG_MAINLINE,
         0,
         LT("Field Record: Survey Break Anchor Notes", "现场记录：勘测断点锚点笔记"),
@@ -144,7 +146,7 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
     },
     {
         EXTERIOR_X(41),
-        EXTERIOR_Y(68),
+        EXTERIOR_Y(67),
         SHIP_LOG_SUPPLEMENTAL,
         1,
         LT("Field Record: Canopy Handoff Record", "现场记录：林冠交接记录"),
@@ -154,7 +156,7 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
     },
     {
         EXTERIOR_X(47),
-        EXTERIOR_Y(72),
+        EXTERIOR_Y(71),
         SHIP_LOG_MAINLINE,
         2,
         LT("Field Record: Echo Basin Topology Sketch", "现场记录：回声盆地地形草图"),
@@ -163,8 +165,8 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         LT("Instant oxygen +18", "立即恢复氧气 +18")
     },
     {
-        EXTERIOR_X(48),
-        EXTERIOR_Y(86),
+        EXTERIOR_X(45),
+        EXTERIOR_Y(84),
         SHIP_LOG_SUPPLEMENTAL,
         1,
         LT("Field Record: Last Camp Testament", "现场记录：最后营地遗言"),
@@ -193,8 +195,8 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         LT("Instant oxygen +18", "立即恢复氧气 +18")
     },
     {
-        EXTERIOR_X(92),
-        EXTERIOR_Y(98),
+        EXTERIOR_X(88),
+        EXTERIOR_Y(96),
         SHIP_LOG_SUPPLEMENTAL,
         0,
         LT("Facility Record: Vent Calibration Handover", "设施记录：通风校准交接"),
@@ -204,7 +206,7 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
     },
     {
         EXTERIOR_X(106),
-        EXTERIOR_Y(99),
+        EXTERIOR_Y(100),
         SHIP_LOG_MAINLINE,
         1,
         LT("Facility Record: Service Shaft Sync Record", "设施记录：维护井道同步记录"),
@@ -213,8 +215,8 @@ const std::array<TaskLogSeed, 14> kLogSeeds = {{
         LT("Permanent attack power +4", "永久攻击力 +4")
     },
     {
-        EXTERIOR_X(114),
-        EXTERIOR_Y(99),
+        EXTERIOR_X(117),
+        EXTERIOR_Y(95),
         SHIP_LOG_SUPPLEMENTAL,
         3,
         LT("Facility Record: Purifier Ring Control Brief", "设施记录：净化环控制简报"),

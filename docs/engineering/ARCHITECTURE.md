@@ -41,13 +41,14 @@ The current text/localization iteration also needs to protect one more constrain
 ### `src/game_session.cpp`
 
 - new game / opening completion / return-to-menu lifecycle flow
-- death threshold handling and recovery-state rebuild
+- single-life death handling and restart-state rebuild
 
 ### `src/game_save_flow.cpp`
 
 - save-slot refresh, selection, activation, and deletion flow
 - snapshot translation between runtime `Game` state and persistence API
 - loaded-save sanitization and safe-tile recovery after world changes
+- account best-score refresh and backfill from qualifying save history when needed
 
 ### `src/game_session_internal.h`
 
@@ -201,7 +202,7 @@ The current text/localization iteration also needs to protect one more constrain
 
 - objective and communicator refresh
 - stage unlock progression helpers
-- log reward and monster-drop progression updates
+- archive progression, ending-readiness, and monster-drop progression updates
 - objective marker, communicator, settlement, and ending accessors
 
 ### `src/task_economy.c`
@@ -262,7 +263,7 @@ The current text/localization iteration also needs to protect one more constrain
 
 ### `src/task_content_data.cpp`
 
-- authored node seeds, monster seeds, ship-log seeds, log rewards, and event rotation
+- authored node seeds, monster seeds, ship-log seeds, archive metadata, and event rotation
 - ship-log text now keeps English and Simplified Chinese adjacent so future edits stay in one place
 
 ### `src/task_presentation.cpp`
@@ -285,7 +286,7 @@ The current text/localization iteration also needs to protect one more constrain
 - main menu
 - pause menu
 - settings overlay presentation
-- death popup
+- death popup and run-over branching (`Restart` skips the opening recap, `Load` enters the save-panel flow)
 - settlement confirmation popup
 
 ### `src/ui_narrative_panels.cpp`

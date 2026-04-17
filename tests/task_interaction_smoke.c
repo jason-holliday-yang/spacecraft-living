@@ -63,6 +63,14 @@ static void RequireValidSpawnPlacements(const GameMap *map, const TaskSystem *ta
                     "monster spawns should not overlap each other");
         }
     }
+
+    for (index = 0; index < tasks->logCount; index++) {
+        const ShipLog *log;
+
+        log = &tasks->logs[index];
+        Require(Map_IsWalkable(map, log->gridX, log->gridY),
+                "ship logs should spawn on walkable world tiles");
+    }
 }
 
 static int CountMonstersOfType(const TaskSystem *tasks, MonsterType type) {
@@ -112,6 +120,23 @@ static int CountActiveNodesInLocation(const TaskSystem *tasks, const char *locat
 
         nodeLocation = Map_GetLocationNameAt(node->gridX, node->gridY);
         if (nodeLocation != NULL && strcmp(nodeLocation, locationName) == 0) {
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
+static int CountActiveNodesOfType(const TaskSystem *tasks, ResourceType type) {
+    int count;
+    int index;
+
+    count = 0;
+    for (index = 0; index < tasks->nodeCount; index++) {
+        const ResourceNode *node;
+
+        node = &tasks->nodes[index];
+        if (node->active && node->type == type) {
             count += 1;
         }
     }
@@ -176,6 +201,59 @@ static int CountLogsInLocation(const TaskSystem *tasks, const char *locationName
     }
 
     return count;
+}
+
+static const ShipLog *FindLogInLocation(const TaskSystem *tasks, const char *locationName) {
+    int index;
+
+    for (index = 0; index < tasks->logCount; index++) {
+        const ShipLog *log;
+        const char *logLocation;
+
+        log = &tasks->logs[index];
+        logLocation = Map_GetLocationNameAt(log->gridX, log->gridY);
+        if (logLocation != NULL && strcmp(logLocation, locationName) == 0) {
+            return log;
+        }
+    }
+
+    return NULL;
+}
+
+static const Monster *FindActiveMonsterInLocation(const TaskSystem *tasks, const char *locationName) {
+    int index;
+
+    for (index = 0; index < tasks->monsterCount; index++) {
+        const Monster *monster;
+        const char *monsterLocation;
+
+        monster = &tasks->monsters[index];
+        if (!monster->active) {
+            continue;
+        }
+
+        monsterLocation = Map_GetLocationNameAt(monster->gridX, monster->gridY);
+        if (monsterLocation != NULL && strcmp(monsterLocation, locationName) == 0) {
+            return monster;
+        }
+    }
+
+    return NULL;
+}
+
+static int DistanceManhattan(int ax, int ay, int bx, int by) {
+    int dx;
+    int dy;
+
+    dx = ax - bx;
+    dy = ay - by;
+    if (dx < 0) {
+        dx = -dx;
+    }
+    if (dy < 0) {
+        dy = -dy;
+    }
+    return dx + dy;
 }
 
 static void CollectAllLogs(TaskSystem *tasks) {
@@ -361,6 +439,8 @@ int main(void) {
             "ship interior should guarantee at least one one-time ore so stage 2 cannot hard-lock on node distribution");
     Require(CountLogsInArea(&tasks, MAP_AREA_BASE) == 3,
             "early ship logs should remain onboard so the intro narrative does not leak into the world");
+    Require(tasks.logCount == 14,
+            "the full narrative arc should keep all fourteen logs available in task data");
     Require(CountLogsInLocation(&tasks, "West Frontier") == 1,
             "west frontier should expose a first field record anchor");
     Require(CountLogsInLocation(&tasks, "Survey Break") == 1,
@@ -383,6 +463,8 @@ int main(void) {
             "purifier ring should expose the control brief record");
     Require(CountLogsInLocation(&tasks, "Root Vault") == 1,
             "root vault should expose a south facility dossier record");
+    Require(CountActiveNodesInLocation(&tasks, "Terminal Bay") == 0,
+            "Loxi's terminal room should not contain stray pickup resources");
     Require(CountActiveNodesInLocation(&tasks, "West Frontier") >= 1,
             "west frontier should keep at least one resource node so W1 is not just an empty border shelf");
     Require(CountActiveNodesInLocation(&tasks, "Survey Break") >= 1,
@@ -403,20 +485,8 @@ int main(void) {
             "purifier ring should keep at least one resource node so S4 has facility-floor rewards");
     Require(CountActiveNodesInLocation(&tasks, "Root Vault") >= 1,
             "root vault should keep at least one resource node so S5 does not land as an empty chamber");
-    Require(tasks.monsterCount == 8,
-            "combat-light balance should keep only one fixed monster per type plus the final boss");
-    Require(CountMonstersOfType(&tasks, MONSTER_THORN_LARVA) == 1,
-            "thorn larva should now be a unique encounter");
-    Require(CountMonstersOfType(&tasks, MONSTER_WING_BUG) == 1,
-            "wing bug should now be a unique encounter");
-    Require(CountMonstersOfType(&tasks, MONSTER_RAPTOR) == 1,
-            "raptor should now be a unique encounter");
-    Require(CountMonstersOfType(&tasks, MONSTER_SWAMP_STALKER) == 1,
-            "swamp stalker should now be a unique encounter");
-    Require(CountMonstersOfType(&tasks, MONSTER_SENTINEL_JELLY) == 1,
-            "sentinel jelly should now be a unique encounter");
-    Require(CountMonstersOfType(&tasks, MONSTER_FOG_WORM) == 1,
-            "fog worm should now be a unique encounter");
+    Require(tasks.monsterCount == 12,
+            "route cleanup should now place one fixed monster encounter in every west and south route area, plus the ruins guard and final boss");
     Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 1,
             "ruins should now retain only one fixed relic guard");
     Require(CountMonstersOfType(&tasks, MONSTER_FINAL_BOSS) == 1,
@@ -424,19 +494,77 @@ int main(void) {
     Require(CountActiveMonstersInLocation(&tasks, "West Frontier") == 1,
             "west frontier should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Survey Break") == 1,
-            "survey break should retain a single local monster encounter");
+            "survey break should now carry its own local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Canopy Hollow") == 1,
             "canopy hollow should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Echo Basin") == 1,
+            "echo basin should retain a single local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Last Camp") == 1,
+            "last camp should now carry its own local monster encounter instead of landing empty");
+    Require(CountActiveMonstersInLocation(&tasks, "South Collapse") == 1,
+            "south collapse should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Vent Galleries") == 1,
-            "vent galleries should retain a single local monster encounter");
+            "vent galleries should now carry its own local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Service Shafts") == 1,
+            "service shafts should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Purifier Ring") == 1,
-            "purifier ring should retain a single local monster encounter");
+            "purifier ring should now carry its own local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Root Vault") == 1,
             "root vault should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Monolith Ring") == 1,
             "ruins should now hold only the relic guard after the boss is moved to the arena");
     Require(CountActiveMonstersInLocation(&tasks, "Guardian Arena") == 1,
             "guardian arena should now hold the isolated final boss encounter");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "West Frontier")->gridX,
+                              FindLogInLocation(&tasks, "West Frontier")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "West Frontier")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "West Frontier")->gridY) <= 6,
+            "west frontier log should stay inside the local monster pressure pocket");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Canopy Hollow")->gridX,
+                              FindLogInLocation(&tasks, "Canopy Hollow")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Canopy Hollow")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Canopy Hollow")->gridY) <= 6,
+            "canopy hollow log should stay inside the local monster pressure pocket");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Echo Basin")->gridX,
+                              FindLogInLocation(&tasks, "Echo Basin")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Echo Basin")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Echo Basin")->gridY) <= 6,
+            "echo basin log should stay inside the local monster pressure pocket");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "South Collapse")->gridX,
+                              FindLogInLocation(&tasks, "South Collapse")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "South Collapse")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "South Collapse")->gridY) <= 6,
+            "south collapse log should stay inside the local monster pressure pocket");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Service Shafts")->gridX,
+                              FindLogInLocation(&tasks, "Service Shafts")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Service Shafts")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Service Shafts")->gridY) <= 6,
+            "service shafts log should stay inside the local monster pressure pocket");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Root Vault")->gridX,
+                              FindLogInLocation(&tasks, "Root Vault")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Root Vault")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Root Vault")->gridY) <= 6,
+            "root vault log should stay inside the local monster pressure pocket");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Survey Break")->gridX,
+                              FindLogInLocation(&tasks, "Survey Break")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Survey Break")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Survey Break")->gridY) >= 8,
+            "survey break log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Last Camp")->gridX,
+                              FindLogInLocation(&tasks, "Last Camp")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Last Camp")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Last Camp")->gridY) >= 4,
+            "last camp log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Vent Galleries")->gridX,
+                              FindLogInLocation(&tasks, "Vent Galleries")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Vent Galleries")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Vent Galleries")->gridY) >= 8,
+            "vent galleries log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
+    Require(DistanceManhattan(FindLogInLocation(&tasks, "Purifier Ring")->gridX,
+                              FindLogInLocation(&tasks, "Purifier Ring")->gridY,
+                              FindActiveMonsterInLocation(&tasks, "Purifier Ring")->gridX,
+                              FindActiveMonsterInLocation(&tasks, "Purifier Ring")->gridY) >= 6,
+            "purifier ring log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
 
     Player_SetStatus(&player, PLAYER_STATUS_LOW_OXYGEN, 1, 6.0f, 12.0f);
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 1, 10.0f, 8.0f);
@@ -546,6 +674,16 @@ int main(void) {
     Require(strstr(message, "first east relay sortie") != NULL && strstr(message, "Loxi") != NULL,
             "terminal bay should explain that Stage 3 field results are converted into route guidance there");
 
+    player.gridX = tasks.logs[0].gridX;
+    player.gridY = tasks.logs[0].gridY;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "collecting an onboard log should still succeed through the unified interaction flow");
+    Require(strstr(message, "Press N") != NULL || strstr(message, "按 N") != NULL,
+            "log recovery text should now point players to the unified N interface instead of the old L shortcut");
+    Require(strstr(message, " with L ") == NULL && strstr(message, "按 L") == NULL,
+            "log recovery text should no longer reference the retired log-only keybinding");
+
     player.gridX = CRASH_CLUE_X - 1;
     player.gridY = CRASH_CLUE_Y;
     tasks.stage = 4;
@@ -566,6 +704,15 @@ int main(void) {
             "crash clue should be marked as found after the successful interaction");
     Require(tasks.stage >= 5,
             "successful crash clue interaction should advance progression");
+    Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(CountActiveNodesOfType(&tasks, RESOURCE_ENERGY_CORE) == 1,
+            "unlocking stage 5 should spawn exactly one active Energy Core node");
+
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "repeat crash clue interaction should still return a closing message");
+    Require(strstr(message, "fully explored") != NULL || strstr(message, "route data") != NULL,
+            "repeat crash clue interaction should explain that the wreck investigation is already complete");
 
     player.gridX = SHIP_DIAGNOSTICS_X + 2;
     player.gridY = SHIP_DIAGNOSTICS_Y + 2;
@@ -593,10 +740,50 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "stage 6 Loxi interaction should still accept a full fragment set");
+    Require(player.resources[RESOURCE_RELIC_FRAGMENT] == 3,
+            "stage 6 Loxi sync should read the fragment set without consuming it");
     Require(message[0] != '\0',
             "stage 6 fragment sync should explain the rewritten system-level route comparison once X2 is ready");
     Require(message[0] != '\0',
             "stage 6 fragment sync should explain all three route meanings once cross-route context is ready");
+
+    {
+        TaskSystem unlockTasks;
+        GameMap unlockMap;
+        Player unlockPlayer;
+
+        Map_Init(&unlockMap);
+        Tasks_Init(&unlockTasks, &unlockMap);
+        Player_Init(&unlockPlayer);
+        unlockPlayer.gridX = LOXI_TERMINAL_X - 1;
+        unlockPlayer.gridY = LOXI_TERMINAL_Y;
+        memset(message, 0, sizeof(message));
+        Require(!unlockTasks.communicatorUnlocked,
+                "fresh task state should begin with the communicator locked");
+        Require(!Map_IsLoxiRoomUnlocked(&unlockMap),
+                "fresh map state should begin with the Loxi room sealed");
+        Require(TasksRuntime_HandleShipInteraction(&unlockTasks,
+                                                   &unlockMap,
+                                                   &unlockPlayer,
+                                                   TASK_INTERACTION_LOXI_TERMINAL,
+                                                   message,
+                                                   sizeof(message)),
+                "first Loxi interaction should succeed from the respawn room");
+        Require(unlockTasks.communicatorUnlocked,
+                "first Loxi interaction should unlock the communicator");
+        Require(Map_IsLoxiRoomUnlocked(&unlockMap),
+                "first Loxi interaction should permanently remove the Loxi room door");
+        Require(message[0] != '\0',
+                "first Loxi interaction should teach the unified N terminal flow");
+
+        unlockPlayer.gridX = LOXI_TERMINAL_X - 2;
+        unlockPlayer.gridY = LOXI_TERMINAL_Y;
+        memset(message, 0, sizeof(message));
+        Require(Tasks_HandleInteraction(&unlockTasks, &unlockMap, &unlockPlayer, message, sizeof(message)),
+                "repeat Loxi interaction should still work slightly outside the terminal footprint");
+        Require(message[0] != '\0',
+                "repeat Loxi interaction should continue returning terminal guidance after unlock");
+    }
 
     {
         ResourceNode *baseOre;
@@ -635,6 +822,14 @@ int main(void) {
             "first real monolith step should permanently light the first stone in the sequence");
     Require(strstr(message, "first monolith locks into resonance") != NULL,
             "first real monolith step should explain the new partial endgame payoff");
+
+    player.gridX = MONOLITH_B_X - 2;
+    player.gridY = MONOLITH_B_Y;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "an already lit monolith should stay interactable from the nearby ring tiles");
+    Require(strstr(message, "already resonating") != NULL || strstr(message, "already active") != NULL,
+            "returning to a lit monolith should still explain its current resonance state");
 
     player.gridX = MONOLITH_A_X - 1;
     player.gridY = MONOLITH_A_Y;
@@ -727,6 +922,28 @@ int main(void) {
     Require(strstr(message, "chosen with Loxi") != NULL || strstr(message, "full context") != NULL,
             "peaceful tower activation should frame the outcome as a ship-side commitment");
 
+    tasks.stage = 5;
+    player.gridX = SHIP_CREW_QUARTERS_X + 2;
+    player.gridY = SHIP_CREW_QUARTERS_Y + 2;
+    player.health = 27.0f;
+    player.oxygen = 22.0f;
+    player.stamina = 11.0f;
+    player.pressure = 58.0f;
+    player.poison = 18.0f;
+    memset(message, 0, sizeof(message));
+    Require(TasksRuntime_HandleShipInteraction(&tasks, &map, &player, TASK_INTERACTION_NONE, message, sizeof(message)),
+            "crew quarters interaction should still provide the ship rest action");
+    Require(player.health == Player_GetMaxHealth(&player),
+            "crew quarters rest should now fully restore health");
+    Require(player.oxygen > 22.0f && player.oxygen < MAX_OXYGEN,
+            "crew quarters rest should still stop short of a full oxygen refill");
+    Require(player.stamina > 11.0f,
+            "crew quarters rest should still restore stamina");
+    Require(player.pressure == INITIAL_PRESSURE,
+            "crew quarters rest should still clear pressure");
+    Require(strstr(message, "fully recover your health") != NULL || strstr(message, "生命值完全恢复") != NULL,
+            "crew quarters rest text should now explain the full-health recovery role");
+
     map.campPlaced = true;
     map.campX = ROPE_BARRIER_B_X - 1;
     map.campY = ROPE_BARRIER_B_Y;
@@ -776,23 +993,19 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "oxygen console should provide base recovery feedback after core repairs are complete");
-    Require(player.health == Player_GetMaxHealth(&player),
-            "base oxygen console should fully restore health");
     Require(player.oxygen == MAX_OXYGEN,
             "base oxygen console should fully restore oxygen");
-    Require(player.stamina == Player_GetCurrentStaminaCap(&player),
-            "base oxygen console should refill stamina for usability");
     Require(player.pressure == 0.0f,
-            "base oxygen console should fully reset hidden pressure");
-    Require(player.poison == 0.0f,
-            "base oxygen console should clear poison buildup");
-    Require(!Player_HasStatus(&player, PLAYER_STATUS_POISONED)
+            "base oxygen console should stabilize hidden pressure");
+    Require(player.health == 31.0f && player.stamina == 12.0f && player.poison == 42.0f,
+            "base oxygen console should no longer act like a full-body recovery station");
+    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
                 && !Player_HasStatus(&player, PLAYER_STATUS_OXYGEN_LEAK)
                 && !Player_HasStatus(&player, PLAYER_STATUS_LOW_OXYGEN)
                 && !Player_HasStatus(&player, PLAYER_STATUS_CRITICAL_CONDITION),
-            "base oxygen console should clear negative survival statuses");
-    Require(strstr(message, "fully restored") != NULL && strstr(message, "anomalies cleared") != NULL,
-            "base oxygen console text should explain the full recovery role");
+            "base oxygen console should clear breathing-related statuses while leaving unrelated recovery to resting");
+    Require(strstr(message, "oxygen reserves are full") != NULL && strstr(message, "breathing alerts") != NULL,
+            "base oxygen console text should explain the oxygen-focused recovery role");
 
     map.campPlaced = false;
     player.gridX = ROPE_BARRIER_A_X - 1;
@@ -867,14 +1080,15 @@ int main(void) {
     tasks.nodes[0].area = MAP_AREA_FOREST;
     tasks.nodes[0].awayTimer = 0.0f;
     memset(message, 0, sizeof(message));
-    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
-            "adjacent depleted exterior nodes should still report a player-facing refresh state");
-    Require(strstr(message, "depleted") != NULL,
-            "depleted exterior nodes should describe the abstract depleted state");
-    Require(strstr(message, "95") == NULL && strstr(message, "135") == NULL && strstr(message, "240") == NULL,
-            "resource status text should not expose respawn timing thresholds");
-    Require(strstr(message, "remaining") == NULL,
-            "resource status text should not expose remaining respawn counts");
+    Require(!Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "adjacent depleted exterior nodes should now stay silent instead of faking an interaction");
+    Require(message[0] == '\0',
+            "adjacent depleted exterior nodes should no longer show refresh-state text");
+
+    memset(message, 0, sizeof(message));
+    TasksRuntime_DescribeNodeStatus(&tasks.nodes[0], message, sizeof(message));
+    Require(message[0] == '\0',
+            "depleted node status text should now stay silent");
 
     tasks.nodes[0].active = true;
     memset(message, 0, sizeof(message));

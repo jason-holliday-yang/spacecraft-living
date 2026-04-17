@@ -79,6 +79,8 @@ int main(void) {
     float deepPoison;
     float deepSuitPoison;
     bool ruinsLeak;
+    float baseHealth;
+    float baseOxygen;
 
     Map_Init(&map);
     Player_Init(&player);
@@ -110,6 +112,18 @@ int main(void) {
     ruinsSuitLoss = MeasureOxygenLoss(SIGNAL_TOWER_X, SIGNAL_TOWER_Y + 6, 5.0f, true, NULL, NULL);
     ruinsReserveLoss = MeasureOxygenLossWithReserve(SIGNAL_TOWER_X, SIGNAL_TOWER_Y + 6, 5.0f, 40.0f, 2, 45.0f, 20.0f);
 
+    player.gridX = SHIP_CORRIDOR_X + 1;
+    player.gridY = SHIP_CORRIDOR_Y + 1;
+    player.health = 28.0f;
+    player.oxygen = 12.0f;
+    player.stamina = 10.0f;
+    player.pressure = 0.0f;
+    player.poison = 18.0f;
+    player.safeRecoveryTimer = 0.0f;
+    Player_ClearAllStatuses(&player);
+    baseHealth = player.health;
+    baseOxygen = player.oxygen;
+    Tasks_Update(&tasks, &map, &player, 5.0f);
     Require(forestLoss > 0.0f && forestLoss < outerLoss,
             "forest should remain the lightest oxygen-pressure zone");
     Require(outerLoss < deepLoss,
@@ -128,6 +142,10 @@ int main(void) {
             "protection suit should also reduce ruins oxygen pressure");
     Require(ruinsReserveLoss < ruinsLoss,
             "oxygen reserve should create meaningful breathing room in the ruins");
+    Require(player.health <= baseHealth
+                && player.oxygen <= baseOxygen
+                && player.poison >= 18.0f,
+            "standing inside the ship should no longer grant passive recovery without using a facility");
 
     puts("health_oxygen smoke ok");
     return 0;

@@ -37,6 +37,21 @@ static void PrepareEndingBranch(TaskSystem *tasks) {
     }
 }
 
+static const ResourceNode *FindActiveNodeOfType(const TaskSystem *tasks, ResourceType type) {
+    int index;
+
+    for (index = 0; index < tasks->nodeCount; index++) {
+        const ResourceNode *node;
+
+        node = &tasks->nodes[index];
+        if (node->active && node->type == type) {
+            return node;
+        }
+    }
+
+    return NULL;
+}
+
 int main(void) {
     GameMap map;
     Player player;
@@ -113,16 +128,22 @@ int main(void) {
     tasks.stage = 5;
     player.gridX = CRASH_CLUE_X;
     player.gridY = CRASH_CLUE_Y;
-    Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "Rope") != NULL || strstr(tasks.communicator, "Camp") != NULL,
-            "stage 5 communicator guidance should explain the rope and camp support tools");
+    Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(strstr(tasks.communicator, "Camp") != NULL || strstr(tasks.communicator, "Energy Core") != NULL,
+            "stage 5 communicator guidance should focus on camp support and the east objective");
     Require(strstr(tasks.communicator, "east route") != NULL || strstr(tasks.communicator, "Energy Core") != NULL,
             "stage 5 communicator guidance should keep east qualification context visible");
     player.resources[RESOURCE_ENERGY_CORE] = 0;
     Require(Tasks_GetObjectiveMarker(&tasks, &player, &markerX, &markerY),
             "stage 5 should expose an east-route marker before the core is collected");
-    Require(markerX == EXTERIOR_X(112) && markerY == EXTERIOR_Y(56),
-            "stage 5 should point toward the deep-swamp objective shelf before the energy core is secured");
+    {
+        const ResourceNode *energyCoreNode = FindActiveNodeOfType(&tasks, RESOURCE_ENERGY_CORE);
+
+        Require(energyCoreNode != NULL,
+                "stage 5 should ensure the Energy Core node exists before the east run");
+        Require(markerX == energyCoreNode->gridX && markerY == energyCoreNode->gridY,
+                "stage 5 marker should point to the actual Energy Core spawn");
+    }
     player.resources[RESOURCE_ENERGY_CORE] = 1;
     Require(Tasks_GetObjectiveMarker(&tasks, &player, &markerX, &markerY),
             "stage 5 should still expose a return marker after the core is collected");
@@ -142,12 +163,16 @@ int main(void) {
     player.poison = 0.0f;
     player.pressure = 0.0f;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "Crouch") != NULL || strstr(tasks.communicator, "stealth") != NULL,
+    Require(strstr(tasks.communicator, "Crouch") != NULL
+                || strstr(tasks.communicator, "crouch") != NULL
+                || strstr(tasks.communicator, "hidden") != NULL,
             "forest field note should teach crouch stealth rule");
 
     player.crouching = true;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "reduces detection") != NULL || strstr(tasks.communicator, "crouching") != NULL,
+    Require(strstr(tasks.communicator, "reduces detection") != NULL
+                || strstr(tasks.communicator, "Crouching") != NULL
+                || strstr(tasks.communicator, "harder to detect") != NULL,
             "forest field note should react once crouch stealth is active");
 
     tasks.stage = 6;
@@ -307,6 +332,16 @@ int main(void) {
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
             "peaceful route should remain selectable for base guidance tests");
     tasks.bossDefeated = false;
+    player.resources[RESOURCE_RELIC_FRAGMENT] = 0;
+    Require(Tasks_GetObjectiveMarker(&tasks, &player, &markerX, &markerY),
+            "peaceful route should still expose a marker before the amplifier is crafted");
+    Require(markerX == EXTERIOR_X(64) && markerY == EXTERIOR_Y(27),
+            "peaceful route should point back to the ruins approach while relic fragments are still missing");
+    player.resources[RESOURCE_RELIC_FRAGMENT] = 3;
+    Require(Tasks_GetObjectiveMarker(&tasks, &player, &markerX, &markerY),
+            "peaceful route should retarget the marker to the workshop once fragments are ready");
+    Require(markerX == WORKBENCH_X && markerY == WORKBENCH_Y,
+            "peaceful route should point to the workshop when the fragment set is ready but the amplifier is not built");
     player.hasSignalAmplifier = true;
     Tasks_UpdateObjective(&tasks, &player);
     Require(strstr(tasks.communicator, "Peaceful route chosen") != NULL || strstr(tasks.communicator, "Signal Amplifier") != NULL,
@@ -315,6 +350,9 @@ int main(void) {
             "stage 7 base guidance should explain the peaceful branch-specific next step");
 
     player.hasSignalAmplifier = false;
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(strstr(tasks.communicator, "workshop") != NULL || strstr(tasks.communicator, "fragments") != NULL,
+            "peaceful-route base guidance should send the player to the workshop once the fragment set is ready");
     tasks.selectedEndingRoute = ENDING_NONE;
     PrepareEndingBranch(&tasks);
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),

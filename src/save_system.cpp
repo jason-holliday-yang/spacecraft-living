@@ -19,9 +19,15 @@ struct AccountRecord {
 };
 
 constexpr const char *kAccountsMagic = "SCLAUTH1";
+constexpr const char *kAccountScoreMagic = "SCLSCR1";
 constexpr size_t kAccountsFileMaxSize = 16384;
 constexpr size_t kMinUsernameLength = 3;
 constexpr size_t kMinPasswordLength = 4;
+
+struct AccountScoreData {
+    char magic[8];
+    int32_t bestScore;
+};
 
 void WriteAuthMessage(char *buffer, size_t bufferSize, const char *message) {
     const char *displayMessage;
@@ -248,6 +254,54 @@ bool ActivateAccount(const AccountRecord &record) {
     return true;
 }
 
+bool GetActiveAccountScorePath(char *buffer, size_t bufferSize) {
+    char accountDirectory[640];
+
+    if (buffer == NULL || bufferSize == 0 || !SaveInternal_GetActiveAccountDirectory(accountDirectory, sizeof(accountDirectory))) {
+        return false;
+    }
+
+    return std::snprintf(buffer, bufferSize, "%s/account_score.bin", accountDirectory) < (int)bufferSize;
+}
+
+bool LoadAccountScore(int *scoreOut) {
+    AccountScoreData data;
+    char path[640];
+    size_t fileSize;
+    size_t bytesRead;
+
+    if (scoreOut == NULL || !GetActiveAccountScorePath(path, sizeof(path)) || !PersistencePlatform_FileExists(path)) {
+        return false;
+    }
+
+    fileSize = 0;
+    bytesRead = PersistencePlatform_ReadFileAtMost(path, &data, sizeof(data), &fileSize);
+    if (bytesRead != sizeof(data) || fileSize != sizeof(data) || std::memcmp(data.magic, kAccountScoreMagic, 8) != 0) {
+        return false;
+    }
+
+    if (data.bestScore <= 0) {
+        return false;
+    }
+
+    *scoreOut = data.bestScore;
+    return true;
+}
+
+bool SaveAccountScore(int score) {
+    AccountScoreData data;
+    char path[640];
+
+    if (score <= 0 || !SaveInternal_EnsureActiveAccountDirectory() || !GetActiveAccountScorePath(path, sizeof(path))) {
+        return false;
+    }
+
+    std::memset(&data, 0, sizeof(data));
+    std::memcpy(data.magic, kAccountScoreMagic, 8);
+    data.bestScore = score;
+    return PersistencePlatform_WriteFileAtomically(path, &data, sizeof(data));
+}
+
 std::vector<AccountRecord>::iterator FindAccountRecordIterator(std::vector<AccountRecord> *records, const std::string &normalizedUsername) {
     if (records == NULL) {
         return std::vector<AccountRecord>::iterator();
@@ -270,28 +324,28 @@ bool DeleteAccountByKey(const std::string &accountKey, char *message, size_t mes
     std::string displayName;
 
     if (!LoadAccountRecords(&records)) {
-        WriteAuthMessage(message, messageSize, "Unable to read local account data.");
+        WriteAuthMessage(message, messageSize, "Couldn't read local account data.");
         return false;
     }
 
     updatedRecords = records;
     recordIt = FindAccountRecordIterator(&updatedRecords, accountKey);
     if (recordIt == updatedRecords.end()) {
-        WriteAuthMessage(message, messageSize, "The requested account could not be found.");
+        WriteAuthMessage(message, messageSize, "That account could not be found.");
         return false;
     }
 
     displayName = recordIt->displayName;
     updatedRecords.erase(recordIt);
     if (!SaveAccountRecords(updatedRecords)) {
-        WriteAuthMessage(message, messageSize, "Unable to remove the account from the local registry.");
+        WriteAuthMessage(message, messageSize, "Couldn't remove the account from the local registry.");
         return false;
     }
 
     if (std::snprintf(accountDirectory, sizeof(accountDirectory), "%s/accounts/%s", SaveSystem_GetBaseDirectory(), accountKey.c_str()) >= (int)sizeof(accountDirectory)
         || !PersistencePlatform_DeleteDirectoryTree(accountDirectory)) {
         SaveAccountRecords(records);
-        WriteAuthMessage(message, messageSize, "Unable to delete this account's save data.");
+        WriteAuthMessage(message, messageSize, "Couldn't delete this account's save data.");
         return false;
     }
 
@@ -318,7 +372,9 @@ void SaveSystem_SetDefaultSettings(GameSettings *settings) {
         return;
     }
 
-    settings->masterVolume = 0.80f;
+    settings->masterVolume = 1.0f;
+    settings->musicVolume = 1.0f;
+    settings->sfxVolume = 1.0f;
     settings->sfxEnabled = true;
     settings->language = GAME_LANGUAGE_EN;
     settings->lastUsername[0] = '\0';
@@ -377,6 +433,37 @@ const char *SaveSystem_GetActiveAccountName(void) {
     return SaveInternal_GetActiveAccountName();
 }
 
+bool SaveSystem_GetActiveAccountBestScore(int *scoreOut) {
+    int bestScore;
+
+    if (scoreOut == NULL || !SaveInternal_HasActiveAccount()) {
+        return false;
+    }
+
+    bestScore = 0;
+    if (!LoadAccountScore(&bestScore)) {
+        return false;
+    }
+
+    *scoreOut = bestScore;
+    return true;
+}
+
+bool SaveSystem_UpdateActiveAccountBestScore(int score) {
+    int existingScore;
+
+    if (!SaveInternal_HasActiveAccount() || score <= 0) {
+        return false;
+    }
+
+    existingScore = 0;
+    if (LoadAccountScore(&existingScore) && existingScore >= score) {
+        return true;
+    }
+
+    return SaveAccountScore(score);
+}
+
 void SaveSystem_Logout(void) {
     SaveInternal_ClearActiveAccount();
 }
@@ -393,13 +480,13 @@ bool SaveSystem_Login(const char *username, const char *password, char *message,
     }
 
     if (!LoadAccountRecords(&records)) {
-        WriteAuthMessage(message, messageSize, "Unable to read local account data.");
+        WriteAuthMessage(message, messageSize, "Couldn't read local account data.");
         return false;
     }
 
     record = FindAccountRecord(records, normalizedUsername);
     if (record == NULL) {
-        WriteAuthMessage(message, messageSize, "Account not found. Register first.");
+        WriteAuthMessage(message, messageSize, "Account not found. Create it first.");
         return false;
     }
 
@@ -409,7 +496,7 @@ bool SaveSystem_Login(const char *username, const char *password, char *message,
     }
 
     if (!ActivateAccount(*record)) {
-        WriteAuthMessage(message, messageSize, "Unable to open this account's save folder.");
+        WriteAuthMessage(message, messageSize, "Couldn't open this account's save folder.");
         return false;
     }
 
@@ -436,12 +523,12 @@ bool SaveSystem_Register(const char *username, const char *password, char *messa
     }
 
     if (!LoadAccountRecords(&records)) {
-        WriteAuthMessage(message, messageSize, "Unable to read local account data.");
+        WriteAuthMessage(message, messageSize, "Couldn't read local account data.");
         return false;
     }
 
     if (FindAccountRecord(records, normalizedUsername) != NULL) {
-        WriteAuthMessage(message, messageSize, "That username already exists. Try logging in.");
+        WriteAuthMessage(message, messageSize, "That username already exists. Try signing in.");
         return false;
     }
 
@@ -451,12 +538,12 @@ bool SaveSystem_Register(const char *username, const char *password, char *messa
     records.push_back(newRecord);
 
     if (!SaveAccountRecords(records)) {
-        WriteAuthMessage(message, messageSize, "Unable to create the local account.");
+        WriteAuthMessage(message, messageSize, "Couldn't create the local account.");
         return false;
     }
 
     if (!ActivateAccount(newRecord)) {
-        WriteAuthMessage(message, messageSize, "Account created, but its save folder could not be opened.");
+        WriteAuthMessage(message, messageSize, "The account was created, but its save folder could not be opened.");
         return false;
     }
 
@@ -484,13 +571,13 @@ bool SaveSystem_DeleteAccount(const char *username, const char *password, char *
     }
 
     if (!LoadAccountRecords(&records)) {
-        WriteAuthMessage(message, messageSize, "Unable to read local account data.");
+        WriteAuthMessage(message, messageSize, "Couldn't read local account data.");
         return false;
     }
 
     record = FindAccountRecord(records, normalizedUsername);
     if (record == NULL) {
-        WriteAuthMessage(message, messageSize, "Account not found.");
+        WriteAuthMessage(message, messageSize, "That account could not be found.");
         return false;
     }
 
@@ -506,13 +593,13 @@ bool SaveSystem_DeleteActiveAccount(char *message, size_t messageSize) {
     std::string activeKey;
 
     if (!SaveInternal_HasActiveAccount()) {
-        WriteAuthMessage(message, messageSize, "No signed-in account is available to delete.");
+        WriteAuthMessage(message, messageSize, "There is no signed-in account to delete.");
         return false;
     }
 
     activeKey = SaveInternal_GetActiveAccountKey();
     if (activeKey.empty()) {
-        WriteAuthMessage(message, messageSize, "No signed-in account is available to delete.");
+        WriteAuthMessage(message, messageSize, "There is no signed-in account to delete.");
         return false;
     }
 

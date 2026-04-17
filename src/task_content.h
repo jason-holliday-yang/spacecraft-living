@@ -70,7 +70,6 @@ const char *TasksContent_GetPhaseNameText(DayPhase phase);
 const char *TasksContent_GetEventNameText(EventType eventType);
 const char *TasksContent_GetEndingTitleText(GameEnding ending);
 const char *TasksContent_GetEndingBodyText(GameEnding ending);
-const char *TasksContent_GetUIFontSampleText(void);
 
 SCL_EXTERN_C_END
 

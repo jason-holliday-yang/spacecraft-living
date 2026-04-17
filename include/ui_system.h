@@ -62,7 +62,7 @@ typedef enum PauseMenuButton {
 
 typedef enum DeathPopupButton {
     DEATH_POPUP_BUTTON_RESTART = 0,
-    DEATH_POPUP_BUTTON_EXIT,
+    DEATH_POPUP_BUTTON_LOAD,
     DEATH_POPUP_BUTTON_COUNT
 } DeathPopupButton;
 
@@ -122,8 +122,6 @@ typedef enum StoryScene {
 
 Rectangle UI_GetMainMenuButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 int UI_GetMainMenuButtonIndexAtPoint(int screenWidth, int screenHeight, Vector2 point);
-Rectangle UI_GetMainMenuSwitchAccountRect(int screenWidth, int screenHeight);
-Rectangle UI_GetMainMenuDeleteAccountRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthInputRect(int screenWidth, int screenHeight, int fieldIndex);
 Rectangle UI_GetAuthPasswordToggleRect(int screenWidth, int screenHeight);
@@ -140,12 +138,22 @@ Rectangle UI_GetSaveDeleteButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetBackpackSlotRect(int screenWidth, int screenHeight, int itemIndex);
 Rectangle UI_GetCraftSlotRect(int screenWidth, int screenHeight, int itemIndex);
 Rectangle UI_GetCraftActionButtonRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorOverlayRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorTabRect(int screenWidth, int screenHeight, int tabIndex);
+Rectangle UI_GetCommunicatorLogListRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorLogContentRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorVisibleLogEntryRect(int screenWidth, int screenHeight, int visibleIndex);
+int UI_GetCommunicatorVisibleLogCount(int screenWidth, int screenHeight);
+int UI_ClampCommunicatorFirstVisibleLogIndex(int screenWidth, int screenHeight, int firstVisibleLogIndex, int totalLogCount);
+int UI_GetCommunicatorFirstVisibleLogIndex(int screenWidth, int screenHeight, int selectedLogIndex, int totalLogCount);
 Rectangle UI_GetLogEntryRect(int screenWidth, int screenHeight, int entryIndex);
-Rectangle UI_GetSettingsSliderRect(int screenWidth, int screenHeight);
-Rectangle UI_GetSettingsDecreaseButtonRect(int screenWidth, int screenHeight);
-Rectangle UI_GetSettingsIncreaseButtonRect(int screenWidth, int screenHeight);
+Rectangle UI_GetSettingsRowRect(int screenWidth, int screenHeight, int rowIndex);
+Rectangle UI_GetSettingsSliderRect(int screenWidth, int screenHeight, int sliderIndex);
+Rectangle UI_GetSettingsDecreaseButtonRect(int screenWidth, int screenHeight, int sliderIndex);
+Rectangle UI_GetSettingsIncreaseButtonRect(int screenWidth, int screenHeight, int sliderIndex);
 Rectangle UI_GetSettingsCloseButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettingsLanguageButtonRect(int screenWidth, int screenHeight, int buttonIndex);
+Rectangle UI_GetSettingsAccountButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex);
 Rectangle UI_GetSettlementConfirmPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex);
@@ -167,19 +175,33 @@ void UI_DrawMainMenu(const AssetBundle *assets,
                      bool hasSave,
                      int saveCount,
                      const char *accountName,
+                     bool hasBestScore,
+                     int bestScore,
                      int screenWidth,
                      int screenHeight,
                      float elapsedSeconds);
 void UI_DrawOpeningCutscene(const AssetBundle *assets, int slideIndex, float slideElapsed, int screenWidth, int screenHeight);
 void UI_DrawStoryScene(const AssetBundle *assets, StoryScene scene, float sceneElapsed, int screenWidth, int screenHeight);
 void UI_DrawPauseMenu(const AssetBundle *assets, int screenWidth, int screenHeight);
-void UI_DrawSettingsOverlay(const AssetBundle *assets, const GameSettings *settings, int screenWidth, int screenHeight);
+void UI_DrawSettingsOverlay(const AssetBundle *assets,
+                            const GameSettings *settings,
+                            const char *accountName,
+                            int saveCount,
+                            bool accountActionsEnabled,
+                            int screenWidth,
+                            int screenHeight);
 void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int selectedItem, int screenWidth, int screenHeight);
 void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, const Player *player, int selectedRecipe, int screenWidth, int screenHeight);
-void UI_DrawCommunicatorOverlay(const AssetBundle *assets, const TaskSystem *tasks, int screenWidth, int screenHeight);
+void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
+                                const TaskSystem *tasks,
+                                int selectedTab,
+                                int selectedLog,
+                                int firstVisibleLog,
+                                int screenWidth,
+                                int screenHeight);
 void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHeight);
 void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds);
-void UI_DrawDeathPopup(const Player *player, const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton);
+void UI_DrawDeathPopup(const Player *player, bool hasSave, const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton);
 void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
                                    const Player *player,
                                    const TaskSystem *tasks,

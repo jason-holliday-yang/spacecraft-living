@@ -38,6 +38,7 @@ typedef enum TileType {
     TILE_WORKBENCH,
     TILE_AIRLOCK_CONSOLE,
     TILE_AIRLOCK_DOOR,
+    TILE_LOXI_ROOM_DOOR,
     TILE_COMM_RELAY,
     TILE_CRASH_CLUE,
     TILE_ENERGY_CONSOLE,
@@ -84,6 +85,9 @@ const char *Map_GetRoomNameAt(int gridX, int gridY);
 void Map_UnlockSwampOuter(GameMap *map);
 void Map_LockSwampOuter(GameMap *map);
 bool Map_IsSwampOuterUnlocked(const GameMap *map);
+void Map_UnlockLoxiRoom(GameMap *map);
+void Map_LockLoxiRoom(GameMap *map);
+bool Map_IsLoxiRoomUnlocked(const GameMap *map);
 void Map_UnlockSwampDeep(GameMap *map);
 void Map_UnlockRuins(GameMap *map);
 void Map_SetFieldCamp(GameMap *map, int gridX, int gridY);
