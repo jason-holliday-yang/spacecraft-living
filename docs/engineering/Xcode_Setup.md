@@ -13,6 +13,42 @@ open build/xcode/SpaceCraftLiving.xcodeproj
 2. Build with `Product -> Build`.
 3. Run with `Product -> Run`.
 
+## Important
+
+- Open `build/xcode/SpaceCraftLiving.xcodeproj`.
+- Do not open the repository root as an Xcode project.
+- Do not add `build/`, `build-*`, or `DerivedData` folders into the Xcode navigator or any target.
+
+The repository contains many generated `.d` dependency files under `build/`.
+If those files are imported into Xcode, Xcode can classify them as DTrace inputs and create
+`CompileDTraceScript` build steps. Because those generated files are not real source inputs and
+often share output locations, Xcode's new build system can then fail with
+`Multiple commands produce ...` errors in `DerivedData`.
+
+## Troubleshooting `CompileDTraceScript` / `Multiple commands produce`
+
+If Xcode shows `CompileDTraceScript` or `Multiple commands produce ... DerivedData ...` while
+building `SpaceCraftLiving`, clean the project state before trying again:
+
+1. Close Xcode.
+2. Delete any manually created or stale Xcode project/workspace that points at the repo root.
+3. Remove `build/` file references from Xcode if they were added previously, especially any
+   `*.d` files shown in `Build Phases -> Compile Sources`.
+4. Regenerate the CMake Xcode project:
+
+```sh
+rm -rf build/xcode
+cmake -S . -B build/xcode -G Xcode -DRAYLIB_ROOT=/opt/homebrew
+open build/xcode/SpaceCraftLiving.xcodeproj
+```
+
+5. In Xcode, run `Product -> Clean Build Folder`.
+6. If the error still persists, delete the matching `SpaceCraftLiving-*` folder under:
+
+```text
+~/Library/Developer/Xcode/DerivedData
+```
+
 ## Resource folder
 
 If you add PNG or audio assets, keep them under `resources/`.

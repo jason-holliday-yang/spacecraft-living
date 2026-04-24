@@ -174,19 +174,45 @@ set(SPACECRAFT_SAVE_STATUS_SOURCES
     ${SPACECRAFT_SAVE_SOURCES}
 )
 
-function(spacecraft_add_executable target)
-    add_executable(${target} ${ARGN})
-    target_include_directories(${target} PRIVATE ${SPACECRAFT_COMMON_INCLUDE_DIRS})
-    target_compile_options(${target} PRIVATE ${SPACECRAFT_COMMON_WARNING_FLAGS})
+set(SPACECRAFT_PUBLIC_HEADERS
+    include/assets.h
+    include/audio_system.h
+    include/c_compat.h
+    include/config.h
+    include/game_manager.h
+    include/localization.h
+    include/map.h
+    include/minimap.h
+    include/persistence_platform.h
+    include/player.h
+    include/puzzle.h
+    include/recipe_catalog.h
+    include/resource_path.h
+    include/save_system.h
+    include/task_system.h
+    include/ui_system.h
+)
 
-    if (APPLE)
-        target_link_libraries(${target} PRIVATE ${RAYLIB_LIBRARY} ${SPACECRAFT_APPLE_FRAMEWORKS})
-    else()
-        target_link_libraries(${target} PRIVATE ${RAYLIB_LIBRARY})
-    endif()
-endfunction()
+set(SPACECRAFT_PRIVATE_HEADERS
+    src/assets_internal.h
+    src/game_manager_internal.h
+    src/game_overlay_internal.h
+    src/game_play_internal.h
+    src/game_session_internal.h
+    src/map_internal.h
+    src/save_codec_internal.h
+    src/save_internal.h
+    src/save_legacy_adapter.h
+    src/save_legacy_format.h
+    src/save_legacy_runtime.h
+    src/task_content.h
+    src/task_runtime_internal.h
+    src/ui_inventory_internal.h
+    src/ui_runtime_internal.h
+    src/ui_story_internal.h
+)
 
-spacecraft_add_executable(SpaceCraftLiving
+set(SPACECRAFT_APP_SOURCES
     src/main.c
     src/assets.cpp
     src/assets_io.cpp
@@ -194,10 +220,6 @@ spacecraft_add_executable(SpaceCraftLiving
     src/assets_gameplay_content.cpp
     src/audio_system.cpp
     src/resource_path.cpp
-    ${SPACECRAFT_SAVE_SOURCES}
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_PLAYER_SOURCES}
     src/recipe_catalog.cpp
     src/game_session.cpp
     src/game_save_flow.cpp
@@ -209,13 +231,12 @@ spacecraft_add_executable(SpaceCraftLiving
     src/game_play.c
     src/game_play_input.c
     src/game_play_story.c
-    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
+    src/game_render.cpp
     src/task_actions.cpp
     src/task_interactions.cpp
     src/task_ship_interactions.cpp
     src/task_world_interactions.cpp
     src/task_crafting.cpp
-    src/game_render.cpp
     src/task_content.cpp
     src/task_content_data.cpp
     src/task_presentation.cpp
@@ -243,6 +264,73 @@ spacecraft_add_executable(SpaceCraftLiving
     src/puzzle.cpp
     src/minimap.cpp
 )
+
+set(SPACECRAFT_TEST_SOURCES
+    tests/camp_recovery_smoke.c
+    tests/endgame_flow_smoke.c
+    tests/endgame_new_survival_smoke.c
+    tests/game_session_smoke.c
+    tests/health_oxygen_smoke.c
+    tests/map_layout_smoke.c
+    tests/save_status_smoke.c
+    tests/save_system_smoke.c
+    tests/status_system_smoke.c
+    tests/task_interaction_smoke.c
+    tests/task_recipe_smoke.c
+    tests/task_text_smoke.c
+    tests/ui_layout_smoke.c
+)
+
+set(SPACECRAFT_XCODE_GROUP_FILES
+    CMakeLists.txt
+    ${SPACECRAFT_PUBLIC_HEADERS}
+    ${SPACECRAFT_PRIVATE_HEADERS}
+    ${SPACECRAFT_MAP_SOURCES}
+    ${SPACECRAFT_PLAYER_SOURCES}
+    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
+    ${SPACECRAFT_TASK_CONTENT_SOURCES}
+    ${SPACECRAFT_SAVE_SOURCES}
+    ${SPACECRAFT_SESSION_SOURCES}
+    ${SPACECRAFT_UI_LAYOUT_SOURCES}
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
+    ${SPACECRAFT_APP_SOURCES}
+    ${SPACECRAFT_TEST_SOURCES}
+)
+
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${SPACECRAFT_XCODE_GROUP_FILES})
+
+function(spacecraft_add_executable target)
+    add_executable(${target} ${ARGN})
+    target_include_directories(${target} PRIVATE ${SPACECRAFT_COMMON_INCLUDE_DIRS})
+    target_compile_options(${target} PRIVATE ${SPACECRAFT_COMMON_WARNING_FLAGS})
+
+    if (APPLE)
+        target_link_libraries(${target} PRIVATE ${RAYLIB_LIBRARY} ${SPACECRAFT_APPLE_FRAMEWORKS})
+    else()
+        target_link_libraries(${target} PRIVATE ${RAYLIB_LIBRARY})
+    endif()
+endfunction()
+
+spacecraft_add_executable(SpaceCraftLiving
+    ${SPACECRAFT_APP_SOURCES}
+    ${SPACECRAFT_SAVE_SOURCES}
+    ${SPACECRAFT_LOCALIZATION_SOURCES}
+    ${SPACECRAFT_MAP_SOURCES}
+    ${SPACECRAFT_PLAYER_SOURCES}
+    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
+)
+
+target_sources(SpaceCraftLiving PRIVATE
+    ${SPACECRAFT_PUBLIC_HEADERS}
+    ${SPACECRAFT_PRIVATE_HEADERS}
+)
+
+if (CMAKE_GENERATOR STREQUAL "Xcode")
+    set_target_properties(SpaceCraftLiving PROPERTIES
+        XCODE_GENERATE_SCHEME TRUE
+        XCODE_SCHEME_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    )
+endif()
 
 spacecraft_add_executable(SpaceCraftSaveSmoke
     tests/save_system_smoke.c

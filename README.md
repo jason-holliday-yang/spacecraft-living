@@ -80,6 +80,17 @@ cmake --build build/cmake
 ctest --test-dir build/cmake --output-on-failure
 ```
 
+使用 `Xcode`：
+
+```sh
+cmake -S . -B build/xcode -G Xcode -DRAYLIB_ROOT=/opt/homebrew
+open build/xcode/SpaceCraftLiving.xcodeproj
+```
+
+不要直接把仓库根目录或 `build/` 目录作为 Xcode 工程打开。
+如果遇到 `CompileDTraceScript` 或 `Multiple commands produce`，参见
+[`docs/engineering/Xcode_Setup.md`](docs/engineering/Xcode_Setup.md) 的排障说明。
+
 ## 目录入口
 
 - [`docs/README.md`](docs/README.md)：当前有效文档入口
