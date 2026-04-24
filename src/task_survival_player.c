@@ -5,8 +5,22 @@
 #include <math.h>
 
 static void SetPlayerStatusActive(Player *player, PlayerStatusType status, bool active, int level, float magnitude) {
+    const PlayerStatusEffect *effect;
+    float remainingTime;
+
+    if (player == NULL) {
+        return;
+    }
+
+    effect = Player_GetStatusEffect(player, status);
+    remainingTime = (effect != NULL && effect->active) ? effect->remainingTime : 0.0f;
+
     if (active) {
-        Player_SetStatus(player, status, level, 0.0f, magnitude);
+        if (effect != NULL && effect->active) {
+            Player_DowngradeStatus(player, status, level, remainingTime, magnitude);
+        } else {
+            Player_SetStatus(player, status, level, remainingTime, magnitude);
+        }
         return;
     }
 
@@ -48,6 +62,7 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
 
     player->glowStickTimer = fmaxf(0.0f, player->glowStickTimer - deltaTime);
     player->speedBoostTimer = fmaxf(0.0f, player->speedBoostTimer - deltaTime);
+    player->attackCooldown = fmaxf(0.0f, player->attackCooldown - deltaTime);
     player->blurPulse += deltaTime;
     Player_UpdateStatuses(player, deltaTime);
 
@@ -264,6 +279,8 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
             player->poison = fmaxf(0.0f, player->poison - (area == MAP_AREA_BASE ? 4.0f : 2.0f) * deltaTime);
             if (player->poison <= 0.0f) {
                 Player_ClearPoison(player);
+            } else {
+                Player_SyncPoisonStatus(player);
             }
         }
         Player_SetStatus(player,
@@ -280,6 +297,8 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
                 player->poison = fmaxf(0.0f, player->poison - deltaTime * (0.25f * campRecoveryStrength));
                 if (player->poison <= 0.0f) {
                     Player_ClearPoison(player);
+                } else {
+                    Player_SyncPoisonStatus(player);
                 }
             }
         }

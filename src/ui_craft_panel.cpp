@@ -33,9 +33,9 @@ void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, con
                                  scale,
                                  LOC_UI_CRAFT_TITLE,
                                  33.0f * scale,
-                                 Loc_PickLiteral("Press F or Enter to craft. ESC closes.", "按 F 或 Enter 制作，按 ESC 关闭。"),
+                                 Loc_PickLiteral("Press F or Enter to build. ESC closes the bench.", "按 F 或 Enter 制作，按 ESC 离开工作台。"),
                                  16.0f * scale,
-                                 Loc_PickLiteral("Select recipe and craft.", "选择配方并制作。"),
+                                 Loc_PickLiteral("Turn salvage into gear before the next push gets uglier.", "在下一次推进变得更凶险前，把回收物真正做成装备。"),
                                  15.5f * scale,
                                  17.0f * scale);
 
@@ -97,13 +97,13 @@ void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, con
                       entry != NULL ? Loc_PickText(entry->ingredientText) : "");
         UIRuntime_DrawWrappedText(assets, buffer, Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 258.0f * scale, detailPanel.width - 36.0f * scale, 48.0f * scale}, 15.2f * scale, 18.0f * scale, Color{255, 220, 150, 255});
         if (entry != NULL && (entry->requiresWorkbench || entry->requiresLowStress)) {
-            UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Advanced build: workbench + stable vitals required.", "高级制作：需要工作台并保持生命体征稳定。"), Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
+            UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Advanced build: stay near the bench and keep your vitals steady.", "高级制作：必须靠近工作台，并保持生命体征稳定。"), Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
         } else {
-            UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Number keys for quick craft. F/Enter crafts selected.", "可用数字键快速制作，按 F/Enter 制作当前选中项。"), Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
+            UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Number keys quick-select a recipe. F or Enter builds the highlighted one.", "可用数字键快速选中配方，按 F 或 Enter 制作当前高亮项。"), Rectangle{detailPanel.x + 18.0f * scale, detailPanel.y + 318.0f * scale, detailPanel.width - 36.0f * scale, 54.0f * scale}, 14.0f * scale, 17.0f * scale, Color{194, 224, 255, 255});
         }
         UIRuntime_DrawButton(assets, buttonRect, Loc_PickLiteral("Craft Selected", "制作当前配方"), true);
     } else {
-        UIRuntime_DrawText(assets, Loc_PickLiteral("No recipes available.", "暂无可用配方。"), Vector2{detailPanel.x + 24.0f * scale, detailPanel.y + 26.0f * scale}, 24.0f * scale, Color{196, 214, 230, 255});
-        UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Progress objectives to unlock more recipes.", "推进目标可解锁更多配方。"), Rectangle{detailPanel.x + 24.0f * scale, detailPanel.y + 62.0f * scale, detailPanel.width - 48.0f * scale, 84.0f * scale}, 15.5f * scale, 18.0f * scale, Color{188, 204, 220, 255});
+        UIRuntime_DrawText(assets, Loc_PickLiteral("No recipes ready yet.", "暂时还没有可用配方。"), Vector2{detailPanel.x + 24.0f * scale, detailPanel.y + 26.0f * scale}, 24.0f * scale, Color{196, 214, 230, 255});
+        UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Push deeper into the run, recover more knowledge, and this bench will have more to offer.", "继续推进流程，找回更多材料与知识，这张工作台才会给出更多选择。"), Rectangle{detailPanel.x + 24.0f * scale, detailPanel.y + 62.0f * scale, detailPanel.width - 48.0f * scale, 84.0f * scale}, 15.5f * scale, 18.0f * scale, Color{188, 204, 220, 255});
     }
 }

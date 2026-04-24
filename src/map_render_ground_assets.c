@@ -62,13 +62,23 @@ static const TextureAsset *GetRuinsFloorAsset(const AssetBundle *assets, const c
     }
 
     if (locationName != NULL) {
-        if (strcmp(locationName, "Ruins Approach") == 0 && assets->tileRuinsApproachFloor.loaded) {
-            return &assets->tileRuinsApproachFloor;
+        if (strcmp(locationName, "Signal Tower Plateau") == 0
+            && assets->tileTowerPlateauFloor.loaded) {
+            return &assets->tileTowerPlateauFloor;
         }
-        if (strcmp(locationName, "Monolith Ring") == 0 && assets->tileRuinsRingFloor.loaded) {
+        if (strcmp(locationName, "Monolith Ring") == 0
+            && assets->tileRuinsRingFloor.loaded) {
             return &assets->tileRuinsRingFloor;
         }
-        if (strcmp(locationName, "Signal Tower Plateau") == 0 && assets->tileTowerPlateauFloor.loaded) {
+        if ((strcmp(locationName, "Ruins Approach") == 0
+                || strcmp(locationName, "South Collapse") == 0
+                || strcmp(locationName, "Service Shafts") == 0)
+            && assets->tileRuinsApproachFloor.loaded) {
+            return &assets->tileRuinsApproachFloor;
+        }
+        if ((strcmp(locationName, "Vent Galleries") == 0
+                || strcmp(locationName, "Purifier Ring") == 0)
+            && assets->tileTowerPlateauFloor.loaded) {
             return &assets->tileTowerPlateauFloor;
         }
     }

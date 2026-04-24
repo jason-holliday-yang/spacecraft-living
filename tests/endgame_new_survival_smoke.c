@@ -16,7 +16,7 @@ static void Require(bool condition, const char *message) {
     exit(1);
 }
 
-static int CountBossArenaRelicGuards(const TaskSystem *tasks) {
+static int CountNorthwestRuinsRelicGuards(const TaskSystem *tasks) {
     int count;
     int index;
 
@@ -30,6 +30,18 @@ static int CountBossArenaRelicGuards(const TaskSystem *tasks) {
     }
 
     return count;
+}
+
+static Monster *FindMonsterByEncounter(TaskSystem *tasks, CombatEncounterId encounterId) {
+    int index;
+
+    for (index = 0; index < tasks->monsterCount; index++) {
+        if (tasks->monsters[index].encounterId == encounterId) {
+            return &tasks->monsters[index];
+        }
+    }
+
+    return NULL;
 }
 
 static void ResetEndgameState(GameMap *map, Player *player, TaskSystem *tasks) {
@@ -83,6 +95,13 @@ int main(void) {
     float peacefulTowerOxygen;
     float unlitBossHealth;
     float litBossHealth;
+    float unlitWeakPointTimer;
+    float litWeakPointTimer;
+    float normalBossHealthAfterHit;
+    float weakPointBossHealthAfterHit;
+    int heroicCompletionScore;
+    int peacefulCompletionScore;
+    int settlementCompletionScore;
 
     ResetEndgameState(&map, &player, &tasks);
     player.gridX = EXTERIOR_X(84);
@@ -127,6 +146,37 @@ int main(void) {
     peacefulTowerOxygen = peacefulRoutePlayer.oxygen;
     Require(peacefulTowerOxygen > unlitTowerOxygen,
             "the peaceful route should reduce tower pressure compared with the forced climb");
+
+    ResetEndgameState(&map, &player, &tasks);
+    Require(Tasks_GetCombatScoreMax() == 120,
+            "combat scoring should now expose the full fixed-encounter budget");
+    Require(Tasks_GetCombatEncounterCount() == 8,
+            "combat scoring should track the six key field encounters plus relic guard and final boss");
+    Require(Tasks_GetCombatScore(&tasks) == 0,
+            "a fresh run should start with zero combat score");
+    tasks.ending = ENDING_HEROIC;
+    heroicCompletionScore = Tasks_GetEndingCompletionScore(&tasks, &player);
+    tasks.ending = ENDING_PEACEFUL;
+    peacefulCompletionScore = Tasks_GetEndingCompletionScore(&tasks, &player);
+    tasks.ending = ENDING_SETTLEMENT;
+    settlementCompletionScore = Tasks_GetEndingCompletionScore(&tasks, &player);
+    Require(heroicCompletionScore == peacefulCompletionScore
+                && peacefulCompletionScore == settlementCompletionScore,
+            "successful endings should now award the same completion score regardless of route");
+    tasks.ending = ENDING_NONE;
+    {
+        Monster *westFrontierEncounter;
+
+        westFrontierEncounter = FindMonsterByEncounter(&tasks, COMBAT_ENCOUNTER_WEST_FRONTIER);
+        Require(westFrontierEncounter != NULL,
+                "the west frontier encounter should stay tagged for combat scoring");
+        westFrontierEncounter->active = false;
+        westFrontierEncounter->health = 0.0f;
+        Require(Tasks_IsCombatEncounterCompleted(&tasks, COMBAT_ENCOUNTER_WEST_FRONTIER),
+                "defeated fixed encounters should report as completed");
+        Require(Tasks_GetCombatScore(&tasks) == 10,
+                "defeating the first field encounter should now contribute its fixed combat score");
+    }
 
     ResetEndgameState(&map, &player, &tasks);
     tasks.monsterCount = 1;
@@ -208,6 +258,117 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 220.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_AOE;
+    tasks.monsters[0].attackTelegraph = 0.1f;
+    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
+    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
+    Tasks_Update(&tasks, &map, &player, 0.2f);
+    unlitWeakPointTimer = tasks.monsters[0].weakPointTimer;
+    Require(unlitWeakPointTimer > 0.0f,
+            "dodging the guardian's area attack should now expose a real weak-point window");
+
+    ResetEndgameState(&map, &player, &tasks);
+    tasks.monolithsLit = 3;
+    tasks.monolithActivated[0] = true;
+    tasks.monolithActivated[1] = true;
+    tasks.monolithActivated[2] = true;
+    tasks.monolithPuzzle.solved = true;
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 220.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_AOE;
+    tasks.monsters[0].attackTelegraph = 0.1f;
+    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
+    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
+    Tasks_Update(&tasks, &map, &player, 0.2f);
+    litWeakPointTimer = tasks.monsters[0].weakPointTimer;
+    Require(litWeakPointTimer > unlitWeakPointTimer,
+            "full monolith prep should extend the guardian weak-point window after a dodged heavy attack");
+
+    ResetEndgameState(&map, &player, &tasks);
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 60.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_AOE;
+    tasks.monsters[0].attackTelegraph = 0.1f;
+    player.gridX = BOSS_ARENA_BOSS_X + 4;
+    player.gridY = BOSS_ARENA_BOSS_Y;
+    Tasks_Update(&tasks, &map, &player, 0.2f);
+    Require(player.health < INITIAL_HEALTH,
+            "the guardian final phase should widen its shockwave pressure beyond the early-phase radius");
+
+    ResetEndgameState(&map, &player, &tasks);
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 220.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    player.hasLaserGun = true;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE;
+    player.gridY = BOSS_ARENA_BOSS_Y;
+    player.facingX = -1;
+    player.facingY = 0;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "player should still be able to land a normal hit against the guardian");
+    normalBossHealthAfterHit = tasks.monsters[0].health;
+
+    ResetEndgameState(&map, &player, &tasks);
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
+    tasks.monsters[0].health = 220.0f;
+    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].weakPointTimer = 1.4f;
+    player.hasLaserGun = true;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE;
+    player.gridY = BOSS_ARENA_BOSS_Y;
+    player.facingX = -1;
+    player.facingY = 0;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "player should be able to punish an exposed guardian weak point");
+    weakPointBossHealthAfterHit = tasks.monsters[0].health;
+    Require(weakPointBossHealthAfterHit < normalBossHealthAfterHit - 10.0f,
+            "weak-point punishment should deal meaningfully more damage than a normal guardian hit");
+    Require(tasks.monsters[0].weakPointTimer <= 0.0f,
+            "landing the weak-point punish should consume the current guardian opening");
+    Require(strstr(message, "Weak point") != NULL || strstr(message, "guardian staggers") != NULL,
+            "weak-point punishment should tell the player they exploited the opening");
+
+    ResetEndgameState(&map, &player, &tasks);
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_FINAL_BOSS;
+    tasks.monsters[0].gridX = BOSS_ARENA_BOSS_X;
+    tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
+    tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
+    tasks.monsters[0].unlockStage = 7;
     tasks.monsters[0].health = 140.0f;
     tasks.monsters[0].maxHealth = 220.0f;
     tasks.monsters[0].attackTimer = 0.0f;
@@ -217,8 +378,8 @@ int main(void) {
     player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
     player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
     Tasks_Update(&tasks, &map, &player, 0.2f);
-    Require(CountBossArenaRelicGuards(&tasks) >= 1,
-            "boss spawn attack should now summon relic-guard reinforcements into the isolated arena");
+    Require(CountNorthwestRuinsRelicGuards(&tasks) >= 1,
+            "boss spawn attack should now summon relic-guard reinforcements into the northwest-ruins fight");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);
@@ -243,26 +404,27 @@ int main(void) {
     player.facingY = 0;
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
-            "player attack should be able to finish the guardian in the arena");
+            "player attack should be able to finish the guardian in Northwest Ruins");
     Require(tasks.bossDefeated,
             "killing the guardian through combat should mark the boss as defeated");
-    Require(player.gridX == BOSS_ARENA_RETURN_X && player.gridY == BOSS_ARENA_RETURN_Y,
-            "guardian defeat should return the player to the ship-side airlock");
-    Require(Map_IsSwampOuterUnlocked(&map),
-            "guardian defeat should reopen the outer route after the isolated arena clears");
+    Require(player.gridX == BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE && player.gridY == BOSS_ARENA_BOSS_Y,
+            "guardian defeat should leave the player in the in-world northwest ruins fight space");
     Require(player.resources[RESOURCE_BOSS_SCALE] >= 1,
             "guardian defeat should still award the boss-scale trophy resource");
-    Require(strstr(message, "guardian collapses") != NULL || strstr(message, "守卫已经崩溃") != NULL,
-            "guardian defeat should explain the forced return to the ship");
+    Require(strstr(message, "northwest ruins") != NULL
+                || strstr(message, "Signal Tower") != NULL
+                || strstr(message, "西北遗迹") != NULL,
+            "guardian defeat should explain that the fight ended in-world and the route now continues to the tower or settlement confirmation");
     Tasks_UpdateObjective(&tasks, &player);
     Require(strcmp(tasks.objective, "Heroic route chosen. Reach the Signal Tower and launch the rescue beacon.") == 0,
             "guardian defeat should hand the heroic route back to the tower finale");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);
+    player.hasSignalAmplifier = true;
+    Tasks_UpdateObjective(&tasks, &player);
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
             "peaceful route should be selectable once the archive is complete");
-    player.hasSignalAmplifier = true;
     player.gridX = SIGNAL_TOWER_X - 1;
     player.gridY = SIGNAL_TOWER_Y;
     memset(message, 0, sizeof(message));
@@ -270,11 +432,17 @@ int main(void) {
             "peaceful route should remain available under the new survival model");
     Require(tasks.ending == ENDING_PEACEFUL,
             "signal tower plus amplifier should still unlock the peaceful ending");
+    Require(Tasks_CalculateEndingScore(&tasks, &player)
+                == Tasks_GetArchiveScore(&tasks)
+                    + Tasks_GetInvestigationScore(&tasks)
+                    + Tasks_GetCombatScore(&tasks)
+                    + Tasks_GetSurvivalScore(&tasks, &player)
+                    + Tasks_GetEndingCompletionScore(&tasks, &player),
+            "ending score breakdown helpers should stay aligned with the final score");
     Require(Tasks_CalculateEndingScore(&tasks, &player) >= 700,
             "a completed peaceful route should now award a strong endgame score");
-    Require(strcmp(Tasks_GetEndingScoreRank(Tasks_CalculateEndingScore(&tasks, &player)), "A") == 0
-                || strcmp(Tasks_GetEndingScoreRank(Tasks_CalculateEndingScore(&tasks, &player)), "S") == 0,
-            "a completed peaceful route should land in the upper ending-score ranks");
+    Require(strcmp(Tasks_GetEndingScoreRank(Tasks_CalculateEndingScore(&tasks, &player)), "A") == 0,
+            "a completed peaceful route should land in the top A-to-E ending-score rank");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);
@@ -296,6 +464,7 @@ int main(void) {
     player.hasSignalAmplifier = true;
     player.gridX = LOXI_TERMINAL_X - 1;
     player.gridY = LOXI_TERMINAL_Y;
+    tasks.bossDefeated = true;
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "settlement route should still be selectable from the base terminal");
@@ -304,6 +473,17 @@ int main(void) {
     Tasks_CommitSettlement(&tasks);
     Require(tasks.ending == ENDING_SETTLEMENT,
             "settlement should remain a valid third endgame route");
+
+    ResetEndgameState(&map, &player, &tasks);
+    PrepareEndingBranch(&tasks);
+    tasks.ending = ENDING_PEACEFUL;
+    {
+        const int scoreWithoutStoryArchive = Tasks_CalculateEndingScore(&tasks, &player);
+
+        tasks.shownMainStorySceneCount = STORY_MAIN_SCENE_COUNT;
+        Require(Tasks_CalculateEndingScore(&tasks, &player) > scoreWithoutStoryArchive,
+                "ending score should now reward completed main-story archive progress even when images are placeholders");
+    }
 
     puts("endgame_new_survival smoke ok");
     return 0;

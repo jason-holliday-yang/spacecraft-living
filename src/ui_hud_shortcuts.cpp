@@ -1,6 +1,6 @@
 #include "ui_runtime_internal.h"
 
-static void DrawHudShortcutIcon(Rectangle rect, int iconKind, Color primary, Color secondary) {
+static void DrawHudShortcutFallbackIcon(Rectangle rect, int iconKind, Color primary, Color secondary) {
     Vector2 center;
     float unit;
     Color glow;
@@ -43,41 +43,72 @@ static void DrawHudShortcutIcon(Rectangle rect, int iconKind, Color primary, Col
     }
 }
 
+void UIRuntime_DrawShortcutIcon(Rectangle rect,
+                                const TextureAsset *iconTexture,
+                                int iconKind,
+                                Color primary,
+                                Color secondary) {
+    DrawCircleV(Vector2{rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f},
+                (rect.width < rect.height ? rect.width : rect.height) * 0.34f,
+                Color{primary.r, primary.g, primary.b, 38});
+    if (iconTexture != nullptr && iconTexture->loaded) {
+        Rectangle textureRect = Rectangle{rect.x + rect.width * 0.14f,
+                                          rect.y + rect.height * 0.14f,
+                                          rect.width * 0.72f,
+                                          rect.height * 0.72f};
+        UIRuntime_DrawTextureAssetFitted(iconTexture, textureRect, WHITE);
+        return;
+    }
+
+    DrawHudShortcutFallbackIcon(rect, iconKind, primary, secondary);
+}
+
 void UIRuntime_DrawHudShortcut(const AssetBundle *assets,
                                Rectangle rect,
                                const char *label,
                                const char *subtitle,
                                const char *keyLabel,
+                               const TextureAsset *iconTexture,
                                int iconKind,
                                Color primary,
                                Color secondary) {
     float localScale;
     Rectangle iconRect;
     Rectangle keyRect;
-    Vector2 labelSize;
-    float labelX;
-    float labelMinX;
-    float labelMaxX;
+    Vector2 subtitleSize;
+    float textX;
+    float textTopY;
+    float textBottomY;
+    float keyFontSize;
+    Vector2 keySize;
 
     localScale = rect.height / 58.0f;
     UIRuntime_DrawPanel(rect, Color{10, 22, 36, 228}, Color{255, 255, 255, 28});
     iconRect = Rectangle{rect.x + 8.0f * localScale, rect.y + 8.0f * localScale, 34.0f * localScale, rect.height - 16.0f * localScale};
-    keyRect = Rectangle{rect.x + rect.width - 30.0f * localScale, rect.y + 10.0f * localScale, 20.0f * localScale, 18.0f * localScale};
+    keyRect = Rectangle{rect.x + rect.width - 30.0f * localScale, rect.y + rect.height - 28.0f * localScale, 20.0f * localScale, 18.0f * localScale};
+    textX = iconRect.x + iconRect.width + 8.0f * localScale;
+    textTopY = rect.y + 10.0f * localScale;
+    textBottomY = rect.y + rect.height - 22.0f * localScale;
+    keyFontSize = 12.0f * localScale;
+
     UIRuntime_DrawPanel(iconRect, Color{18, 34, 52, 235}, Color{109, 201, 234, 65});
-    DrawHudShortcutIcon(iconRect, iconKind, primary, secondary);
-    labelSize = UIRuntime_MeasureText(assets, label, 13.5f * localScale);
-    labelMinX = iconRect.x + iconRect.width + 8.0f * localScale;
-    labelMaxX = keyRect.x - 6.0f * localScale - labelSize.x;
-    labelX = labelMinX;
-    if (labelMaxX > labelMinX) {
-        labelX = labelMinX + (labelMaxX - labelMinX) * 0.5f;
-    }
+    UIRuntime_DrawShortcutIcon(iconRect, iconTexture, iconKind, primary, secondary);
+    subtitleSize = UIRuntime_MeasureText(assets, subtitle, 10.5f * localScale);
     UIRuntime_DrawText(assets,
                        label,
-                       Vector2{labelX, rect.y + rect.height * 0.5f - labelSize.y * 0.5f},
-                       13.5f * localScale,
+                       Vector2{textX, textTopY},
+                       13.0f * localScale,
                        WHITE);
+    UIRuntime_DrawText(assets,
+                       subtitle,
+                       Vector2{textX, textBottomY - subtitleSize.y * 0.5f},
+                       10.5f * localScale,
+                       Color{182, 199, 214, 255});
     UIRuntime_DrawPanel(keyRect, Color{33, 56, 80, 245}, Color{255, 214, 154, 85});
-    UIRuntime_DrawText(assets, keyLabel, Vector2{keyRect.x + 6.0f * localScale, keyRect.y + 2.5f * localScale}, 12.0f * localScale, Color{255, 234, 206, 255});
-    (void)subtitle;
+    keySize = UIRuntime_MeasureText(assets, keyLabel, keyFontSize);
+    UIRuntime_DrawText(assets,
+                       keyLabel,
+                       Vector2{keyRect.x + (keyRect.width - keySize.x) * 0.5f, keyRect.y + (keyRect.height - keySize.y) * 0.5f - 0.5f * localScale},
+                       keyFontSize,
+                       Color{255, 234, 206, 255});
 }

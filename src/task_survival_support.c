@@ -61,12 +61,16 @@ float TasksRuntime_GetOxygenLeakRate(const TaskSystem *tasks) {
     float rate;
     int pressureCycles;
 
-    rate = 15.0f / FULL_CYCLE_SECONDS;
-    if (tasks->oxygenRepairLevel >= 1) {
-        rate *= 0.70f;
-    }
+    /* Base ship leak pacing:
+       - before any repair: roughly 1 minute of field oxygen
+       - after the first repair: roughly 3 minutes
+       - after full repair: no extra ship leak */
     if (tasks->oxygenRepairLevel >= 2) {
         rate = 0.0f;
+    } else if (tasks->oxygenRepairLevel >= 1) {
+        rate = 0.38f;
+    } else {
+        rate = 1.49f;
     }
 
     pressureCycles = tasks->dayCount / 3;

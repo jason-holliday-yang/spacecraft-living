@@ -104,10 +104,10 @@ int main(void) {
                 && Player_GetStatusEffect(&player, PLAYER_STATUS_CRITICAL_CONDITION)->level == 2,
             "very low health should activate critical condition level 2");
 
-    forestLoss = MeasureOxygenLoss(EXTERIOR_X(50), EXTERIOR_Y(90), 5.0f, false, NULL, NULL);
-    outerLoss = MeasureOxygenLoss(EXTERIOR_X(106), EXTERIOR_Y(80), 5.0f, false, NULL, NULL);
-    deepLoss = MeasureOxygenLoss(EXTERIOR_X(112), EXTERIOR_Y(72), 5.0f, false, &deepPoison, NULL);
-    deepSuitLoss = MeasureOxygenLoss(EXTERIOR_X(112), EXTERIOR_Y(72), 5.0f, true, &deepSuitPoison, NULL);
+    forestLoss = MeasureOxygenLoss(EXTERIOR_X(90), EXTERIOR_Y(80), 5.0f, false, NULL, NULL);
+    outerLoss = MeasureOxygenLoss(EXTERIOR_X(102), EXTERIOR_Y(56), 5.0f, false, NULL, NULL);
+    deepLoss = MeasureOxygenLoss(EXTERIOR_X(116), EXTERIOR_Y(50), 5.0f, false, &deepPoison, NULL);
+    deepSuitLoss = MeasureOxygenLoss(EXTERIOR_X(116), EXTERIOR_Y(50), 5.0f, true, &deepSuitPoison, NULL);
     ruinsLoss = MeasureOxygenLoss(SIGNAL_TOWER_X, SIGNAL_TOWER_Y + 6, 5.0f, false, NULL, &ruinsLeak);
     ruinsSuitLoss = MeasureOxygenLoss(SIGNAL_TOWER_X, SIGNAL_TOWER_Y + 6, 5.0f, true, NULL, NULL);
     ruinsReserveLoss = MeasureOxygenLossWithReserve(SIGNAL_TOWER_X, SIGNAL_TOWER_Y + 6, 5.0f, 40.0f, 2, 45.0f, 20.0f);

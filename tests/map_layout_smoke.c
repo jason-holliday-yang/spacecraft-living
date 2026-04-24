@@ -212,6 +212,16 @@ int main(void) {
     RequireVoidHullBoundary(&map, PLAYER_START_X, SHIP_POWER_BAY_Y + SHIP_POWER_BAY_HEIGHT, "bottom hull should stay sealed");
     RequireVoidHullBoundary(&map, AIRLOCK_DOOR_X, AIRLOCK_DOOR_TOP_Y - 1, "airlock should not leak above the door");
     RequireVoidHullBoundary(&map, AIRLOCK_DOOR_X, AIRLOCK_DOOR_TOP_Y + AIRLOCK_DOOR_HEIGHT, "airlock should not leak below the door");
+    Require(Map_GetGroundTileAt(&map, SHIP_CARGO_HOLD_X - 2, AIRLOCK_DOOR_Y) != TILE_VOID,
+            "ship left side should now sit just one void tile away from the exterior instead of a wide gap");
+    Require(Map_GetGroundTileAt(&map, PLAYER_START_X, SHIP_CREW_QUARTERS_Y - 2) != TILE_VOID,
+            "ship top side should now sit just one void tile away from the exterior instead of a wide gap");
+    Require(Map_GetGroundTileAt(&map, PLAYER_START_X, SHIP_POWER_BAY_Y + SHIP_POWER_BAY_HEIGHT + 1) != TILE_VOID,
+            "ship bottom side should now sit just one void tile away from the exterior instead of a wide gap");
+    Require(Map_GetGroundTileAt(&map, AIRLOCK_DOOR_X + 1, AIRLOCK_DOOR_TOP_Y - 1) == TILE_VOID,
+            "ship right side should keep a one-tile void outline away from the dedicated airlock opening");
+    Require(Map_GetGroundTileAt(&map, AIRLOCK_DOOR_X + 2, AIRLOCK_DOOR_TOP_Y - 1) != TILE_VOID,
+            "ship right side should return to exterior ground immediately after the one-tile void outline");
     Require(Map_GetGroundTileAt(&map, SHIP_CARGO_HOLD_X - 1, AIRLOCK_DOOR_Y) != TILE_BASE_FLOOR,
             "left side should stay sealed off instead of connecting cargo directly to ship-floor continuity");
     Require(!Map_IsWalkable(&map, SHIP_CARGO_HOLD_X - 1, AIRLOCK_DOOR_Y),
@@ -250,10 +260,30 @@ int main(void) {
             "airlock exit should reconnect into the ruins approach");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, EXTERIOR_X(34), EXTERIOR_Y(78)),
             "airlock exit should reconnect into the western forest route");
-    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(53), EXTERIOR_Y(74)), "Echo Basin") == 0,
-            "echo basin should now occupy a broad west-line basin instead of a thin edge pocket");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(24), EXTERIOR_Y(74)), "West Frontier") == 0,
+            "west archive entry should remain anchored in West Frontier after the redistribution");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(35), EXTERIOR_Y(76)), "Survey Break") == 0,
+            "survey break should stay centered on the mid-west relay handoff");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(41), EXTERIOR_Y(67)), "Canopy Hollow") == 0,
+            "canopy hollow should keep the upper-west observation pocket");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(26), EXTERIOR_Y(90)), "Echo Basin") == 0,
+            "echo basin should now occupy the lower-left basin block instead of a thin edge pocket");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(14), EXTERIOR_Y(98)), "Echo Basin") == 0,
+            "echo basin should now reach the far lower-left corner instead of stopping short of the map edge");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(46), EXTERIOR_Y(100)), "Echo Basin") == 0,
+            "echo basin should stay broad across the lower-west shelf outside the last-camp island");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(45), EXTERIOR_Y(84)), "Last Camp") == 0,
+            "last camp should remain the isolated lower-west decision point");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(80), EXTERIOR_Y(98)), "South Collapse") == 0,
+            "south collapse should cover the widened entry shelf of the southern descent");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(88), EXTERIOR_Y(96)), "Vent Galleries") == 0,
+            "vent galleries should stay readable on the upper middle facility deck");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(106), EXTERIOR_Y(100)), "Service Shafts") == 0,
+            "service shafts should stay aligned to the central maintenance spine");
     Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(108), EXTERIOR_Y(98)), "Purifier Ring") == 0,
             "purifier ring should claim a slightly wider south-deck footprint after the late-map polish");
+    Require(strcmp(Map_GetLocationNameAt(EXTERIOR_X(122), EXTERIOR_Y(102)), "Root Vault") == 0,
+            "root vault should remain the deepest point of the southern archive route");
     for (offsetY = 0; offsetY < STATION_FOOTPRINT_HEIGHT; offsetY++) {
         for (offsetX = 0; offsetX < STATION_FOOTPRINT_WIDTH; offsetX++) {
             Require(Map_GetPropTileAt(&map, WORKBENCH_X + offsetX, WORKBENCH_Y + offsetY) == TILE_WORKBENCH,
@@ -308,28 +338,67 @@ int main(void) {
             "monolith ring should stay on ruins ground");
     Require(Map_GetGroundTileAt(&map, EXTERIOR_X(64), EXTERIOR_Y(10)) == TILE_RUINS_GROUND,
             "tower plateau should stay on ruins ground");
+    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(42), EXTERIOR_Y(14)) == TILE_RUINS_GROUND,
+            "north ruins should now extend farther west so the upper edge reads as a full plateau");
+    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(88), EXTERIOR_Y(18)) == TILE_RUINS_GROUND,
+            "north ruins should now extend farther east so the upper edge stays visually full");
     Require(Map_IsWalkable(&map, EXTERIOR_X(64), EXTERIOR_Y(27)),
             "ruins approach centerline should remain walkable");
     Require(Map_IsWalkable(&map, EXTERIOR_X(64), EXTERIOR_Y(17)),
             "monolith ring centerline should remain walkable");
     Require(Map_IsWalkable(&map, SIGNAL_TOWER_X - 1, SIGNAL_TOWER_Y),
             "tower ascent centerline should remain walkable");
-    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(98), EXTERIOR_Y(48)) == TILE_SWAMP_GROUND,
+    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(100), EXTERIOR_Y(40)) == TILE_SWAMP_GROUND,
             "outer swamp rim should stay on swamp ground");
-    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(106), EXTERIOR_Y(70)) == TILE_SWAMP_GROUND,
-            "flooded detour should stay on outer-swamp ground");
-    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(112), EXTERIOR_Y(56)) == TILE_DEEP_SWAMP_GROUND,
+    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(102), EXTERIOR_Y(62)) == TILE_SWAMP_GROUND,
+            "flooded detour should stay on shallow-swamp ground after the relay lane");
+    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(111), EXTERIOR_Y(30)) == TILE_DEEP_SWAMP_GROUND,
             "deep gate shelf should stay on deep-swamp ground");
-    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(114), EXTERIOR_Y(72)) == TILE_DEEP_SWAMP_GROUND,
+    Require(Map_GetGroundTileAt(&map, EXTERIOR_X(111), EXTERIOR_Y(48)) == TILE_DEEP_SWAMP_GROUND,
             "deep basin should stay on deep-swamp ground");
-    Require(Map_IsWalkable(&map, EXTERIOR_X(98), EXTERIOR_Y(48)),
+    Require(Map_IsWalkable(&map, EXTERIOR_X(98), EXTERIOR_Y(40)),
             "outer swamp rim teaching shelf should remain walkable");
-    Require(Map_IsWalkable(&map, EXTERIOR_X(106), EXTERIOR_Y(70)),
+    Require(Map_IsWalkable(&map, EXTERIOR_X(102), EXTERIOR_Y(62)),
             "flooded detour route should remain walkable");
-    Require(Map_IsWalkable(&map, EXTERIOR_X(111), EXTERIOR_Y(56)),
+    Require(Map_IsWalkable(&map, EXTERIOR_X(110), EXTERIOR_Y(30)),
             "deep gate objective shelf should remain walkable");
-    Require(Map_IsWalkable(&map, EXTERIOR_X(114), EXTERIOR_Y(72)),
+    Require(Map_IsWalkable(&map, EXTERIOR_X(111), EXTERIOR_Y(48)),
             "deep basin route should remain walkable");
+    Require(BOSS_ARENA_WIDTH >= 11 && BOSS_ARENA_HEIGHT >= 13,
+            "Northwest Ruins should remain large enough for the dedicated guardian encounter");
+    Require(BOSS_ARENA_X < EXTERIOR_X(24) && BOSS_ARENA_Y < EXTERIOR_Y(24),
+            "Northwest Ruins guardian encounter should sit in the upper-left corner of the world map");
+    Require(Map_GetGroundTileAt(&map, BOSS_ARENA_BOSS_X, BOSS_ARENA_BOSS_Y) == TILE_RUINS_GROUND,
+            "Northwest Ruins guardian center should stay on ruins ground");
+    Require(strcmp(Map_GetLocationNameAt(BOSS_ARENA_PLAYER_ENTRY_X, BOSS_ARENA_PLAYER_ENTRY_Y), "Northwest Ruins") == 0,
+            "Northwest Ruins entry should report the world-map encounter location name");
+    Require(BOSS_ARENA_BOSS_X >= BOSS_ARENA_X + (BOSS_ARENA_WIDTH / 2) - 1
+                && BOSS_ARENA_BOSS_X <= BOSS_ARENA_X + (BOSS_ARENA_WIDTH / 2),
+            "guardian spawn should now sit near the horizontal center of Northwest Ruins");
+    Require(BOSS_ARENA_BOSS_Y >= BOSS_ARENA_Y + (BOSS_ARENA_HEIGHT / 2) - 1
+                && BOSS_ARENA_BOSS_Y <= BOSS_ARENA_Y + (BOSS_ARENA_HEIGHT / 2),
+            "guardian spawn should now sit near the vertical center of Northwest Ruins");
+    Require(Map_IsWalkable(&map, BOSS_ARENA_PLAYER_ENTRY_X, BOSS_ARENA_PLAYER_ENTRY_Y),
+            "Northwest Ruins should keep a dedicated walkable entry tile");
+    for (offsetX = 0; offsetX < BOSS_ARENA_WIDTH; ++offsetX) {
+        Require(Map_GetPropTileAt(&map, BOSS_ARENA_X + offsetX, BOSS_ARENA_Y) == TILE_ROCK,
+                "Northwest Ruins top wall should stay sealed by rock");
+        Require(Map_GetPropTileAt(&map, BOSS_ARENA_X + offsetX, BOSS_ARENA_Y + BOSS_ARENA_HEIGHT - 1) == TILE_ROCK,
+                "Northwest Ruins bottom wall should stay sealed by rock");
+    }
+    for (offsetY = 0; offsetY < BOSS_ARENA_HEIGHT; ++offsetY) {
+        Require(Map_GetPropTileAt(&map, BOSS_ARENA_X, BOSS_ARENA_Y + offsetY) == TILE_ROCK,
+                "Northwest Ruins left wall should stay sealed by rock");
+        if (offsetY < BOSS_ARENA_ENTRY_TOP_Y - BOSS_ARENA_Y
+            || offsetY > BOSS_ARENA_ENTRY_TOP_Y - BOSS_ARENA_Y + BOSS_ARENA_ENTRY_HEIGHT - 1) {
+            Require(Map_GetPropTileAt(&map, BOSS_ARENA_X + BOSS_ARENA_WIDTH - 1, BOSS_ARENA_Y + offsetY) == TILE_ROCK,
+                    "Northwest Ruins right wall should stay sealed everywhere except the dedicated entry");
+        }
+    }
+    for (offsetY = 0; offsetY < BOSS_ARENA_ENTRY_HEIGHT; ++offsetY) {
+        Require(Map_GetPropTileAt(&map, BOSS_ARENA_X + BOSS_ARENA_WIDTH - 1, BOSS_ARENA_ENTRY_TOP_Y + offsetY) == TILE_VOID,
+                "Northwest Ruins should keep exactly one open entry on its right edge");
+    }
     Require(Map_GetPropTileAt(&map, SWAMP_GATE_X, EXTERIOR_Y(52)) == TILE_VOID
                 && Map_GetPropTileAt(&map, SWAMP_GATE_X + 1, EXTERIOR_Y(52)) == TILE_VOID,
             "deep-swamp gate should no longer use a decorative full-height barrier that can be bypassed");

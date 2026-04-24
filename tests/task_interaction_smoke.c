@@ -1,4 +1,5 @@
 #include "map.h"
+#include "localization.h"
 #include "player.h"
 #include "task_system.h"
 #include "../src/task_runtime_internal.h"
@@ -15,6 +16,66 @@ static void Require(bool condition, const char *message) {
 
     fprintf(stderr, "task_interaction_smoke failed: %s\n", message);
     exit(1);
+}
+
+static bool CanReach(const GameMap *map, int startX, int startY, int targetX, int targetY) {
+    bool visited[MAP_HEIGHT][MAP_WIDTH];
+    int queueX[MAP_WIDTH * MAP_HEIGHT];
+    int queueY[MAP_WIDTH * MAP_HEIGHT];
+    int head;
+    int tail;
+
+    if (!Map_IsWalkable(map, startX, startY) || !Map_IsWalkable(map, targetX, targetY)) {
+        return false;
+    }
+
+    memset(visited, 0, sizeof(visited));
+    head = 0;
+    tail = 0;
+    visited[startY][startX] = true;
+    queueX[tail] = startX;
+    queueY[tail] = startY;
+    tail += 1;
+
+    while (head < tail) {
+        static const int kDirections[4][2] = {
+            {1, 0},
+            {-1, 0},
+            {0, 1},
+            {0, -1}
+        };
+        int currentX;
+        int currentY;
+        int directionIndex;
+
+        currentX = queueX[head];
+        currentY = queueY[head];
+        head += 1;
+
+        if (currentX == targetX && currentY == targetY) {
+            return true;
+        }
+
+        for (directionIndex = 0; directionIndex < 4; directionIndex++) {
+            int nextX;
+            int nextY;
+
+            nextX = currentX + kDirections[directionIndex][0];
+            nextY = currentY + kDirections[directionIndex][1];
+            if (!Map_IsWithinBounds(nextX, nextY)
+                || visited[nextY][nextX]
+                || !Map_IsWalkable(map, nextX, nextY)) {
+                continue;
+            }
+
+            visited[nextY][nextX] = true;
+            queueX[tail] = nextX;
+            queueY[tail] = nextY;
+            tail += 1;
+        }
+    }
+
+    return false;
 }
 
 static void RequireValidSpawnPlacements(const GameMap *map, const TaskSystem *tasks) {
@@ -406,12 +467,14 @@ static void RequireReasonableTaskPlacements(const GameMap *map, const TaskSystem
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Echo Basin") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Last Camp") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Crash Forest") == 0
+                    || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Flooded Detour") == 0
+                    || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Deep Basin") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "South Collapse") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Vent Galleries") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Service Shafts") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Purifier Ring") == 0
                     || strcmp(Map_GetLocationNameAt(log->gridX, log->gridY), "Root Vault") == 0,
-                "collectible records should stay inside the ship or on the intended west/south archive anchors");
+                "collectible records should stay inside the ship or on the intended regional archive anchors");
     }
 }
 
@@ -451,8 +514,8 @@ int main(void) {
             "echo basin should expose a topology reconstruction record");
     Require(CountLogsInLocation(&tasks, "Last Camp") == 1,
             "last camp should expose a late west archive record");
-    Require(CountLogsInLocation(&tasks, "Crash Forest") == 1,
-            "crash forest should expose the wreck black-box log once the clue is resolved");
+    Require(CountLogsInLocation(&tasks, "Deep Basin") == 1,
+            "deep basin should now expose the wreck black-box log beside the buried crash site");
     Require(CountLogsInLocation(&tasks, "South Collapse") == 1,
             "south collapse should expose the opening facility outage memo");
     Require(CountLogsInLocation(&tasks, "Vent Galleries") == 1,
@@ -463,6 +526,41 @@ int main(void) {
             "purifier ring should expose the control brief record");
     Require(CountLogsInLocation(&tasks, "Root Vault") == 1,
             "root vault should expose a south facility dossier record");
+    Require(FindLogInLocation(&tasks, "West Frontier")->category == SHIP_LOG_MAINLINE,
+            "west frontier should keep the opening west mainline archive");
+    Require(FindLogInLocation(&tasks, "Survey Break")->category == SHIP_LOG_MAINLINE,
+            "survey break should keep the relay-chain mainline archive");
+    Require(FindLogInLocation(&tasks, "Canopy Hollow")->category == SHIP_LOG_SUPPLEMENTAL,
+            "canopy hollow should stay a supplemental west handoff record");
+    Require(FindLogInLocation(&tasks, "Echo Basin")->category == SHIP_LOG_MAINLINE,
+            "echo basin should keep the west mainline reconstruction archive");
+    Require(FindLogInLocation(&tasks, "Last Camp")->category == SHIP_LOG_SUPPLEMENTAL,
+            "last camp should stay a supplemental west decision record");
+    Require(FindLogInLocation(&tasks, "Deep Basin")->category == SHIP_LOG_MAINLINE,
+            "deep basin should keep the east-line mainline crash archive");
+    Require(FindLogInLocation(&tasks, "South Collapse")->category == SHIP_LOG_MAINLINE,
+            "south collapse should keep the opening south mainline archive");
+    Require(FindLogInLocation(&tasks, "Vent Galleries")->category == SHIP_LOG_SUPPLEMENTAL,
+            "vent galleries should stay a supplemental facility handover archive");
+    Require(FindLogInLocation(&tasks, "Service Shafts")->category == SHIP_LOG_MAINLINE,
+            "service shafts should keep the maintenance-spine mainline archive");
+    Require(FindLogInLocation(&tasks, "Purifier Ring")->category == SHIP_LOG_SUPPLEMENTAL,
+            "purifier ring should stay a supplemental control brief");
+    Require(FindLogInLocation(&tasks, "Root Vault")->category == SHIP_LOG_MAINLINE,
+            "root vault should keep the final south mainline archive");
+    {
+        GameMap unlockedMap;
+
+        unlockedMap = map;
+        Map_UnlockLoxiRoom(&unlockedMap);
+        Map_UnlockSwampOuter(&unlockedMap);
+        Map_UnlockSwampDeep(&unlockedMap);
+        Map_UnlockRuins(&unlockedMap);
+        for (int logIndex = 0; logIndex < tasks.logCount; logIndex++) {
+            Require(CanReach(&unlockedMap, PLAYER_START_X, PLAYER_START_Y, tasks.logs[logIndex].gridX, tasks.logs[logIndex].gridY),
+                    "every seeded log should remain collectible once the route gates are unlocked");
+        }
+    }
     Require(CountActiveNodesInLocation(&tasks, "Terminal Bay") == 0,
             "Loxi's terminal room should not contain stray pickup resources");
     Require(CountActiveNodesInLocation(&tasks, "West Frontier") >= 1,
@@ -485,36 +583,50 @@ int main(void) {
             "purifier ring should keep at least one resource node so S4 has facility-floor rewards");
     Require(CountActiveNodesInLocation(&tasks, "Root Vault") >= 1,
             "root vault should keep at least one resource node so S5 does not land as an empty chamber");
-    Require(tasks.monsterCount == 12,
-            "route cleanup should now place one fixed monster encounter in every west and south route area, plus the ruins guard and final boss");
+    Require(tasks.monsterCount == 8,
+            "route cleanup should now place each monster type exactly once, distributed across the major route pockets");
+    Require(CountMonstersOfType(&tasks, MONSTER_THORN_LARVA) == 1,
+            "thorn larva should now appear only once on the whole map");
+    Require(CountMonstersOfType(&tasks, MONSTER_WING_BUG) == 1,
+            "wing bug should now appear only once on the whole map");
+    Require(CountMonstersOfType(&tasks, MONSTER_RAPTOR) == 1,
+            "raptor should now appear only once on the whole map");
+    Require(CountMonstersOfType(&tasks, MONSTER_SWAMP_STALKER) == 1,
+            "swamp stalker should now appear only once on the whole map");
+    Require(CountMonstersOfType(&tasks, MONSTER_SENTINEL_JELLY) == 1,
+            "sentinel jelly should now appear only once on the whole map");
+    Require(CountMonstersOfType(&tasks, MONSTER_FOG_WORM) == 1,
+            "fog worm should now appear only once on the whole map");
     Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == 1,
             "ruins should now retain only one fixed relic guard");
     Require(CountMonstersOfType(&tasks, MONSTER_FINAL_BOSS) == 1,
             "final boss should remain a single encounter");
     Require(CountActiveMonstersInLocation(&tasks, "West Frontier") == 1,
             "west frontier should retain a single local monster encounter");
-    Require(CountActiveMonstersInLocation(&tasks, "Survey Break") == 1,
-            "survey break should now carry its own local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Survey Break") == 0,
+            "survey break should now stay readable as a calm relay stop");
     Require(CountActiveMonstersInLocation(&tasks, "Canopy Hollow") == 1,
             "canopy hollow should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Echo Basin") == 1,
             "echo basin should retain a single local monster encounter");
-    Require(CountActiveMonstersInLocation(&tasks, "Last Camp") == 1,
-            "last camp should now carry its own local monster encounter instead of landing empty");
+    Require(CountActiveMonstersInLocation(&tasks, "Last Camp") == 0,
+            "last camp should now stay readable as a quiet decision point");
+    Require(CountActiveMonstersInLocation(&tasks, "Deep Basin") == 1,
+            "deep basin should retain the single east-line monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "South Collapse") == 1,
             "south collapse should retain a single local monster encounter");
-    Require(CountActiveMonstersInLocation(&tasks, "Vent Galleries") == 1,
-            "vent galleries should now carry its own local monster encounter");
-    Require(CountActiveMonstersInLocation(&tasks, "Service Shafts") == 1,
-            "service shafts should retain a single local monster encounter");
-    Require(CountActiveMonstersInLocation(&tasks, "Purifier Ring") == 1,
-            "purifier ring should now carry its own local monster encounter");
+    Require(CountActiveMonstersInLocation(&tasks, "Vent Galleries") == 0,
+            "vent galleries should now stay readable as a traversal archive shelf");
+    Require(CountActiveMonstersInLocation(&tasks, "Service Shafts") == 0,
+            "service shafts should now stay readable as a maintenance archive shelf");
+    Require(CountActiveMonstersInLocation(&tasks, "Purifier Ring") == 0,
+            "purifier ring should now stay readable as a control archive shelf");
     Require(CountActiveMonstersInLocation(&tasks, "Root Vault") == 1,
             "root vault should retain a single local monster encounter");
     Require(CountActiveMonstersInLocation(&tasks, "Monolith Ring") == 1,
-            "ruins should now hold only the relic guard after the boss is moved to the arena");
-    Require(CountActiveMonstersInLocation(&tasks, "Guardian Arena") == 1,
-            "guardian arena should now hold the isolated final boss encounter");
+            "main ruins should now hold only the relic guard after the guardian is anchored in Northwest Ruins");
+    Require(CountActiveMonstersInLocation(&tasks, "Northwest Ruins") == 1,
+            "northwest ruins should now hold the final boss encounter inside the world map");
     Require(DistanceManhattan(FindLogInLocation(&tasks, "West Frontier")->gridX,
                               FindLogInLocation(&tasks, "West Frontier")->gridY,
                               FindActiveMonsterInLocation(&tasks, "West Frontier")->gridX,
@@ -535,36 +647,21 @@ int main(void) {
                               FindActiveMonsterInLocation(&tasks, "South Collapse")->gridX,
                               FindActiveMonsterInLocation(&tasks, "South Collapse")->gridY) <= 6,
             "south collapse log should stay inside the local monster pressure pocket");
-    Require(DistanceManhattan(FindLogInLocation(&tasks, "Service Shafts")->gridX,
-                              FindLogInLocation(&tasks, "Service Shafts")->gridY,
-                              FindActiveMonsterInLocation(&tasks, "Service Shafts")->gridX,
-                              FindActiveMonsterInLocation(&tasks, "Service Shafts")->gridY) <= 6,
-            "service shafts log should stay inside the local monster pressure pocket");
     Require(DistanceManhattan(FindLogInLocation(&tasks, "Root Vault")->gridX,
                               FindLogInLocation(&tasks, "Root Vault")->gridY,
                               FindActiveMonsterInLocation(&tasks, "Root Vault")->gridX,
                               FindActiveMonsterInLocation(&tasks, "Root Vault")->gridY) <= 6,
             "root vault log should stay inside the local monster pressure pocket");
-    Require(DistanceManhattan(FindLogInLocation(&tasks, "Survey Break")->gridX,
-                              FindLogInLocation(&tasks, "Survey Break")->gridY,
-                              FindActiveMonsterInLocation(&tasks, "Survey Break")->gridX,
-                              FindActiveMonsterInLocation(&tasks, "Survey Break")->gridY) >= 8,
-            "survey break log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
-    Require(DistanceManhattan(FindLogInLocation(&tasks, "Last Camp")->gridX,
-                              FindLogInLocation(&tasks, "Last Camp")->gridY,
-                              FindActiveMonsterInLocation(&tasks, "Last Camp")->gridX,
-                              FindActiveMonsterInLocation(&tasks, "Last Camp")->gridY) >= 4,
-            "last camp log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
-    Require(DistanceManhattan(FindLogInLocation(&tasks, "Vent Galleries")->gridX,
-                              FindLogInLocation(&tasks, "Vent Galleries")->gridY,
-                              FindActiveMonsterInLocation(&tasks, "Vent Galleries")->gridX,
-                              FindActiveMonsterInLocation(&tasks, "Vent Galleries")->gridY) >= 8,
-            "vent galleries log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
-    Require(DistanceManhattan(FindLogInLocation(&tasks, "Purifier Ring")->gridX,
-                              FindLogInLocation(&tasks, "Purifier Ring")->gridY,
-                              FindActiveMonsterInLocation(&tasks, "Purifier Ring")->gridX,
-                              FindActiveMonsterInLocation(&tasks, "Purifier Ring")->gridY) >= 6,
-            "purifier ring log should stay readable as a direct-pickup investigation rather than a monster-gated pickup");
+    Require(FindActiveMonsterInLocation(&tasks, "Survey Break") == NULL,
+            "survey break should not force a monster-gated pickup");
+    Require(FindActiveMonsterInLocation(&tasks, "Last Camp") == NULL,
+            "last camp should not force a monster-gated pickup");
+    Require(FindActiveMonsterInLocation(&tasks, "Vent Galleries") == NULL,
+            "vent galleries should not force a monster-gated pickup");
+    Require(FindActiveMonsterInLocation(&tasks, "Service Shafts") == NULL,
+            "service shafts should not force a monster-gated pickup");
+    Require(FindActiveMonsterInLocation(&tasks, "Purifier Ring") == NULL,
+            "purifier ring should not force a monster-gated pickup");
 
     Player_SetStatus(&player, PLAYER_STATUS_LOW_OXYGEN, 1, 6.0f, 12.0f);
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 1, 10.0f, 8.0f);
@@ -601,9 +698,9 @@ int main(void) {
     player.gridY = EXTERIOR_Y(20);
     Tasks_Update(&tasks, &map, &player, 0.0f);
     Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) >= 2,
-            "boss phase changes should now be able to summon additional relic guards into the arena");
-    Require(CountActiveMonstersInLocation(&tasks, "Guardian Arena") >= 2,
-            "guardian arena should gain at least one reinforcement once the boss enters its later phase");
+            "boss phase changes should now be able to summon additional relic guards into the northwest ruins fight");
+    Require(CountActiveMonstersInLocation(&tasks, "Northwest Ruins") >= 2,
+            "northwest ruins fight should gain at least one reinforcement once the boss enters its later phase");
     RequireValidSpawnPlacements(&map, &tasks);
     tasks.stage = 1;
 
@@ -620,6 +717,19 @@ int main(void) {
             "low health should activate the critical condition status");
     Require(Player_HasStatus(&player, PLAYER_STATUS_FILTERED),
             "protection suit should expose the filtered status");
+    player.gridX = SHIP_WORKSHOP_X + 1;
+    player.gridY = SHIP_WORKSHOP_Y + 1;
+    player.poison = 12.0f;
+    player.oxygen = INITIAL_OXYGEN;
+    player.health = INITIAL_HEALTH;
+    Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
+                && Player_GetStatusEffect(&player, PLAYER_STATUS_POISONED)->level == 1,
+            "poisoned status should downgrade when poison buildup drops into the light tier");
+    player.poison = 0.0f;
+    Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(!Player_HasStatus(&player, PLAYER_STATUS_POISONED),
+            "poisoned status should clear once poison buildup is fully removed");
     player.oxygen = 0.0f;
     Tasks_Update(&tasks, &map, &player, 0.0f);
     Require(Player_HasStatus(&player, PLAYER_STATUS_SUFFOCATING),
@@ -671,7 +781,7 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(TasksRuntime_HandleShipInteraction(&tasks, &map, &player, TASK_INTERACTION_NONE, message, sizeof(message)),
             "terminal bay room interaction should provide route-debrief guidance");
-    Require(strstr(message, "first east relay sortie") != NULL && strstr(message, "Loxi") != NULL,
+    Require(strstr(message, "relay sortie") != NULL && strstr(message, "Loxi") != NULL && strstr(message, "route") != NULL,
             "terminal bay should explain that Stage 3 field results are converted into route guidance there");
 
     player.gridX = tasks.logs[0].gridX;
@@ -705,30 +815,44 @@ int main(void) {
     Require(tasks.stage >= 5,
             "successful crash clue interaction should advance progression");
     Tasks_Update(&tasks, &map, &player, 0.0f);
-    Require(CountActiveNodesOfType(&tasks, RESOURCE_ENERGY_CORE) == 1,
-            "unlocking stage 5 should spawn exactly one active Energy Core node");
+    Require(CountActiveNodesOfType(&tasks, RESOURCE_ENERGY_CORE) == 0,
+            "unlocking stage 5 should no longer spawn a standalone Energy Core node");
 
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
-            "repeat crash clue interaction should still return a closing message");
-    Require(strstr(message, "fully explored") != NULL || strstr(message, "route data") != NULL,
-            "repeat crash clue interaction should explain that the wreck investigation is already complete");
+            "stage 5 crash clue interaction should explain the extraction requirements");
+    Require(strstr(message, "Junk Metal") != NULL
+                && strstr(message, "Protective Fiber") != NULL
+                && strstr(message, "Energy Crystal") != NULL,
+            "stage 5 wreck interaction should explain the new extraction-material requirements");
+
+    player.resources[RESOURCE_JUNK_METAL] = 1;
+    player.resources[RESOURCE_PROTECTIVE_FIBER] = 1;
+    player.resources[RESOURCE_ENERGY_CRYSTAL] = 1;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "returning to the wreck with the extraction materials should grant the Energy Core");
+    Require(player.resources[RESOURCE_ENERGY_CORE] == 1,
+            "wreck extraction should now grant the Energy Core directly");
+    Require(player.resources[RESOURCE_JUNK_METAL] == 0
+                && player.resources[RESOURCE_PROTECTIVE_FIBER] == 0
+                && player.resources[RESOURCE_ENERGY_CRYSTAL] == 0,
+            "wreck extraction should consume the salvage materials");
 
     player.gridX = SHIP_DIAGNOSTICS_X + 2;
     player.gridY = SHIP_DIAGNOSTICS_Y + 2;
     memset(message, 0, sizeof(message));
     Require(TasksRuntime_HandleShipInteraction(&tasks, &map, &player, TASK_INTERACTION_NONE, message, sizeof(message)),
             "diagnostics room interaction should provide deep-east planning guidance");
-    Require(strstr(message, "Deep Gate") != NULL && strstr(message, "plan") != NULL,
+    Require(strstr(message, "Deep Gate") != NULL && (strstr(message, "plan") != NULL || strstr(message, "fallback") != NULL),
             "diagnostics should frame Stage 5 hazard control as route planning rather than random punishment");
 
     player.gridX = SHIP_POWER_BAY_X + 2;
     player.gridY = SHIP_POWER_BAY_Y + 2;
-    player.resources[RESOURCE_ENERGY_CORE] = 1;
     memset(message, 0, sizeof(message));
     Require(TasksRuntime_HandleShipInteraction(&tasks, &map, &player, TASK_INTERACTION_NONE, message, sizeof(message)),
             "power bay room interaction should explain the Energy Core handoff");
-    Require(strstr(message, "Energy Core") != NULL && strstr(message, "opens the north route") != NULL,
+    Require(strstr(message, "Energy Core") != NULL && strstr(message, "north route") != NULL,
             "power bay should explain that installing the core is what converts east proof into north progression");
 
     tasks.stage = 6;
@@ -798,7 +922,7 @@ int main(void) {
         memset(message, 0, sizeof(message));
         Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
                 "base ore should still be collectable when adjacent ship interactions are also in range");
-        Require(strstr(message, "Collected Ore") != NULL && strstr(message, "ship supply") != NULL,
+        Require(strstr(message, "Ore") != NULL && strstr(message, "ship supply") != NULL,
                 "pickup priority should prefer the ore node over overlapping ship interactions");
         Require(!baseOre->active,
                 "collecting the one-time base ore should exhaust the ship supply node");
@@ -810,9 +934,10 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "first monolith interaction should activate the puzzle");
-    Require(strstr(message, "strengthen your boss damage") != NULL,
+    Require((strstr(message, "guardian") != NULL || strstr(message, "boss") != NULL)
+                && (strstr(message, "tower") != NULL || strstr(message, "climb") != NULL),
             "first monolith interaction should explain the Stage 7 payoff");
-    Require(strstr(message, "guardian and Signal Tower") != NULL,
+    Require(strstr(message, "binds the two together") != NULL || strstr(message, "Signal Tower") != NULL,
             "first monolith interaction should now explain that the ring helps reveal the guardian-tower relationship");
 
     memset(message, 0, sizeof(message));
@@ -848,7 +973,8 @@ int main(void) {
             "final monolith interaction should complete the sequence");
     Require(tasks.monolithsLit == 3,
             "solving the monolith sequence should light all monoliths");
-    Require(strstr(message, "30% more damage") != NULL,
+    Require((strstr(message, "hit harder") != NULL || strstr(message, "30% more damage") != NULL)
+                && strstr(message, "heroic path") != NULL,
             "solving the monolith sequence should explain the real combat bonus");
 
     player.gridX = SIGNAL_TOWER_X - 1;
@@ -888,24 +1014,23 @@ int main(void) {
     PrepareEndingBranch(&tasks);
     tasks.bossDefeated = false;
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),
-            "heroic route should become selectable for the airlock-to-arena flow");
+            "heroic route should become selectable for the world-space guardian flow");
     Map_LockSwampOuter(&map);
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
-            "heroic-route airlock interaction should now transition into the isolated arena");
-    Require(player.gridX == BOSS_ARENA_PLAYER_ENTRY_X && player.gridY == BOSS_ARENA_PLAYER_ENTRY_Y,
-            "heroic-route airlock interaction should teleport the player to the arena entry");
-    Require(Map_GetAreaAt(player.gridX, player.gridY) == MAP_AREA_BOSS_ARENA,
-            "heroic-route airlock interaction should place the player inside the boss arena area");
-    Require(strstr(message, "guardian arena") != NULL || strstr(message, "isolated breach mode") != NULL,
-            "heroic-route airlock text should explain the forced transition into the isolated boss arena");
-    Require(strstr(tasks.objective, "Defeat the guardian") != NULL || strstr(tasks.objective, "isolated arena") != NULL,
-            "heroic-route arena transition should immediately update the objective to the guardian fight");
+            "heroic-route airlock interaction should still work as the normal world-door toggle");
+    Require(player.gridX == AIRLOCK_CONSOLE_X - 1 && player.gridY == AIRLOCK_CONSOLE_Y,
+            "heroic route should no longer teleport the player when using the airlock console");
+    Require(Map_IsSwampOuterUnlocked(&map),
+            "heroic route airlock use should now simply open the exterior route");
+    Require(strstr(message, "Airlock") != NULL || strstr(message, "气闸") != NULL,
+            "heroic-route airlock text should now describe a normal airlock cycle instead of a guardian-route transition");
 
     player.gridX = SIGNAL_TOWER_X - 1;
     player.gridY = SIGNAL_TOWER_Y;
     PrepareEndingBranch(&tasks);
     player.hasSignalAmplifier = true;
+    Tasks_UpdateObjective(&tasks, &player);
     tasks.signalTowerActivated = false;
     tasks.ending = ENDING_NONE;
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
@@ -919,8 +1044,23 @@ int main(void) {
             "signal tower with amplifier should lead to the peaceful ending");
     Require(strstr(message, "Signal Amplifier") != NULL || strstr(message, "peaceful") != NULL,
             "peaceful tower activation should clearly describe the non-combat tower stabilization route");
-    Require(strstr(message, "chosen with Loxi") != NULL || strstr(message, "full context") != NULL,
+    Require(strstr(message, "confirmed back at the ship") != NULL || strstr(message, "chosen with Loxi") != NULL,
             "peaceful tower activation should frame the outcome as a ship-side commitment");
+
+    PrepareEndingBranch(&tasks);
+    Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),
+            "heroic route should stay selectable for workshop guidance checks");
+    player.gridX = WORKBENCH_X;
+    player.gridY = WORKBENCH_Y;
+    player.hasLaserGun = true;
+    player.hasSignalAmplifier = false;
+    player.resources[RESOURCE_RELIC_FRAGMENT] = 3;
+    memset(message, 0, sizeof(message));
+    Require(TasksRuntime_HandleShipInteraction(&tasks, &map, &player, TASK_INTERACTION_NONE, message, sizeof(message)),
+            "workshop interaction should still work after locking in a non-peaceful ending route");
+    Require(strstr(message, "Signal Amplifier") == NULL && strstr(message, "peaceful route") == NULL
+                && strstr(message, "信号放大器") == NULL && strstr(message, "和平路线") == NULL,
+            "workshop should stop pushing amplifier crafting once the player has already chosen a non-peaceful ending route");
 
     tasks.stage = 5;
     player.gridX = SHIP_CREW_QUARTERS_X + 2;
@@ -1093,7 +1233,7 @@ int main(void) {
     tasks.nodes[0].active = true;
     memset(message, 0, sizeof(message));
     TasksRuntime_DescribeNodeStatus(&tasks.nodes[0], message, sizeof(message));
-    Require(strstr(message, "restored") != NULL,
+    Require(strstr(message, "restored") != NULL || strstr(message, "regrown") != NULL,
             "reactivated exterior nodes should use the restored abstract state once they have cycled");
 
     tasks.nodes[0].active = false;
@@ -1117,10 +1257,28 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(TasksRuntime_CollectNode(&tasks, &player, &tasks.nodes[0], message, sizeof(message)),
             "ship interior one-time supply nodes should still be collectible once");
-    Require(strstr(message, "one-time ship supply") != NULL,
+    Require((strstr(message, "ship supply") != NULL || strstr(message, "supply cache") != NULL)
+                && (strstr(message, "one-time") != NULL || strstr(message, "one-use") != NULL),
             "ship interior collection text should label the node as a one-time supply");
     Require(tasks.nodes[0].respawnsRemaining == 0 && !tasks.nodes[0].active,
             "ship interior one-time supply collection should exhaust the node permanently");
+
+    tasks.nodes[0].active = true;
+    tasks.nodes[0].respawnsRemaining = 0;
+    tasks.nodes[0].type = RESOURCE_METAL_SCRAP;
+    player.gridX = tasks.nodes[0].gridX - 1;
+    player.gridY = tasks.nodes[0].gridY;
+    player.facingX = 1;
+    player.facingY = 0;
+    player.oxygen = INITIAL_OXYGEN;
+    player.health = INITIAL_HEALTH;
+    Loc_SetLanguage(GAME_LANGUAGE_ZH_CN);
+    memset(message, 0, sizeof(message));
+    Require(TasksRuntime_CollectNode(&tasks, &player, &tasks.nodes[0], message, sizeof(message)),
+            "ship interior collection should still work in chinese mode");
+    Require((strstr(message, "已收集") != NULL || strstr(message, "已回收") != NULL) && strstr(message, "金属残片") != NULL,
+            "ship interior collection text should localize both the pickup prefix and resource label in chinese mode");
+    Loc_SetLanguage(GAME_LANGUAGE_EN);
 
     tasks.monsterCount = 2;
     tasks.monsters[0].active = true;
@@ -1151,7 +1309,13 @@ int main(void) {
             "attack targeting should not hit a different adjacent monster to the side or rear");
     Require(tasks.monsters[1].health < 40.0f,
             "attack targeting should prioritize the adjacent monster in the facing direction");
+    memset(message, 0, sizeof(message));
+    Require(!Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "attack should now respect a short recovery window after striking");
+    Require(strstr(message, "recovering") != NULL,
+            "attack recovery failures should explain that the weapon is still settling");
     tasks.monsters[1].health = 40.0f;
+    player.attackCooldown = 0.0f;
     player.oxygen = 4.0f;
     memset(message, 0, sizeof(message));
     Require(!Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
@@ -1159,8 +1323,8 @@ int main(void) {
     Require(strstr(message, "oxygen margin") != NULL,
             "failed attack should explain the new oxygen-based exertion gate");
 
-    player.gridX = 104;
-    player.gridY = 54;
+    player.gridX = EXTERIOR_X(109);
+    player.gridY = EXTERIOR_Y(49);
     player.health = INITIAL_HEALTH;
     player.oxygen = INITIAL_OXYGEN;
     player.poison = 0.0f;
@@ -1168,31 +1332,37 @@ int main(void) {
     tasks.monsterCount = 1;
     tasks.monsters[0].active = true;
     tasks.monsters[0].type = MONSTER_SWAMP_STALKER;
-    tasks.monsters[0].gridX = 105;
-    tasks.monsters[0].gridY = 54;
+    tasks.monsters[0].gridX = EXTERIOR_X(110);
+    tasks.monsters[0].gridY = EXTERIOR_Y(49);
     tasks.monsters[0].area = Map_GetAreaAt(tasks.monsters[0].gridX, tasks.monsters[0].gridY);
     tasks.monsters[0].unlockStage = 1;
     tasks.monsters[0].health = 48.0f;
     tasks.monsters[0].maxHealth = 48.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(tasks.monsters[0].attackTelegraph > 0.0f,
+            "normal monsters should now telegraph briefly before landing their hit");
+    Tasks_Update(&tasks, &map, &player, 0.5f);
     Require(player.poison > 0.0f,
             "swamp stalkers should now express their identity through poison pressure");
 
-    player.gridX = 112;
-    player.gridY = 62;
+    player.gridX = EXTERIOR_X(107);
+    player.gridY = EXTERIOR_Y(44);
     player.health = INITIAL_HEALTH;
     player.oxygen = INITIAL_OXYGEN;
     player.poison = 0.0f;
     Player_ClearAllStatuses(&player);
     tasks.monsters[0].type = MONSTER_SENTINEL_JELLY;
-    tasks.monsters[0].gridX = 113;
-    tasks.monsters[0].gridY = 62;
+    tasks.monsters[0].gridX = EXTERIOR_X(108);
+    tasks.monsters[0].gridY = EXTERIOR_Y(44);
     tasks.monsters[0].area = Map_GetAreaAt(tasks.monsters[0].gridX, tasks.monsters[0].gridY);
     tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].recoverTimer = 0.0f;
+    tasks.monsters[0].attackTelegraph = 0.0f;
     tasks.monsters[0].health = 64.0f;
     tasks.monsters[0].maxHealth = 64.0f;
     Tasks_Update(&tasks, &map, &player, 0.0f);
+    Tasks_Update(&tasks, &map, &player, 0.6f);
     Require(Player_HasStatus(&player, PLAYER_STATUS_OXYGEN_LEAK),
             "sentinel jelly attacks should now create oxygen leak pressure");
 

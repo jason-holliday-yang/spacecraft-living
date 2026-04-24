@@ -143,7 +143,7 @@ const char *Map_GetAreaName(MapArea area) {
         case MAP_AREA_RUINS:
             return "Ruins";
         case MAP_AREA_BOSS_ARENA:
-            return "Boss Arena";
+            return "Ruins";
         case MAP_AREA_UNKNOWN:
         default:
             return "Unknown Area";
@@ -179,7 +179,7 @@ const char *Map_GetLocationNameAt(int gridX, int gridY) {
         return "Airlock Link";
     }
     if (IsRectBounds(gridX, gridY, BOSS_ARENA_X, BOSS_ARENA_Y, BOSS_ARENA_WIDTH, BOSS_ARENA_HEIGHT)) {
-        return "Guardian Arena";
+        return "Northwest Ruins";
     }
 
     if (IsRectBounds(gridX, gridY, RUINS_MAIN_X, RUINS_MAIN_Y, RUINS_MAIN_WIDTH, RUINS_MAIN_HEIGHT)) {
@@ -198,44 +198,48 @@ const char *Map_GetLocationNameAt(int gridX, int gridY) {
     }
 
     if (IsRectBounds(gridX, gridY, SWAMP_DEEP_X, SWAMP_DEEP_Y, SWAMP_DEEP_WIDTH, SWAMP_DEEP_HEIGHT)) {
-        if (gridY <= EXTERIOR_Y(61)) {
+        if (gridY <= EXTERIOR_Y(36)) {
             return "Deep Gate";
         }
         return "Deep Basin";
     }
     if (IsRectBounds(gridX, gridY, SWAMP_OUTER_X, SWAMP_OUTER_Y, SWAMP_OUTER_WIDTH, SWAMP_OUTER_HEIGHT)) {
-        if (gridY <= EXTERIOR_Y(54)) {
+        if (gridY <= EXTERIOR_Y(46)) {
             return "Outer Swamp Rim";
         }
         return "Flooded Detour";
     }
     if (gridX >= WORLD_MIN_X && gridX <= WORLD_MAX_X && gridY >= WORLD_MIN_Y && gridY <= WORLD_MAX_Y) {
-        if (gridX >= EXTERIOR_X(22) && gridX < EXTERIOR_X(55) && gridY >= EXTERIOR_Y(34) && gridY <= EXTERIOR_Y(88)) {
-            if (gridX >= EXTERIOR_X(43) && gridY >= EXTERIOR_Y(62)) {
-                if (gridY >= EXTERIOR_Y(83)) {
-                    return "Last Camp";
-                }
-                return "Echo Basin";
+        if (gridX >= EXTERIOR_X(10) && gridX <= EXTERIOR_X(58) && gridY >= EXTERIOR_Y(30) && gridY <= EXTERIOR_Y(102)) {
+            if (IsRectBounds(gridX, gridY, EXTERIOR_X(40), EXTERIOR_Y(84), EXTERIOR_SIZE(12), EXTERIOR_SIZE(12))) {
+                return "Last Camp";
             }
-            if (gridX >= EXTERIOR_X(38)) {
+            if (IsRectBounds(gridX, gridY, EXTERIOR_X(38), EXTERIOR_Y(50), EXTERIOR_SIZE(14), EXTERIOR_SIZE(19))) {
                 return "Canopy Hollow";
             }
-            if (gridX >= EXTERIOR_X(30)) {
+            if (IsRectBounds(gridX, gridY, EXTERIOR_X(30), EXTERIOR_Y(58), EXTERIOR_SIZE(16), EXTERIOR_SIZE(24))) {
                 return "Survey Break";
+            }
+            if (IsRectBounds(gridX, gridY, EXTERIOR_X(10), EXTERIOR_Y(78), EXTERIOR_SIZE(24), EXTERIOR_SIZE(24))
+                || IsRectBounds(gridX, gridY, EXTERIOR_X(30), EXTERIOR_Y(78), EXTERIOR_SIZE(20), EXTERIOR_SIZE(24))
+                || IsRectBounds(gridX, gridY, EXTERIOR_X(10), EXTERIOR_Y(94), EXTERIOR_SIZE(40), EXTERIOR_SIZE(10))) {
+                return "Echo Basin";
             }
             return "West Frontier";
         }
-        if (gridY > EXTERIOR_Y(93)) {
-            if (gridX >= EXTERIOR_X(119)) {
+        if (gridX >= EXTERIOR_X(62) && gridY >= EXTERIOR_Y(86)) {
+            if (gridX >= EXTERIOR_X(119) || (gridX >= EXTERIOR_X(116) && gridY >= EXTERIOR_Y(99))) {
                 return "Root Vault";
             }
-            if (gridX >= EXTERIOR_X(108)) {
+            if (gridX >= EXTERIOR_X(113)
+                || (gridX >= EXTERIOR_X(110) && gridY <= EXTERIOR_Y(97))
+                || (gridX >= EXTERIOR_X(108) && gridY >= EXTERIOR_Y(98))) {
                 return "Purifier Ring";
             }
-            if (gridX >= EXTERIOR_X(103)) {
+            if (gridX >= EXTERIOR_X(101) && gridY >= EXTERIOR_Y(93)) {
                 return "Service Shafts";
             }
-            if (gridX >= EXTERIOR_X(87)) {
+            if (gridX >= EXTERIOR_X(84) && gridY >= EXTERIOR_Y(90)) {
                 return "Vent Galleries";
             }
             return "South Collapse";

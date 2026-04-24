@@ -8,31 +8,73 @@
 #include <cstdio>
 #include <cstring>
 
+static int GetEndingChoicePopupButtonCount(const Game *game) {
+    const int availableEndingCount = game != NULL ? Tasks_GetAvailableEndingCount(&game->tasks) : 0;
+
+    return availableEndingCount > 1 ? availableEndingCount + 1 : 2;
+}
+
+static AudioCue GetRouteConfirmCue(GameEnding ending) {
+    switch (ending) {
+        case ENDING_PEACEFUL:
+            return AUDIO_CUE_ENDING_PEACEFUL;
+        case ENDING_SETTLEMENT:
+            return AUDIO_CUE_ENDING_SETTLEMENT;
+        case ENDING_HEROIC:
+            return AUDIO_CUE_ENDING;
+        case ENDING_FAILURE:
+        case ENDING_NONE:
+        default:
+            return AUDIO_CUE_WARNING;
+    }
+}
+
 static void ConfirmEndingChoice(Game *game, GameEnding ending) {
+    char message[256];
+
     if (game == NULL) {
         return;
     }
 
-    if (ending == ENDING_SETTLEMENT) {
-        Tasks_CommitSettlement(&game->tasks);
-    } else {
-        Tasks_SelectEndingRoute(&game->tasks, ending);
-        if (ending == ENDING_HEROIC && game->tasks.selectedEndingRoute == ENDING_HEROIC && !game->tasks.bossDefeated) {
-            Map_LockSwampOuter(&game->map);
-        }
-        Tasks_UpdateObjective(&game->tasks, &game->player);
+    if (!Tasks_SelectEndingRoute(&game->tasks, ending)) {
+        return;
     }
 
+    Tasks_UpdateObjective(&game->tasks, &game->player);
     game->settlementConfirmOpen = false;
-    game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_PEACEFUL;
-    if (game->tasks.ending == ENDING_SETTLEMENT) {
-        Game_RecordActiveAccountScore(game);
-        game->state = GAME_STATE_ENDING;
-        Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
-        Audio_PlayCue(&game->audio, AUDIO_CUE_ENDING_SETTLEMENT);
-    } else {
-        Audio_PlayCue(&game->audio, AUDIO_CUE_REPAIR);
+    game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
+    switch (ending) {
+        case ENDING_HEROIC:
+            std::snprintf(message,
+                          sizeof(message),
+                          "%s",
+                          Loc_PickLiteral("Heroic route locked. Hunt the guardian in the northwest ruins, then finish at the Signal Tower.",
+                                          "强行救援路线已锁定。先去西北遗迹猎杀守卫，再到信号塔完成最后一步。"));
+            break;
+        case ENDING_PEACEFUL:
+            std::snprintf(message,
+                          sizeof(message),
+                          "%s",
+                          Loc_PickLiteral("Peaceful route locked. Prepare the Signal Amplifier, then carry it to the Signal Tower.",
+                                          "和平救援路线已锁定。先准备信号放大器，再把它带到信号塔。"));
+            break;
+        case ENDING_SETTLEMENT:
+            std::snprintf(message,
+                          sizeof(message),
+                          "%s",
+                          Loc_PickLiteral("Settlement route locked. Return to Loxi once you are ready to confirm staying here for good.",
+                                          "定居路线已锁定。等你准备好真正留下来时，再回到洛希那里确认。"));
+            break;
+        case ENDING_FAILURE:
+        case ENDING_NONE:
+        default:
+            message[0] = '\0';
+            break;
     }
+    if (message[0] != '\0') {
+        Game_PostMessage(game, message, 4.2f);
+    }
+    Audio_PlayCue(&game->audio, GetRouteConfirmCue(ending));
 }
 
 static float ClampFloatLocal(float value, float minValue, float maxValue) {
@@ -262,7 +304,7 @@ static void CloseAccountDeleteConfirm(Game *game) {
 
 static void MoveAuthFieldSelection(Game *game, int delta) {
     int selection;
-    const int authFieldCount = 6;
+    const int authFieldCount = 7;
 
     if (game == NULL) {
         return;
@@ -273,7 +315,7 @@ static void MoveAuthFieldSelection(Game *game, int delta) {
         while (selection < AUTH_FIELD_USERNAME) {
             selection += authFieldCount;
         }
-        while (selection > AUTH_FIELD_SWITCH_MODE) {
+        while (selection > AUTH_FIELD_EXIT_GAME) {
             selection -= authFieldCount;
         }
 
@@ -518,6 +560,7 @@ static void UpdateAuthScreen(Game *game) {
     Rectangle deleteRect;
     Rectangle submitRect;
     Rectangle switchRect;
+    Rectangle exitRect;
     bool editingTextField;
 
     usernameRect = UI_GetAuthInputRect(GetScreenWidth(), GetScreenHeight(), 0);
@@ -526,6 +569,7 @@ static void UpdateAuthScreen(Game *game) {
     deleteRect = UI_GetAuthDeleteAccountRect(GetScreenWidth(), GetScreenHeight());
     submitRect = UI_GetAuthSubmitButtonRect(GetScreenWidth(), GetScreenHeight());
     switchRect = UI_GetAuthSwitchModeRect(GetScreenWidth(), GetScreenHeight());
+    exitRect = UI_GetAuthExitButtonRect(GetScreenWidth(), GetScreenHeight());
     editingTextField = game->authSelectedField == AUTH_FIELD_USERNAME || game->authSelectedField == AUTH_FIELD_PASSWORD;
 
     if (IsKeyPressed(KEY_TAB)) {
@@ -575,6 +619,12 @@ static void UpdateAuthScreen(Game *game) {
             Game_BeginScreenTransition(game, SCREEN_TRANSITION_TOGGLE_AUTH_MODE, -1);
             return;
         }
+        if (CheckCollisionPointRec(mouse, exitRect)) {
+            game->authSelectedField = AUTH_FIELD_EXIT_GAME;
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+            game->requestClose = true;
+            return;
+        }
     }
 
     if (!GameOverlay_IsConfirmPressed()) {
@@ -604,6 +654,10 @@ static void UpdateAuthScreen(Game *game) {
         case AUTH_FIELD_SWITCH_MODE:
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             Game_BeginScreenTransition(game, SCREEN_TRANSITION_TOGGLE_AUTH_MODE, -1);
+            return;
+        case AUTH_FIELD_EXIT_GAME:
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+            game->requestClose = true;
             return;
         default:
             break;
@@ -649,6 +703,8 @@ static void UpdateMainMenu(Game *game) {
 }
 
 static void UpdateOpeningCutscene(Game *game) {
+    static constexpr float kOpeningInitialBlackHoldDuration = 1.5f;
+
     if (game->narrativeTransitionActive) {
         return;
     }
@@ -662,6 +718,17 @@ static void UpdateOpeningCutscene(Game *game) {
     }
 
     if (!GameOverlay_IsCutsceneAdvancePressed()) {
+        return;
+    }
+
+    if (game->openingAwaitingFirstAdvance) {
+        if (game->openingCutsceneElapsed < kOpeningInitialBlackHoldDuration) {
+            return;
+        }
+
+        game->openingAwaitingFirstAdvance = false;
+        game->openingCutsceneElapsed = 0.0f;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
         return;
     }
 
@@ -875,29 +942,49 @@ static void UpdateSettingsOverlay(Game *game) {
 static void UpdateSettlementConfirm(Game *game) {
     Vector2 mouse;
     int buttonIndex;
+    int buttonCount;
+    int availableEndingCount;
     bool activateSelection;
 
     activateSelection = false;
+    availableEndingCount = game != NULL ? Tasks_GetAvailableEndingCount(&game->tasks) : 0;
+    buttonCount = GetEndingChoicePopupButtonCount(game);
+
+    if (availableEndingCount <= 0) {
+        game->settlementConfirmOpen = false;
+        game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
+        return;
+    }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
         game->settlementConfirmOpen = false;
-        game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_PEACEFUL;
+        game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
         Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
         return;
     }
 
     if (GameOverlay_IsBackwardNavigationPressed()) {
-        game->settlementConfirmSelection = (game->settlementConfirmSelection + SETTLEMENT_CONFIRM_BUTTON_COUNT - 1) % SETTLEMENT_CONFIRM_BUTTON_COUNT;
+        game->settlementConfirmSelection = (game->settlementConfirmSelection + buttonCount - 1) % buttonCount;
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
     }
 
     if (GameOverlay_IsForwardNavigationPressed()) {
-        game->settlementConfirmSelection = (game->settlementConfirmSelection + 1) % SETTLEMENT_CONFIRM_BUTTON_COUNT;
+        game->settlementConfirmSelection = (game->settlementConfirmSelection + 1) % buttonCount;
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
     }
 
     if (GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
-        buttonIndex = GameOverlay_FindClickedIndexedRect(mouse, SETTLEMENT_CONFIRM_BUTTON_COUNT, UI_GetSettlementConfirmButtonRect);
+        buttonIndex = -1;
+        for (int index = 0; index < buttonCount; index++) {
+            if (CheckCollisionPointRec(mouse,
+                                       UI_GetSettlementConfirmButtonRect(GetScreenWidth(),
+                                                                         GetScreenHeight(),
+                                                                         index,
+                                                                         buttonCount))) {
+                buttonIndex = index;
+                break;
+            }
+        }
         if (buttonIndex >= 0) {
             game->settlementConfirmSelection = buttonIndex;
             activateSelection = true;
@@ -912,23 +999,14 @@ static void UpdateSettlementConfirm(Game *game) {
         return;
     }
 
-    switch (game->settlementConfirmSelection) {
-        case SETTLEMENT_CONFIRM_BUTTON_HEROIC:
-            ConfirmEndingChoice(game, ENDING_HEROIC);
-            return;
-        case SETTLEMENT_CONFIRM_BUTTON_PEACEFUL:
-            ConfirmEndingChoice(game, ENDING_PEACEFUL);
-            return;
-        case SETTLEMENT_CONFIRM_BUTTON_SETTLEMENT:
-            ConfirmEndingChoice(game, ENDING_SETTLEMENT);
-            return;
-        case SETTLEMENT_CONFIRM_BUTTON_CANCEL:
-        default:
-            game->settlementConfirmOpen = false;
-            game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_PEACEFUL;
-            Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
-            return;
+    if (game->settlementConfirmSelection >= availableEndingCount) {
+        game->settlementConfirmOpen = false;
+        game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        return;
     }
+
+    ConfirmEndingChoice(game, Tasks_GetAvailableEndingAt(&game->tasks, game->settlementConfirmSelection));
 }
 
 static void UpdateSavePanel(Game *game) {

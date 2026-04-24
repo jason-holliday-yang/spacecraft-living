@@ -40,6 +40,19 @@ typedef enum MonsterType {
     MONSTER_FINAL_BOSS
 } MonsterType;
 
+typedef enum CombatEncounterId {
+    COMBAT_ENCOUNTER_NONE = 0,
+    COMBAT_ENCOUNTER_WEST_FRONTIER,
+    COMBAT_ENCOUNTER_CANOPY_HOLLOW,
+    COMBAT_ENCOUNTER_ECHO_BASIN,
+    COMBAT_ENCOUNTER_DEEP_BASIN,
+    COMBAT_ENCOUNTER_SOUTH_COLLAPSE,
+    COMBAT_ENCOUNTER_ROOT_VAULT,
+    COMBAT_ENCOUNTER_RELIC_GUARD,
+    COMBAT_ENCOUNTER_FINAL_BOSS,
+    COMBAT_ENCOUNTER_COUNT
+} CombatEncounterId;
+
 typedef enum GameEnding {
     ENDING_NONE = 0,
     ENDING_HEROIC,
@@ -72,6 +85,7 @@ typedef enum BossAttackType {
 typedef struct Monster {
     bool active;
     MonsterType type;
+    CombatEncounterId encounterId;
     int gridX;
     int gridY;
     int spawnX;
@@ -82,6 +96,8 @@ typedef struct Monster {
     float maxHealth;
     float moveTimer;
     float attackTimer;
+    float recoverTimer;
+    float weakPointTimer;
     bool phaseTriggered;
     BossAttackType currentAttack;
     float attackTelegraph;
@@ -107,6 +123,8 @@ typedef struct ShipLog {
     char storyTextZh[512];
     char rewardDescEn[128];
     char rewardDescZh[128];
+    char detailTextEn[1024];
+    char detailTextZh[1024];
 } ShipLog;
 
 typedef struct TaskSystem {
@@ -121,8 +139,10 @@ typedef struct TaskSystem {
     int energyRepairLevel;
     bool crashClueFound;
     bool amplifierUnlocked;
+    bool signalAmplifierCrafted;
     bool communicatorUnlocked;
     bool endingArchiveReviewed;
+    int shownMainStorySceneCount;
     bool bossDefeated;
     bool signalTowerActivated;
     bool westW1Started;
@@ -176,6 +196,7 @@ int Tasks_GetLogSceneIndex(const TaskSystem *tasks, const ShipLog *log);
 const char *Tasks_GetLogTitle(const ShipLog *log);
 const char *Tasks_GetLogStoryText(const ShipLog *log);
 const char *Tasks_GetLogRewardDescription(const ShipLog *log);
+const char *Tasks_GetLogDetailText(const ShipLog *log);
 bool Tasks_IsRecipeVisible(const TaskSystem *tasks, RecipeType recipe);
 bool Tasks_CanCraftRecipe(const TaskSystem *tasks, const Player *player, RecipeType recipe);
 int Tasks_GetVisibleRecipeCount(const TaskSystem *tasks);
@@ -188,6 +209,9 @@ const char *Tasks_GetCommunicatorHint(const TaskSystem *tasks);
 bool Tasks_IsEndingBranchReady(const TaskSystem *tasks);
 GameEnding Tasks_GetSelectedEndingRoute(const TaskSystem *tasks);
 bool Tasks_SelectEndingRoute(TaskSystem *tasks, GameEnding ending);
+bool Tasks_IsEndingAvailable(const TaskSystem *tasks, GameEnding ending);
+int Tasks_GetAvailableEndingCount(const TaskSystem *tasks);
+GameEnding Tasks_GetAvailableEndingAt(const TaskSystem *tasks, int index);
 bool Tasks_CanChooseSettlement(const TaskSystem *tasks);
 void Tasks_CommitSettlement(TaskSystem *tasks);
 GameEnding Tasks_GetEnding(const TaskSystem *tasks);
@@ -195,6 +219,16 @@ const char *Tasks_GetEndingTitle(GameEnding ending);
 const char *Tasks_GetEndingBody(GameEnding ending);
 int Tasks_CalculateEndingScore(const TaskSystem *tasks, const Player *player);
 const char *Tasks_GetEndingScoreRank(int score);
+int Tasks_GetArchiveScore(const TaskSystem *tasks);
+int Tasks_GetInvestigationScore(const TaskSystem *tasks);
+int Tasks_GetSurvivalScore(const TaskSystem *tasks, const Player *player);
+int Tasks_GetEndingCompletionScore(const TaskSystem *tasks, const Player *player);
+int Tasks_GetCombatScore(const TaskSystem *tasks);
+int Tasks_GetCombatScoreMax(void);
+int Tasks_GetCombatEncounterCount(void);
+bool Tasks_IsCombatEncounterCompleted(const TaskSystem *tasks, CombatEncounterId encounter);
+int Tasks_GetCombatEncounterScore(CombatEncounterId encounter);
+const char *Tasks_GetCombatEncounterName(CombatEncounterId encounter);
 
 SCL_EXTERN_C_END
 

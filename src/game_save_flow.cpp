@@ -76,6 +76,7 @@ static int CalculateSnapshotEndingScore(const SaveSnapshot *snapshot) {
     tasks.energyRepairLevel = snapshot->energyRepairLevel;
     tasks.crashClueFound = snapshot->crashClueFound;
     tasks.amplifierUnlocked = snapshot->amplifierUnlocked;
+    tasks.signalAmplifierCrafted = snapshot->hasSignalAmplifier;
     tasks.bossDefeated = snapshot->bossDefeated;
     tasks.signalTowerActivated = snapshot->signalTowerActivated;
     tasks.selectedEndingRoute = (GameEnding)snapshot->selectedEndingRoute;
@@ -104,6 +105,9 @@ static int CalculateSnapshotEndingScore(const SaveSnapshot *snapshot) {
     tasks.monolithActivated[1] = snapshot->monolithActivated[1];
     tasks.monolithActivated[2] = snapshot->monolithActivated[2];
     tasks.monolithsLit = snapshot->monolithsLit;
+    for (index = 0; index < STORY_MAIN_SCENE_COUNT; index++) {
+        tasks.shownMainStorySceneCount += snapshot->storyMainSceneShown[index] ? 1 : 0;
+    }
     tasks.ending = (GameEnding)snapshot->ending;
 
     for (index = 0; index < tasks.logCount && index < MAX_LOGS; index++) {

@@ -124,7 +124,7 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
     UIRuntime_DrawText(assets, Loc_PickLiteral("Mission Status", "任务状态"), Vector2{statusPanel.x + 18.0f * scale, statusPanel.y + 14.0f * scale}, 25.0f * scale, WHITE);
     snprintf(smallBuffer, sizeof(smallBuffer), "%s: %s", LOC_UI_STAGE, Tasks_GetStageName(tasks->stage));
     UIRuntime_DrawWrappedText(assets, smallBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 48.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 16.0f * scale, 17.0f * scale, Color{166, 255, 226, 255});
-    snprintf(cycleBuffer, sizeof(cycleBuffer), "%s: %s %d - %s", LOC_UI_DAY, Loc_PickLiteral("Day", "第"), tasks->dayCount + 1, Tasks_GetPhaseName(tasks->phase));
+    snprintf(cycleBuffer, sizeof(cycleBuffer), "%s: %s", Loc_PickLiteral("Environment", "环境"), Tasks_GetPhaseName(tasks->phase));
     UIRuntime_DrawWrappedText(assets, cycleBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 68.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 14.5f * scale, 16.0f * scale, Color{194, 224, 255, 255});
     snprintf(reserveBuffer, sizeof(reserveBuffer), "%s: %d", Loc_PickLiteral("Active Effects", "当前效果"), Player_GetActiveStatusCount(player));
     UIRuntime_DrawWrappedText(assets, reserveBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 88.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 14.5f * scale, 16.0f * scale, Color{255, 214, 154, 255});
@@ -141,8 +141,24 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
     }
     UIRuntime_DrawPanel(shortcutsPanel, Color{8, 18, 30, 220}, Color{255, 255, 255, 36});
     UIRuntime_DrawText(assets, Loc_PickLiteral("Quick Access", "快捷功能"), Vector2{shortcutsPanel.x + 12.0f * scale, shortcutsPanel.y - 22.0f * scale}, 15.0f * scale, Color{182, 199, 214, 255});
-    UIRuntime_DrawHudShortcut(assets, UI_GetHudShortcutRect(screenWidth, screenHeight, 0), Loc_PickLiteral("Map", "地图"), Loc_PickLiteral("Scout", "侦察"), "M", 0, Color{110, 201, 255, 255}, Color{62, 118, 192, 255});
-    UIRuntime_DrawHudShortcut(assets, UI_GetHudShortcutRect(screenWidth, screenHeight, 1), Loc_PickLiteral("Bag", "背包"), Loc_PickLiteral("Supplies", "补给"), "B", 1, Color{232, 180, 113, 255}, Color{127, 84, 44, 255});
+    UIRuntime_DrawHudShortcut(assets,
+                              UI_GetHudShortcutRect(screenWidth, screenHeight, 0),
+                              Loc_PickLiteral("Map", "地图"),
+                              Loc_PickLiteral("Scout", "侦察"),
+                              "M",
+                              &assets->iconMapButton,
+                              0,
+                              Color{110, 201, 255, 255},
+                              Color{62, 118, 192, 255});
+    UIRuntime_DrawHudShortcut(assets,
+                              UI_GetHudShortcutRect(screenWidth, screenHeight, 1),
+                              Loc_PickLiteral("Bag", "背包"),
+                              Loc_PickLiteral("Supplies", "补给"),
+                              "B",
+                              &assets->iconInventoryButton,
+                              1,
+                              Color{232, 180, 113, 255},
+                              Color{127, 84, 44, 255});
 
     if (message->timer > 0.0f && message->text[0] != '\0') {
         UIRuntime_DrawPanel(messagePanel, Color{11, 15, 26, 220}, Color{255, 192, 129, 80});

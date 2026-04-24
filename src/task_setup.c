@@ -326,6 +326,10 @@ static bool FindNearestSpawnTile(const TaskSystem *tasks,
                     if (AbsInt(gridX - preferredX) != radius && AbsInt(gridY - preferredY) != radius) {
                         continue;
                     }
+                    if (preferredArea != MAP_AREA_BOSS_ARENA
+                        && Map_GetAreaAt(gridX, gridY) == MAP_AREA_BOSS_ARENA) {
+                        continue;
+                    }
                     if (preferredArea != MAP_AREA_UNKNOWN && Map_GetAreaAt(gridX, gridY) != preferredArea) {
                         continue;
                     }
@@ -413,6 +417,42 @@ bool TasksRuntime_FindMonsterSpawnTile(const TaskSystem *tasks,
     return FindNearestSpawnTile(tasks, map, preferredX, preferredY, IsMonsterSpawnTileValid, ScoreMonsterSpawnTile, 12, resolvedX, resolvedY);
 }
 
+static CombatEncounterId ResolveCombatEncounterId(MonsterType type, MapArea area, int gridX, int gridY) {
+    const char *locationName;
+
+    if (type == MONSTER_FINAL_BOSS) {
+        return COMBAT_ENCOUNTER_FINAL_BOSS;
+    }
+    if (type == MONSTER_RELIC_GUARD) {
+        return area == MAP_AREA_BOSS_ARENA ? COMBAT_ENCOUNTER_NONE : COMBAT_ENCOUNTER_RELIC_GUARD;
+    }
+
+    locationName = Map_GetLocationNameAt(gridX, gridY);
+    if (locationName == NULL) {
+        return COMBAT_ENCOUNTER_NONE;
+    }
+    if (strcmp(locationName, "West Frontier") == 0) {
+        return COMBAT_ENCOUNTER_WEST_FRONTIER;
+    }
+    if (strcmp(locationName, "Canopy Hollow") == 0) {
+        return COMBAT_ENCOUNTER_CANOPY_HOLLOW;
+    }
+    if (strcmp(locationName, "Echo Basin") == 0) {
+        return COMBAT_ENCOUNTER_ECHO_BASIN;
+    }
+    if (strcmp(locationName, "Deep Basin") == 0) {
+        return COMBAT_ENCOUNTER_DEEP_BASIN;
+    }
+    if (strcmp(locationName, "South Collapse") == 0) {
+        return COMBAT_ENCOUNTER_SOUTH_COLLAPSE;
+    }
+    if (strcmp(locationName, "Root Vault") == 0) {
+        return COMBAT_ENCOUNTER_ROOT_VAULT;
+    }
+
+    return COMBAT_ENCOUNTER_NONE;
+}
+
 bool TasksRuntime_AddMonsterSpawn(TaskSystem *tasks,
                                   const GameMap *map,
                                   MonsterType type,
@@ -439,6 +479,7 @@ bool TasksRuntime_AddMonsterSpawn(TaskSystem *tasks,
     monster->spawnY = resolvedY;
     monster->unlockStage = unlockStage;
     monster->area = Map_GetAreaAt(resolvedX, resolvedY);
+    monster->encounterId = ResolveCombatEncounterId(type, monster->area, resolvedX, resolvedY);
     if (!TasksContent_GetMonsterSpec(type, &monsterSpec)) {
         memset(&monsterSpec, 0, sizeof(monsterSpec));
         monsterSpec.maxHealth = 20.0f;

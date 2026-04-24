@@ -123,13 +123,15 @@ void Game_CloseTransientOverlays(Game *game) {
     game->craftOpen = false;
     game->mapOpen = false;
     game->communicatorOpen = false;
+    game->communicatorLogDetailOpen = false;
+    game->communicatorLogDetailVisibility = 0.0f;
     game->helpOpen = false;
     game->logReaderOpen = false;
     game->savePanelOpen = false;
     game->showDeathPopup = false;
     game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
     game->settlementConfirmOpen = false;
-    game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_PEACEFUL;
+    game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
     game->accountDeleteConfirmOpen = false;
     game->accountDeleteConfirmSelection = ACCOUNT_DELETE_CONFIRM_BUTTON_CANCEL;
     game->accountDeleteFromAuth = false;
@@ -160,6 +162,7 @@ static void EnterGameplayFromOpening(Game *game) {
     game->state = GAME_STATE_PLAYING;
     game->openingSlideIndex = 0;
     game->openingCutsceneElapsed = 0.0f;
+    game->openingAwaitingFirstAdvance = false;
     game->narrativeTransitionActive = false;
     game->narrativeTransitionElapsed = 0.0f;
     game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
@@ -183,10 +186,16 @@ void Game_ResetGameplayWorld(Game *game) {
     MiniMap_Init(&game->miniMap);
     game->elapsedSeconds = 0.0f;
     game->openingCutsceneElapsed = 0.0f;
+    game->openingAwaitingFirstAdvance = false;
     game->storySceneElapsed = 0.0f;
     game->narrativeTransitionActive = false;
     game->narrativeTransitionElapsed = 0.0f;
     game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
+    game->screenTransitionActive = false;
+    game->screenTransitionResolved = false;
+    game->screenTransitionElapsed = 0.0f;
+    game->screenTransitionAction = SCREEN_TRANSITION_NONE;
+    game->screenTransitionSlotIndex = -1;
     game->hurtSoundCooldown = 0.0f;
     game->monsterCueCooldown = 0.0f;
     game->bufferedMoveX = 0;
@@ -207,6 +216,10 @@ void Game_ResetGameplayWorld(Game *game) {
     std::memset(game->storySceneShown, 0, sizeof(game->storySceneShown));
     game->selectedLogIndex = 0;
     game->communicatorFirstVisibleLogIndex = 0;
+    game->selectedStorySceneIndex = 0;
+    game->communicatorFirstVisibleStorySceneIndex = 0;
+    game->communicatorLogDetailOpen = false;
+    game->communicatorLogDetailVisibility = 0.0f;
     game->pendingLanguage = game->settings.language;
     game->requestClose = false;
     game->lastLocationName[0] = '\0';
@@ -226,6 +239,7 @@ void Game_StartNewGame(Game *game) {
     game->state = GAME_STATE_OPENING;
     game->openingSlideIndex = 0;
     game->openingCutsceneElapsed = 0.0f;
+    game->openingAwaitingFirstAdvance = true;
     game->narrativeTransitionActive = false;
     game->narrativeTransitionElapsed = 0.0f;
     game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
@@ -268,6 +282,7 @@ void Game_ReturnToMenu(Game *game) {
     game->state = GAME_STATE_INTRO;
     game->openingSlideIndex = 0;
     game->openingCutsceneElapsed = 0.0f;
+    game->openingAwaitingFirstAdvance = false;
     Game_CloseStoryScene(game);
     Game_CloseTransientOverlays(game);
     Game_ClearMessage(game);

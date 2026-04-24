@@ -62,6 +62,11 @@ static void PrepareMainArchiveOnly(TaskSystem *tasks) {
     }
 }
 
+static void CollectSupplementalLog(TaskSystem *tasks, int logIndex) {
+    tasks->logs[logIndex].active = true;
+    tasks->logs[logIndex].collected = true;
+}
+
 static void MovePlayerToLoxiRightSide(Player *player) {
     player->gridX = LOXI_TERMINAL_X + STATION_FOOTPRINT_WIDTH;
     player->gridY = LOXI_TERMINAL_Y;
@@ -86,7 +91,7 @@ int main(void) {
     player.hasSignalAmplifier = true;
     MovePlayerToLoxiLeftPickupTile(&player);
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strcmp(tasks.objective, "Recover the remaining mainline logs and finish west/south archive tasks before choosing an ending with Loxi.") == 0,
+    Require(strcmp(tasks.objective, "Recover West Frontier, South Collapse, and the remaining mainline logs before choosing an ending with Loxi.") == 0,
             "stage 7 should now keep the player on archive completion before the branch point opens");
 
     PrepareMainArchiveOnly(&tasks);
@@ -107,25 +112,85 @@ int main(void) {
     Require(strstr(message, "Archive review complete") != NULL || strstr(message, "档案复核完成") != NULL,
             "archive review interaction should explicitly explain that the truth review step has completed");
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strcmp(tasks.objective, "Return to Loxi and choose the final route.") == 0,
-            "after the archive review, the objective should advance to the actual route choice");
+    Require(strstr(tasks.objective, "Canopy Handoff") != NULL
+                || strstr(tasks.objective, "林冠交接") != NULL,
+            "after the archive review, the objective should point to the next missing route unlock when no ending is unlocked yet");
+
+    CollectSupplementalLog(&tasks, 7);
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(Tasks_GetAvailableEndingCount(&tasks) == 0,
+            "recovering only the last-camp settlement record should not unlock settlement before the guardian dies");
+    Require(!Tasks_IsEndingAvailable(&tasks, ENDING_SETTLEMENT),
+            "last-camp inheritance evidence alone should not unlock settlement without the guardian kill");
+    Require(!Tasks_IsEndingAvailable(&tasks, ENDING_HEROIC),
+            "settlement-only evidence should not auto-unlock heroic rescue");
+    Require(!Tasks_IsEndingAvailable(&tasks, ENDING_PEACEFUL),
+            "settlement-only evidence should not auto-unlock peaceful rescue");
+    Require(strcmp(tasks.objective, "Recover the Canopy Handoff record, then return to Loxi to confirm heroic rescue.") == 0,
+            "without the guardian kill, the objective should still stay focused on the next missing route unlock");
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "loxi terminal should explain why settlement is still blocked");
+    Require(strstr(message, "guardian") != NULL || strstr(message, "守卫") != NULL,
+            "settlement-blocked Loxi guidance should explicitly mention the guardian gate");
+
+    player.hasSignalAmplifier = false;
+    CollectSupplementalLog(&tasks, 12);
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(Tasks_GetAvailableEndingCount(&tasks) == 0,
+            "adding peaceful-route evidence should still not unlock peaceful rescue before the Signal Amplifier is crafted");
+    Require(!Tasks_IsEndingAvailable(&tasks, ENDING_PEACEFUL),
+            "south maintenance control evidence should not unlock peaceful rescue without the Signal Amplifier");
+    Require(strcmp(tasks.objective, "Recover 3 Relic Fragments, craft the Signal Amplifier at the workshop, then return to Loxi for peaceful rescue.") == 0,
+            "without the Signal Amplifier, the objective should redirect the player to peaceful-route preparation instead of route confirmation");
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
+            "loxi terminal should explain that peaceful rescue still needs the Signal Amplifier");
+    Require(strstr(message, "Signal Amplifier") != NULL || strstr(message, "信号放大器") != NULL,
+            "peaceful-route Loxi guidance should explicitly mention the missing Signal Amplifier gate");
+
+    player.hasSignalAmplifier = true;
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(Tasks_GetAvailableEndingCount(&tasks) == 1,
+            "crafting the Signal Amplifier should finally unlock peaceful rescue while settlement stays boss-gated");
+    Require(Tasks_GetAvailableEndingAt(&tasks, 0) == ENDING_PEACEFUL,
+            "before the guardian dies, the only unlocked ending should become peaceful rescue once the amplifier exists");
+    Require(Tasks_IsEndingAvailable(&tasks, ENDING_PEACEFUL),
+            "south maintenance control evidence plus the Signal Amplifier should unlock peaceful rescue");
+    Require(strcmp(tasks.objective, "Return to Loxi and confirm the only unlocked ending: Peaceful Rescue.") == 0,
+            "once the Signal Amplifier exists, the objective should shift to single-ending confirmation");
 
     PrepareEndingBranch(&tasks);
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strcmp(tasks.objective, "Return to Loxi and choose the final route.") == 0,
-            "once the archive is complete, the objective should point back to Loxi");
+    Require(strcmp(tasks.objective, "Return to Loxi and choose among the unlocked endings.") == 0,
+            "once every ending-line archive is complete, the objective should point back to Loxi for final choice");
+    Require(Tasks_GetAvailableEndingCount(&tasks) == 2,
+            "before the guardian dies, the fully recovered archive should still expose only heroic and peaceful");
+    Require(Tasks_GetAvailableEndingAt(&tasks, 0) == ENDING_HEROIC
+                && Tasks_GetAvailableEndingAt(&tasks, 1) == ENDING_PEACEFUL,
+            "available ending order should stay heroic then peaceful before settlement's boss gate is cleared");
 
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "loxi terminal should remain interactive once the branch point opens");
     Require(tasks.ending == ENDING_NONE,
             "base terminal should not commit the settlement ending without confirmation");
-    Require(Tasks_CanChooseSettlement(&tasks),
-            "base terminal should expose settlement as an explicit available choice");
+    Require(!Tasks_CanChooseSettlement(&tasks),
+            "base terminal should keep settlement unavailable until the guardian is defeated");
     Require(message[0] != '\0',
             "settlement interaction should explain that confirmation is required");
     Require(message[0] != '\0',
             "settlement interaction should explain that settlement closes both rescue routes");
+    tasks.bossDefeated = true;
+    Tasks_UpdateObjective(&tasks, &player);
+    Require(Tasks_GetAvailableEndingCount(&tasks) == 3,
+            "defeating the guardian should add settlement back into the fully recovered archive set");
+    Require(Tasks_GetAvailableEndingAt(&tasks, 0) == ENDING_HEROIC
+                && Tasks_GetAvailableEndingAt(&tasks, 1) == ENDING_PEACEFUL
+                && Tasks_GetAvailableEndingAt(&tasks, 2) == ENDING_SETTLEMENT,
+            "available ending order should become heroic, peaceful, settlement once the guardian is defeated");
+    Require(Tasks_CanChooseSettlement(&tasks),
+            "base terminal should expose settlement as an explicit available choice after the guardian falls");
     Tasks_CommitSettlement(&tasks);
     Require(tasks.ending == ENDING_SETTLEMENT,
             "committing the settlement route should enter the settlement ending");
@@ -143,6 +208,7 @@ int main(void) {
             "tower should redirect the player to Loxi when no route has been chosen");
 
     PrepareEndingBranch(&tasks);
+    Tasks_UpdateObjective(&tasks, &player);
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
             "peaceful route should be selectable once the archive is complete");
     memset(message, 0, sizeof(message));
@@ -160,20 +226,20 @@ int main(void) {
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_HEROIC),
             "heroic route should be selectable once the archive is complete");
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strcmp(tasks.objective, "Heroic route chosen. Open the airlock and commit to the guardian arena.") == 0,
-            "heroic route should now point to the airlock before the boss fight starts");
+    Require(strcmp(tasks.objective, "Heroic route chosen. Defeat the guardian in the northwest ruins, then return to the Signal Tower.") == 0,
+            "heroic route should now point directly to the northwest guardian fight");
     Map_LockSwampOuter(&map);
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
-            "heroic airlock interaction should now trigger the arena transition");
-    Require(player.gridX == BOSS_ARENA_PLAYER_ENTRY_X && player.gridY == BOSS_ARENA_PLAYER_ENTRY_Y,
-            "heroic airlock interaction should teleport the player into the isolated boss arena");
-    Require(Map_GetAreaAt(player.gridX, player.gridY) == MAP_AREA_BOSS_ARENA,
-            "heroic airlock interaction should place the player in the boss arena area");
-    Require(strstr(message, "guardian arena") != NULL || strstr(message, "isolated breach mode") != NULL,
-            "heroic airlock interaction should explain the forced arena breach");
-    Require(strcmp(tasks.objective, "Heroic route chosen. Defeat the guardian in the isolated arena, then return to the Signal Tower.") == 0,
-            "heroic arena entry should update the objective to defeating the guardian before the tower");
+            "heroic airlock interaction should remain a normal door toggle");
+    Require(player.gridX == AIRLOCK_CONSOLE_X - 1 && player.gridY == AIRLOCK_CONSOLE_Y,
+            "heroic airlock interaction should no longer teleport the player away from the world-map guardian fight");
+    Require(Map_IsSwampOuterUnlocked(&map),
+            "heroic airlock interaction should still open the outer route");
+    Require(strstr(message, "Airlock") != NULL || strstr(message, "气闸") != NULL,
+            "heroic airlock interaction should explain the normal airlock cycle");
+    Require(strcmp(tasks.objective, "Heroic route chosen. Defeat the guardian in the northwest ruins, then return to the Signal Tower.") == 0,
+            "heroic airlock use should leave the route objective focused on the northwest guardian fight");
 
     ResetEndgameState(&map, &player, &tasks);
     player.hasSignalAmplifier = true;
@@ -214,6 +280,7 @@ int main(void) {
     player.gridX = SIGNAL_TOWER_X - 1;
     player.gridY = SIGNAL_TOWER_Y;
     tasks.bossDefeated = false;
+    Tasks_UpdateObjective(&tasks, &player);
     Require(Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
             "peaceful route should remain selectable when X3 is complete");
     memset(message, 0, sizeof(message));

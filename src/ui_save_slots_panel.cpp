@@ -79,7 +79,7 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
         UIRuntime_DrawText(assets, buffer, Vector2{slotRect.x + 12.0f * scale, slotRect.y + 10.0f * scale}, 18.0f * scale, WHITE);
 
         if (occupied) {
-            std::snprintf(buffer, sizeof(buffer), "%s %d  %s %d", Loc_PickLiteral("Stage", "阶段"), slots[slotIndex].stage, Loc_PickLiteral("Day", "天数"), slots[slotIndex].dayCount + 1);
+            std::snprintf(buffer, sizeof(buffer), "%s %d", Loc_PickLiteral("Stage", "阶段"), slots[slotIndex].stage);
             UIRuntime_DrawText(assets, buffer, Vector2{slotRect.x + 12.0f * scale, slotRect.y + 34.0f * scale}, 15.0f * scale, Color{174, 240, 213, 255});
             std::snprintf(buffer, sizeof(buffer), "HP %.0f  O2 %.0f  %s %d", slots[slotIndex].health, slots[slotIndex].oxygen, Loc_PickLiteral("Deaths", "死亡"), slots[slotIndex].deathCount);
             UIRuntime_DrawText(assets, buffer, Vector2{slotRect.x + 12.0f * scale, slotRect.y + 55.0f * scale}, 13.0f * scale, Color{204, 219, 231, 255});
@@ -112,14 +112,12 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
         if (selectedInfo->exists) {
             std::snprintf(buffer, sizeof(buffer), "%s %d", Loc_PickLiteral("Stage", "阶段"), selectedInfo->stage);
             UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 126.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
-            std::snprintf(buffer, sizeof(buffer), "%s %d", Loc_PickLiteral("Day", "天数"), selectedInfo->dayCount + 1);
-            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 152.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
             std::snprintf(buffer, sizeof(buffer), "%s %.0f", Loc_PickLiteral("Oxygen", "氧气"), selectedInfo->oxygen);
-            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 178.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
+            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 152.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
             std::snprintf(buffer, sizeof(buffer), "%s %.0f", Loc_PickLiteral("Health", "生命"), selectedInfo->health);
-            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 204.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
+            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 178.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
             std::snprintf(buffer, sizeof(buffer), "%s %d", Loc_PickLiteral("Deaths", "死亡"), selectedInfo->deathCount);
-            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 230.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
+            UIRuntime_DrawText(assets, buffer, Vector2{detailsPanel.x + 18.0f * scale, detailsPanel.y + 204.0f * scale}, 17.0f * scale, Color{221, 233, 244, 255});
         } else {
             UIRuntime_DrawText(
                 assets,

@@ -139,6 +139,9 @@ static SaveSnapshot BuildSnapshot(void) {
     snapshot.monsters[0].health = 14.0f;
     snapshot.monsters[0].phaseTriggered = true;
     snapshot.logs[0].collected = true;
+    snapshot.storyMainSceneShown[0] = true;
+    snapshot.storyMainSceneShown[8] = true;
+    snapshot.storyMainSceneShown[STORY_MAIN_SCENE_COUNT - 1] = true;
     snapshot.communicatorUnlocked = true;
     return snapshot;
 }
@@ -411,6 +414,12 @@ int main(void) {
     Require(loaded.clearedDynamicTileCount == saved.clearedDynamicTileCount, "dynamic tile count should round-trip");
     Require(loaded.resources[RESOURCE_JUNK_METAL] == saved.resources[RESOURCE_JUNK_METAL], "resource inventory should round-trip");
     Require(loaded.logs[0].collected == saved.logs[0].collected, "log collection should round-trip");
+    Require(loaded.storyMainSceneShown[0] == saved.storyMainSceneShown[0],
+            "main story archive progress should round-trip");
+    Require(loaded.storyMainSceneShown[8] == saved.storyMainSceneShown[8],
+            "mid-arc story archive progress should round-trip");
+    Require(loaded.storyMainSceneShown[STORY_MAIN_SCENE_COUNT - 1] == saved.storyMainSceneShown[STORY_MAIN_SCENE_COUNT - 1],
+            "reserved tail story slots should round-trip even before art is added");
 
     SaveSystem_Logout();
     Require(!SaveSystem_IsAccountAuthenticated(), "logout should clear the active account");

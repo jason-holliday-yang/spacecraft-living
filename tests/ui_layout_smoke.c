@@ -140,10 +140,10 @@ static void VerifySettlementConfirmLayout(int screenWidth, int screenHeight) {
     Rectangle cancelButton;
 
     panel = UI_GetSettlementConfirmPanelRect(screenWidth, screenHeight);
-    heroicButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_HEROIC);
-    peacefulButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_PEACEFUL);
-    settlementButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_SETTLEMENT);
-    cancelButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_CANCEL);
+    heroicButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_HEROIC, 4);
+    peacefulButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_PEACEFUL, 4);
+    settlementButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_SETTLEMENT, 4);
+    cancelButton = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, SETTLEMENT_CONFIRM_BUTTON_CANCEL, 4);
 
     Require(panel.width > 0.0f && panel.height > 0.0f, "settlement confirm panel should have a positive size");
     Require(RectContainsRect(panel, heroicButton), "heroic button should stay inside the panel");

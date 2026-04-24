@@ -161,13 +161,13 @@ void TasksRuntime_DescribeNodeStatus(const ResourceNode *node, char *message, si
     resourceLabel = Player_GetResourceLabel(node->type);
     switch (TasksRuntime_GetNodeInfoState(node)) {
         case RESOURCE_NODE_INFO_READY:
-            snprintf(message, messageSize, "%s node: ready to collect.", resourceLabel);
+            snprintf(message, messageSize, "%s node: intact and ready to harvest.", resourceLabel);
             break;
         case RESOURCE_NODE_INFO_RESTORED:
-            snprintf(message, messageSize, "%s node: restored and ready to collect.", resourceLabel);
+            snprintf(message, messageSize, "%s node: regrown and ready to harvest again.", resourceLabel);
             break;
         case RESOURCE_NODE_INFO_SHIP_SUPPLY_READY:
-            snprintf(message, messageSize, "%s ship supply: ready for one collection.", resourceLabel);
+            snprintf(message, messageSize, "%s ship supply: one salvage pull remains.", resourceLabel);
             break;
         case RESOURCE_NODE_INFO_SHIP_SUPPLY_EMPTY:
             if (message != NULL && messageSize > 0) {
@@ -227,7 +227,7 @@ bool TasksRuntime_SpendRecipeResources(TaskSystem *tasks,
 
     entry = RecipeCatalog_Get(recipe);
     if (tasks == NULL || player == NULL || entry == NULL) {
-        TasksRuntime_WriteMessage(message, messageSize, "Crafting data unavailable.");
+        TasksRuntime_WriteMessage(message, messageSize, "Crafting data is unavailable.");
         return false;
     }
     if (!Tasks_IsRecipeVisible(tasks, recipe)) {
@@ -237,17 +237,17 @@ bool TasksRuntime_SpendRecipeResources(TaskSystem *tasks,
     if (entry->requiresWorkbench && !Tasks_IsNearWorkbench(player)) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : "Move next to the workbench.");
+                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : "Move in beside the workbench first.");
         return false;
     }
     if (entry->requiresLowStress && !Player_CanCraftAdvanced(player)) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : "Stabilize health, oxygen, and anomalies first.");
+                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : "Steady your health, oxygen, and anomalies first.");
         return false;
     }
     if (!RecipeCatalog_SpendResources(player, recipe)) {
-        snprintf(missingMessage, sizeof(missingMessage), "Missing materials: %s.", Loc_PickText(entry->ingredientText));
+        snprintf(missingMessage, sizeof(missingMessage), "Missing materials for this build: %s.", Loc_PickText(entry->ingredientText));
         TasksRuntime_WriteMessage(message, messageSize, missingMessage);
         return false;
     }
@@ -258,6 +258,7 @@ bool TasksRuntime_SpendRecipeResources(TaskSystem *tasks,
 bool TasksRuntime_CollectNode(TaskSystem *tasks, Player *player, ResourceNode *node, char *message, size_t messageSize) {
     float oxygenCost;
     int yieldCount;
+    const char *messageFormat;
     const char *resourceLabel;
     bool shipInteriorNode;
     ResourceNodeInfoState nodeInfoState;
@@ -266,11 +267,11 @@ bool TasksRuntime_CollectNode(TaskSystem *tasks, Player *player, ResourceNode *n
     shipInteriorNode = TasksRuntime_IsShipInteriorNode(node);
     nodeInfoState = TasksRuntime_GetNodeInfoState(node);
     if (player->health <= 12.0f || Player_HasStatus(player, PLAYER_STATUS_CRITICAL_CONDITION)) {
-        TasksRuntime_WriteMessage(message, messageSize, "You are too injured to gather safely right now.");
+        TasksRuntime_WriteMessage(message, messageSize, "You are in no condition to gather safely right now.");
         return false;
     }
     if (player->oxygen <= oxygenCost + 4.0f || Player_HasStatus(player, PLAYER_STATUS_SUFFOCATING)) {
-        TasksRuntime_WriteMessage(message, messageSize, "Your oxygen margin is too thin to gather safely right now.");
+        TasksRuntime_WriteMessage(message, messageSize, "Your oxygen margin is too thin for a safe harvest.");
         return false;
     }
 
@@ -296,11 +297,15 @@ bool TasksRuntime_CollectNode(TaskSystem *tasks, Player *player, ResourceNode *n
     }
 
     if (shipInteriorNode) {
-        snprintf(message, messageSize, "Collected %s x%d from a one-time ship supply.", resourceLabel, yieldCount);
+        messageFormat = Loc_PickLiteral("Recovered %s x%d from a one-use ship supply cache.",
+                                        "已回收 %s x%d（来自飞船内一次性补给箱）。");
     } else if (nodeInfoState == RESOURCE_NODE_INFO_RESTORED) {
-        snprintf(message, messageSize, "Collected %s x%d from a restored node.", resourceLabel, yieldCount);
+        messageFormat = Loc_PickLiteral("Harvested %s x%d from a regrown node.",
+                                        "已采集 %s x%d（来自重新长成的资源节点）。");
     } else {
-        snprintf(message, messageSize, "Collected %s x%d", resourceLabel, yieldCount);
+        messageFormat = Loc_PickLiteral("Harvested %s x%d",
+                                        "已采集 %s x%d");
     }
+    snprintf(message, messageSize, messageFormat, resourceLabel, yieldCount);
     return true;
 }

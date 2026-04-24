@@ -1,9 +1,11 @@
 #include "task_system.h"
 
+#include "localization.h"
 #include "recipe_catalog.h"
 #include "task_runtime_internal.h"
 
 #include <cmath>
+#include <cstdio>
 
 static void DrawTextureAssetCentered(const TextureAsset *asset, Vector2 center, float maxWidth, float maxHeight, Color tint) {
     Rectangle source;
@@ -213,6 +215,34 @@ static const TextureAsset *GetMonsterTexture(const AssetBundle *assets, MonsterT
     }
 }
 
+static int GetBossPhaseForPresentation(const Monster *boss) {
+    const float healthPercent = boss != NULL && boss->maxHealth > 0.0f ? boss->health / boss->maxHealth : 1.0f;
+
+    if (healthPercent > 0.70f) {
+        return 1;
+    }
+    if (healthPercent > 0.35f) {
+        return 2;
+    }
+    return 3;
+}
+
+static const char *GetBossAttackLabel(BossAttackType attack) {
+    switch (attack) {
+        case BOSS_ATTACK_MELEE:
+            return Loc_PickLiteral("Swipe", "挥击");
+        case BOSS_ATTACK_CHARGE:
+            return Loc_PickLiteral("Charge", "冲锋");
+        case BOSS_ATTACK_SPAWN:
+            return Loc_PickLiteral("Summon", "呼援");
+        case BOSS_ATTACK_AOE:
+            return Loc_PickLiteral("Shockwave", "震荡");
+        case BOSS_ATTACK_NONE:
+        default:
+            return "";
+    }
+}
+
 static void DrawMonster(const Monster *monster, const AssetBundle *assets, float elapsedSeconds, int bossDebuffStacks) {
     Rectangle rect;
     Vector2 pos;
@@ -266,6 +296,16 @@ static void DrawMonster(const Monster *monster, const AssetBundle *assets, float
             radius = rect.width * 0.32f;
             break;
         case MONSTER_FINAL_BOSS:
+        {
+            const int phase = GetBossPhaseForPresentation(monster);
+            const char *phaseLabel = phase == 1
+                ? Loc_PickLiteral("Phase 1", "一阶段")
+                : (phase == 2 ? Loc_PickLiteral("Phase 2", "二阶段") : Loc_PickLiteral("Final Phase", "最终阶段"));
+            const char *attackLabel = GetBossAttackLabel(monster->currentAttack);
+            Color phaseColor = phase == 1
+                ? Color{255, 184, 108, 255}
+                : (phase == 2 ? Color{112, 223, 255, 255} : Color{255, 128, 118, 255});
+
             if (texture != NULL && texture->loaded) {
                 DrawTextureAssetCentered(texture, pos, rect.width, rect.height, WHITE);
             } else {
@@ -282,6 +322,17 @@ static void DrawMonster(const Monster *monster, const AssetBundle *assets, float
                          32,
                          Color{107, 242, 255, (unsigned char)(50 + bossDebuffStacks * 20)});
             }
+            if (monster->weakPointTimer > 0.0f) {
+                const float weakPointPulse = sinf(elapsedSeconds * 10.0f) * 0.5f + 0.5f;
+
+                DrawRing(pos,
+                         rect.width * 0.55f,
+                         rect.width * 0.68f + weakPointPulse * 5.0f,
+                         0.0f,
+                         360.0f,
+                         40,
+                         Color{255, 234, 162, (unsigned char)(90 + weakPointPulse * 70.0f)});
+            }
             if (!assets->boss.loaded) {
                 DrawCircleV(pos, radius, body);
             }
@@ -294,8 +345,14 @@ static void DrawMonster(const Monster *monster, const AssetBundle *assets, float
                           (int)(rect.y - 10.0f),
                           (int)(rect.width * 0.70f * (monster->health / monster->maxHealth)),
                           6,
-                          Color{245, 94, 81, 255});
+                          monster->weakPointTimer > 0.0f ? Color{255, 224, 132, 255} : Color{245, 94, 81, 255});
+            DrawRectangleRounded(Rectangle{rect.x + rect.width * 0.08f, rect.y - 30.0f, 74.0f, 16.0f}, 0.35f, 6, Fade(phaseColor, 0.18f));
+            DrawText(phaseLabel, (int)(rect.x + rect.width * 0.10f), (int)(rect.y - 31.0f), 13, phaseColor);
+            if (monster->attackTelegraph > 0.0f && attackLabel[0] != '\0') {
+                DrawText(attackLabel, (int)(rect.x + rect.width * 0.61f), (int)(rect.y - 31.0f), 13, Color{255, 234, 182, 255});
+            }
             return;
+        }
         default:
             break;
     }
@@ -381,6 +438,62 @@ static void DrawBossTelegraph(const Monster *monster, float elapsedSeconds) {
     }
 }
 
+static void DrawMonsterCombatTelegraph(const Monster *monster, float elapsedSeconds) {
+    Rectangle rect;
+    Vector2 pos;
+    float pulse;
+    int originX;
+    int originY;
+    int width;
+    int height;
+    Color color;
+
+    if (monster == NULL || monster->attackTelegraph <= 0.0f) {
+        return;
+    }
+    if (monster->type == MONSTER_FINAL_BOSS) {
+        DrawBossTelegraph(monster, elapsedSeconds);
+        return;
+    }
+
+    TasksRuntime_GetMonsterFootprint(monster, &originX, &originY, &width, &height);
+    rect = Rectangle{
+        (float)(originX * TILE_SIZE),
+        (float)(originY * TILE_SIZE),
+        (float)(width * TILE_SIZE),
+        (float)(height * TILE_SIZE)
+    };
+    pos = Vector2{rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f};
+    pulse = sinf(elapsedSeconds * 9.0f) * 0.5f + 0.5f;
+    color = Color{255, 158, 118, (unsigned char)(90 + pulse * 60.0f)};
+
+    switch (monster->type) {
+        case MONSTER_SWAMP_STALKER:
+        case MONSTER_FOG_WORM:
+            color = Color{136, 226, 120, (unsigned char)(92 + pulse * 58.0f)};
+            break;
+        case MONSTER_SENTINEL_JELLY:
+        case MONSTER_WING_BUG:
+            color = Color{118, 214, 255, (unsigned char)(92 + pulse * 58.0f)};
+            break;
+        case MONSTER_RELIC_GUARD:
+            color = Color{255, 212, 150, (unsigned char)(95 + pulse * 62.0f)};
+            break;
+        case MONSTER_THORN_LARVA:
+        case MONSTER_RAPTOR:
+        default:
+            break;
+    }
+
+    DrawRing(pos,
+             rect.width * 0.34f,
+             rect.width * 0.50f + pulse * 3.0f,
+             0.0f,
+             360.0f,
+             32,
+             color);
+}
+
 void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float elapsedSeconds) {
     int index;
 
@@ -409,7 +522,7 @@ void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float e
 
         monster = &tasks->monsters[index];
         if (monster->active && tasks->stage >= monster->unlockStage) {
-            DrawBossTelegraph(monster, elapsedSeconds);
+            DrawMonsterCombatTelegraph(monster, elapsedSeconds);
             DrawMonster(monster, assets, elapsedSeconds, tasks->monolithsLit);
         }
     }

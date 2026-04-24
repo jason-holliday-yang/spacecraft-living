@@ -28,9 +28,9 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
                                  scale,
                                  Loc_PickLiteral("Backpack", "背包"),
                                  33.0f * scale,
-                                 Loc_PickLiteral("Press B or ESC to close.", "按 B 或 ESC 关闭。"),
+                                 Loc_PickLiteral("Press B or ESC to seal the pack again.", "按 B 或 ESC 收起背包。"),
                                  16.5f * scale,
-                                 Loc_PickLiteral("Inspect supplies, check counts, and use field items from one cleaner layout.", "在更清晰的界面中查看补给、确认数量并使用野外物品。"),
+                                 Loc_PickLiteral("Check what is left, what can still save you, and what the next push will cost.", "看看还剩下什么、哪些东西还能救命，以及下一次推进会消耗掉什么。"),
                                  16.0f * scale,
                                  17.0f * scale);
 
@@ -95,14 +95,14 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
         UIRuntime_DrawWrappedText(assets, statusBuffer, Rectangle{detailPanel.x + 128.0f * scale, detailPanel.y + 104.0f * scale, detailPanel.width - 146.0f * scale, 36.0f * scale}, 14.5f * scale, 16.0f * scale, Color{255, 214, 154, 255});
         UIRuntime_DrawPanel(descriptionPanel, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
         UIRuntime_DrawPanel(actionPanel, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
-        UIRuntime_DrawText(assets, Loc_PickLiteral("Item Brief", "物品简介"), Vector2{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 14.0f * scale}, 17.0f * scale, WHITE);
+        UIRuntime_DrawText(assets, Loc_PickLiteral("Field Notes", "现场描述"), Vector2{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 14.0f * scale}, 17.0f * scale, WHITE);
         UIRuntime_DrawWrappedText(assets, Loc_PickText(selectedEntry->description), Rectangle{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 42.0f * scale, descriptionPanel.width - 28.0f * scale, descriptionPanel.height - 56.0f * scale}, 14.8f * scale, 18.0f * scale, Color{214, 226, 238, 255});
-        UIRuntime_DrawText(assets, Loc_PickLiteral("Field Action", "现场操作"), Vector2{actionPanel.x + 14.0f * scale, actionPanel.y + 14.0f * scale}, 18.0f * scale, WHITE);
+        UIRuntime_DrawText(assets, Loc_PickLiteral("Use Case", "使用方式"), Vector2{actionPanel.x + 14.0f * scale, actionPanel.y + 14.0f * scale}, 18.0f * scale, WHITE);
         UIRuntime_DrawWrappedText(
             assets,
             UIInventory_BackpackEntryCanUseDirectly(selectedItem)
-                ? Loc_PickLiteral("Press F or Enter to use the selected field item now.", "按 F 或 Enter 立即使用当前选中的野外物品。")
-                : Loc_PickLiteral("This selection stays in storage for crafting, route prep, or passive use.", "该物品会保留在储备中，用于制作、路线准备或被动效果。"),
+                ? Loc_PickLiteral("Press F or Enter to use this field item immediately.", "按 F 或 Enter 立即使用当前选中的野外物品。")
+                : Loc_PickLiteral("This item stays packed for crafting, route setup, or passive protection.", "该物品会继续留在背包里，用于制作、路线准备或被动防护。"),
             Rectangle{actionPanel.x + 14.0f * scale, actionPanel.y + 42.0f * scale, actionPanel.width - 28.0f * scale, actionPanel.height - 54.0f * scale},
             14.5f * scale,
             18.0f * scale,

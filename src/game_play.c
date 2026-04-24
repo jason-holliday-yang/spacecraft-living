@@ -1,20 +1,5 @@
 #include "game_play_internal.h"
 
-static AudioCue GetEndingCue(GameEnding ending) {
-    switch (ending) {
-        case ENDING_PEACEFUL:
-            return AUDIO_CUE_ENDING_PEACEFUL;
-        case ENDING_SETTLEMENT:
-            return AUDIO_CUE_ENDING_SETTLEMENT;
-        case ENDING_HEROIC:
-            return AUDIO_CUE_ENDING;
-        case ENDING_FAILURE:
-        case ENDING_NONE:
-        default:
-            return AUDIO_CUE_WARNING;
-    }
-}
-
 static bool BossStartedTelegraphing(const TaskSystem *tasks, bool hadTelegraphBefore) {
     int index;
 
@@ -43,6 +28,7 @@ void Game_UpdatePlayingState(Game *game, float deltaTime) {
     bool hadOxygenLeakBefore;
     bool hadBossTelegraph;
     GameEnding endingBeforeUpdate;
+    int previousDayCount;
     int monsterIndex;
 
     GamePlay_CaptureStoryTriggerSnapshot(game, &storyBefore);
@@ -86,6 +72,7 @@ void Game_UpdatePlayingState(Game *game, float deltaTime) {
     hadLowOxygenBefore = Player_HasStatus(&game->player, PLAYER_STATUS_LOW_OXYGEN);
     hadOxygenLeakBefore = Player_HasStatus(&game->player, PLAYER_STATUS_OXYGEN_LEAK);
     endingBeforeUpdate = game->tasks.ending;
+    previousDayCount = game->tasks.dayCount;
     hadBossTelegraph = false;
     for (monsterIndex = 0; monsterIndex < game->tasks.monsterCount; monsterIndex++) {
         const Monster *monster;
@@ -98,6 +85,7 @@ void Game_UpdatePlayingState(Game *game, float deltaTime) {
     }
 
     Tasks_Update(&game->tasks, &game->map, &game->player, deltaTime);
+    Game_MaybePostDayAdvanceMessage(game, previousDayCount);
     MiniMap_Update(&game->miniMap, &game->player, &game->map);
     Audio_SetScene(&game->audio, Game_SelectAudioScene(game));
     Game_MaybePostNorthRouteTransitionHint(game);
@@ -127,9 +115,9 @@ void Game_UpdatePlayingState(Game *game, float deltaTime) {
         if (endingBeforeUpdate == ENDING_NONE) {
             Game_RecordActiveAccountScore(game);
         }
-        game->state = GAME_STATE_ENDING;
-        Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
-        Audio_PlayCue(&game->audio, endingBeforeUpdate == ENDING_NONE ? GetEndingCue(game->tasks.ending) : AUDIO_CUE_ENDING);
+        if (!game->screenTransitionActive) {
+            Game_BeginScreenTransition(game, SCREEN_TRANSITION_ENTER_ENDING, -1);
+        }
     }
 
     game->camera.target = game->player.renderPos;

@@ -22,12 +22,12 @@ void Assets_Load(AssetBundle *assets) {
     monsterSize = TILE_SIZE * MONSTER_FOOTPRINT_SIZE;
 
     assets->player = AssetsInternal_LoadOptionalTextureSheetFitted(
-        "resources/images/my_astronaut.png",
+        "resources/images/characters/player/my_astronaut.png",
         assets->playerSpriteFrames
     );
     assets->playerIsSpriteSheet = assets->player.loaded;
     if (!assets->player.loaded) {
-        assets->player = AssetsInternal_LoadOptionalTextureFitted("resources/images/player_astronaut.png", singleTileSize, singleTileSize);
+        assets->player = AssetsInternal_LoadOptionalTextureFitted("resources/images/characters/player/player_astronaut.png", singleTileSize, singleTileSize);
         assets->playerIsSpriteSheet = false;
     }
 

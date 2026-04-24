@@ -1,9 +1,20 @@
 #include "game_overlay_internal.h"
 
 #include "localization.h"
+#include "ui_story_internal.h"
 #include "ui_runtime_internal.h"
 
 #include <cstdio>
+
+static float ClampUnit(float value) {
+    if (value < 0.0f) {
+        return 0.0f;
+    }
+    if (value > 1.0f) {
+        return 1.0f;
+    }
+    return value;
+}
 
 static void EnsureCommunicatorSelectionVisible(Game *game, int collectedCount) {
     int visibleCount;
@@ -31,6 +42,52 @@ static void EnsureCommunicatorSelectionVisible(Game *game, int collectedCount) {
                                                                                       GetScreenHeight(),
                                                                                       game->communicatorFirstVisibleLogIndex,
                                                                                       collectedCount);
+}
+
+static int CountShownMainStoryScenes(const Game *game) {
+    int count = 0;
+
+    if (game == NULL) {
+        return 0;
+    }
+
+    for (int scene = STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY;
+         scene < STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY + STORY_MAIN_SCENE_COUNT;
+         ++scene) {
+        if (game->storySceneShown[scene]) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+static void EnsureCommunicatorStorySelectionVisible(Game *game, int shownCount) {
+    int visibleCount;
+
+    if (game == NULL) {
+        return;
+    }
+
+    game->communicatorFirstVisibleStorySceneIndex = UI_ClampCommunicatorFirstVisibleLogIndex(GetScreenWidth(),
+                                                                                             GetScreenHeight(),
+                                                                                             game->communicatorFirstVisibleStorySceneIndex,
+                                                                                             shownCount);
+    if (shownCount <= 0) {
+        return;
+    }
+
+    visibleCount = UI_GetCommunicatorVisibleLogCount(GetScreenWidth(), GetScreenHeight());
+    if (game->selectedStorySceneIndex < game->communicatorFirstVisibleStorySceneIndex) {
+        game->communicatorFirstVisibleStorySceneIndex = game->selectedStorySceneIndex;
+    } else if (game->selectedStorySceneIndex >= game->communicatorFirstVisibleStorySceneIndex + visibleCount) {
+        game->communicatorFirstVisibleStorySceneIndex = game->selectedStorySceneIndex - visibleCount + 1;
+    }
+
+    game->communicatorFirstVisibleStorySceneIndex = UI_ClampCommunicatorFirstVisibleLogIndex(GetScreenWidth(),
+                                                                                             GetScreenHeight(),
+                                                                                             game->communicatorFirstVisibleStorySceneIndex,
+                                                                                             shownCount);
 }
 
 static void TryCraftSelectedRecipe(Game *game) {
@@ -194,20 +251,38 @@ static void UpdateBackpackOverlay(Game *game) {
 }
 
 static void UpdateCommunicatorOverlay(Game *game) {
+    static constexpr float kCommunicatorDetailFadeDuration = 0.16f;
     Vector2 mouse;
     int collectedCount;
+    int shownStoryCount;
     int tabIndex;
     int firstVisibleLog;
     int visibleCount;
     int drawCount;
     int visibleIndex;
     float wheelMove;
+    float detailFadeStep;
+    bool detailVisible;
+
+    detailFadeStep = GetFrameTime() / kCommunicatorDetailFadeDuration;
+    game->communicatorLogDetailVisibility = ClampUnit(
+        game->communicatorLogDetailVisibility + (game->communicatorLogDetailOpen ? detailFadeStep : -detailFadeStep));
+    detailVisible = game->communicatorLogDetailOpen || game->communicatorLogDetailVisibility > 0.001f;
+
+    if (detailVisible && IsKeyPressed(KEY_ESCAPE)) {
+        game->communicatorLogDetailOpen = false;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        return;
+    }
 
     if (GameOverlay_TryCloseOverlay(game, &game->communicatorOpen, KEY_N)) {
+        game->communicatorLogDetailOpen = false;
+        game->communicatorLogDetailVisibility = 0.0f;
         return;
     }
 
     collectedCount = Tasks_GetCollectedLogCount(&game->tasks);
+    shownStoryCount = CountShownMainStoryScenes(game);
     if (game->communicatorTab < COMMUNICATOR_TAB_TASKS || game->communicatorTab >= COMMUNICATOR_TAB_COUNT) {
         game->communicatorTab = COMMUNICATOR_TAB_TASKS;
     }
@@ -221,6 +296,16 @@ static void UpdateCommunicatorOverlay(Game *game) {
                                                                                       GetScreenHeight(),
                                                                                       game->communicatorFirstVisibleLogIndex,
                                                                                       collectedCount);
+    if (game->selectedStorySceneIndex < 0) {
+        game->selectedStorySceneIndex = 0;
+    }
+    if (shownStoryCount > 0 && game->selectedStorySceneIndex >= shownStoryCount) {
+        game->selectedStorySceneIndex = shownStoryCount - 1;
+    }
+    game->communicatorFirstVisibleStorySceneIndex = UI_ClampCommunicatorFirstVisibleLogIndex(GetScreenWidth(),
+                                                                                             GetScreenHeight(),
+                                                                                             game->communicatorFirstVisibleStorySceneIndex,
+                                                                                             shownStoryCount);
 
     if (IsKeyPressed(KEY_TAB)
         || IsKeyPressed(KEY_Q)
@@ -238,15 +323,19 @@ static void UpdateCommunicatorOverlay(Game *game) {
         }
 
         game->communicatorTab = (CommunicatorTab)nextTab;
+        game->communicatorLogDetailOpen = false;
+        game->communicatorLogDetailVisibility = 0.0f;
         Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         return;
     }
 
-    if (game->communicatorTab != COMMUNICATOR_TAB_LOGS) {
+    if (game->communicatorTab == COMMUNICATOR_TAB_TASKS) {
         if (GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
             tabIndex = GameOverlay_FindClickedIndexedRect(mouse, COMMUNICATOR_TAB_COUNT, UI_GetCommunicatorTabRect);
             if (tabIndex >= 0) {
                 game->communicatorTab = (CommunicatorTab)tabIndex;
+                game->communicatorLogDetailOpen = false;
+                game->communicatorLogDetailVisibility = 0.0f;
                 Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
             }
         }
@@ -254,18 +343,30 @@ static void UpdateCommunicatorOverlay(Game *game) {
     }
 
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
-        if (game->selectedLogIndex > 0) {
+        if (game->communicatorTab == COMMUNICATOR_TAB_LOGS && game->selectedLogIndex > 0) {
             game->selectedLogIndex--;
+            game->communicatorLogDetailOpen = false;
             EnsureCommunicatorSelectionVisible(game, collectedCount);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+        } else if (game->communicatorTab == COMMUNICATOR_TAB_STORY && game->selectedStorySceneIndex > 0) {
+            game->selectedStorySceneIndex--;
+            game->communicatorLogDetailOpen = false;
+            EnsureCommunicatorStorySelectionVisible(game, shownStoryCount);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         }
         return;
     }
 
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
-        if (game->selectedLogIndex + 1 < collectedCount) {
+        if (game->communicatorTab == COMMUNICATOR_TAB_LOGS && game->selectedLogIndex + 1 < collectedCount) {
             game->selectedLogIndex++;
+            game->communicatorLogDetailOpen = false;
             EnsureCommunicatorSelectionVisible(game, collectedCount);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+        } else if (game->communicatorTab == COMMUNICATOR_TAB_STORY && game->selectedStorySceneIndex + 1 < shownStoryCount) {
+            game->selectedStorySceneIndex++;
+            game->communicatorLogDetailOpen = false;
+            EnsureCommunicatorStorySelectionVisible(game, shownStoryCount);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         }
         return;
@@ -276,22 +377,43 @@ static void UpdateCommunicatorOverlay(Game *game) {
         Vector2 mousePosition = GetMousePosition();
 
         if (CheckCollisionPointRec(mousePosition, UI_GetCommunicatorLogListRect(GetScreenWidth(), GetScreenHeight()))) {
-            int previousFirstVisibleLogIndex = game->communicatorFirstVisibleLogIndex;
+            if (game->communicatorTab == COMMUNICATOR_TAB_LOGS) {
+                int previousFirstVisibleLogIndex = game->communicatorFirstVisibleLogIndex;
 
-            if (wheelMove > 0.0f) {
-                game->communicatorFirstVisibleLogIndex--;
-            } else if (wheelMove < 0.0f) {
-                game->communicatorFirstVisibleLogIndex++;
+                if (wheelMove > 0.0f) {
+                    game->communicatorFirstVisibleLogIndex--;
+                } else if (wheelMove < 0.0f) {
+                    game->communicatorFirstVisibleLogIndex++;
+                }
+
+                game->communicatorFirstVisibleLogIndex = UI_ClampCommunicatorFirstVisibleLogIndex(GetScreenWidth(),
+                                                                                                  GetScreenHeight(),
+                                                                                                  game->communicatorFirstVisibleLogIndex,
+                                                                                                  collectedCount);
+                if (game->communicatorFirstVisibleLogIndex != previousFirstVisibleLogIndex) {
+                    Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+                }
+                return;
             }
 
-            game->communicatorFirstVisibleLogIndex = UI_ClampCommunicatorFirstVisibleLogIndex(GetScreenWidth(),
-                                                                                              GetScreenHeight(),
-                                                                                              game->communicatorFirstVisibleLogIndex,
-                                                                                              collectedCount);
-            if (game->communicatorFirstVisibleLogIndex != previousFirstVisibleLogIndex) {
-                Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+            if (game->communicatorTab == COMMUNICATOR_TAB_STORY) {
+                int previousFirstVisibleStoryIndex = game->communicatorFirstVisibleStorySceneIndex;
+
+                if (wheelMove > 0.0f) {
+                    game->communicatorFirstVisibleStorySceneIndex--;
+                } else if (wheelMove < 0.0f) {
+                    game->communicatorFirstVisibleStorySceneIndex++;
+                }
+
+                game->communicatorFirstVisibleStorySceneIndex = UI_ClampCommunicatorFirstVisibleLogIndex(GetScreenWidth(),
+                                                                                                         GetScreenHeight(),
+                                                                                                         game->communicatorFirstVisibleStorySceneIndex,
+                                                                                                         shownStoryCount);
+                if (game->communicatorFirstVisibleStorySceneIndex != previousFirstVisibleStoryIndex) {
+                    Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+                }
+                return;
             }
-            return;
         }
     }
 
@@ -302,24 +424,48 @@ static void UpdateCommunicatorOverlay(Game *game) {
     tabIndex = GameOverlay_FindClickedIndexedRect(mouse, COMMUNICATOR_TAB_COUNT, UI_GetCommunicatorTabRect);
     if (tabIndex >= 0) {
         game->communicatorTab = (CommunicatorTab)tabIndex;
+        game->communicatorLogDetailOpen = false;
+        game->communicatorLogDetailVisibility = 0.0f;
         Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         return;
     }
 
-    if (collectedCount <= 0) {
+    if (game->communicatorTab == COMMUNICATOR_TAB_LOGS && collectedCount <= 0) {
+        return;
+    }
+    if (game->communicatorTab == COMMUNICATOR_TAB_STORY && shownStoryCount <= 0) {
         return;
     }
 
-    firstVisibleLog = game->communicatorFirstVisibleLogIndex;
+    if (detailVisible) {
+        game->communicatorLogDetailOpen = false;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        return;
+    }
+
+    if (CheckCollisionPointRec(mouse, UI_GetCommunicatorLogImageRect(GetScreenWidth(), GetScreenHeight()))) {
+        game->communicatorLogDetailOpen = true;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        return;
+    }
+
+    firstVisibleLog = game->communicatorTab == COMMUNICATOR_TAB_STORY
+        ? game->communicatorFirstVisibleStorySceneIndex
+        : game->communicatorFirstVisibleLogIndex;
     visibleCount = UI_GetCommunicatorVisibleLogCount(GetScreenWidth(), GetScreenHeight());
-    drawCount = collectedCount - firstVisibleLog;
+    drawCount = (game->communicatorTab == COMMUNICATOR_TAB_STORY ? shownStoryCount : collectedCount) - firstVisibleLog;
     if (drawCount > visibleCount) {
         drawCount = visibleCount;
     }
 
     for (visibleIndex = 0; visibleIndex < drawCount; ++visibleIndex) {
         if (CheckCollisionPointRec(mouse, UI_GetCommunicatorVisibleLogEntryRect(GetScreenWidth(), GetScreenHeight(), visibleIndex))) {
-            game->selectedLogIndex = firstVisibleLog + visibleIndex;
+            if (game->communicatorTab == COMMUNICATOR_TAB_STORY) {
+                game->selectedStorySceneIndex = firstVisibleLog + visibleIndex;
+            } else {
+                game->selectedLogIndex = firstVisibleLog + visibleIndex;
+            }
+            game->communicatorLogDetailOpen = false;
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
             return;
         }
@@ -342,21 +488,27 @@ static void UpdateDeathPopup(Game *game) {
 
     activateSelection = false;
     if (!canLoad) {
-        game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
+        if (game->deathPopupSelection == DEATH_POPUP_BUTTON_LOAD) {
+            game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
+        }
     }
 
     if (IsKeyPressed(KEY_ESCAPE)) {
-        game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
+        game->deathPopupSelection = DEATH_POPUP_BUTTON_MENU;
         activateSelection = true;
     }
 
-    if (canLoad && GameOverlay_IsBackwardNavigationPressed()) {
-        game->deathPopupSelection = (game->deathPopupSelection + DEATH_POPUP_BUTTON_COUNT - 1) % DEATH_POPUP_BUTTON_COUNT;
+    if (GameOverlay_IsBackwardNavigationPressed()) {
+        do {
+            game->deathPopupSelection = (game->deathPopupSelection + DEATH_POPUP_BUTTON_COUNT - 1) % DEATH_POPUP_BUTTON_COUNT;
+        } while (!canLoad && game->deathPopupSelection == DEATH_POPUP_BUTTON_LOAD);
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
     }
 
-    if (canLoad && GameOverlay_IsForwardNavigationPressed()) {
-        game->deathPopupSelection = (game->deathPopupSelection + 1) % DEATH_POPUP_BUTTON_COUNT;
+    if (GameOverlay_IsForwardNavigationPressed()) {
+        do {
+            game->deathPopupSelection = (game->deathPopupSelection + 1) % DEATH_POPUP_BUTTON_COUNT;
+        } while (!canLoad && game->deathPopupSelection == DEATH_POPUP_BUTTON_LOAD);
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
     }
 
@@ -378,9 +530,12 @@ static void UpdateDeathPopup(Game *game) {
 
     if (game->deathPopupSelection == DEATH_POPUP_BUTTON_RESTART) {
         Game_HandleDeathRecovery(game);
-    } else if (canLoad) {
+    } else if (game->deathPopupSelection == DEATH_POPUP_BUTTON_LOAD && canLoad) {
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
         Game_OpenSavePanel(game, SAVE_PANEL_MODE_LOAD);
+    } else if (game->deathPopupSelection == DEATH_POPUP_BUTTON_MENU) {
+        Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        Game_BeginScreenTransition(game, SCREEN_TRANSITION_RETURN_TO_MENU, -1);
     }
 }
 

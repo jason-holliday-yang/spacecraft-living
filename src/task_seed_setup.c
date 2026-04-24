@@ -43,6 +43,7 @@ static void AddLog(TaskSystem *tasks,
                    LocalizedText title,
                    LocalizedText story,
                    LocalizedText rewardDesc,
+                   LocalizedText detailText,
                    const GameMap *map) {
     ShipLog *log;
     int resolvedX;
@@ -68,6 +69,8 @@ static void AddLog(TaskSystem *tasks,
     snprintf(log->storyTextZh, sizeof(log->storyTextZh), "%s", story.simplifiedChinese != NULL ? story.simplifiedChinese : log->storyTextEn);
     snprintf(log->rewardDescEn, sizeof(log->rewardDescEn), "%s", rewardDesc.english != NULL ? rewardDesc.english : "");
     snprintf(log->rewardDescZh, sizeof(log->rewardDescZh), "%s", rewardDesc.simplifiedChinese != NULL ? rewardDesc.simplifiedChinese : log->rewardDescEn);
+    snprintf(log->detailTextEn, sizeof(log->detailTextEn), "%s", detailText.english != NULL ? detailText.english : "");
+    snprintf(log->detailTextZh, sizeof(log->detailTextZh), "%s", detailText.simplifiedChinese != NULL ? detailText.simplifiedChinese : log->detailTextEn);
 }
 
 void Tasks_Init(TaskSystem *tasks, GameMap *map) {
@@ -137,6 +140,7 @@ void Tasks_Init(TaskSystem *tasks, GameMap *map) {
                seed.title,
                seed.storyText,
                seed.rewardDescription,
+               seed.detailText,
                map);
     }
 

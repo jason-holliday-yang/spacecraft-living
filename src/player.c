@@ -28,6 +28,33 @@ static int GetPoisonTier(const Player *player) {
     return 0;
 }
 
+void Player_SyncPoisonStatus(Player *player) {
+    const PlayerStatusEffect *effect;
+    int poisonTier;
+
+    if (player == NULL) {
+        return;
+    }
+
+    poisonTier = GetPoisonTier(player);
+    if (poisonTier <= 0) {
+        Player_ClearStatus(player, PLAYER_STATUS_POISONED);
+        return;
+    }
+
+    effect = Player_GetStatusEffect(player, PLAYER_STATUS_POISONED);
+    if (effect != NULL && effect->active) {
+        Player_DowngradeStatus(player,
+                               PLAYER_STATUS_POISONED,
+                               poisonTier,
+                               effect->remainingTime,
+                               player->poison);
+        return;
+    }
+
+    Player_SetStatus(player, PLAYER_STATUS_POISONED, poisonTier, 0.0f, player->poison);
+}
+
 static Vector2 LerpVector2(Vector2 from, Vector2 to, float t) {
     return (Vector2){
         from.x + (to.x - from.x) * t,
@@ -65,6 +92,7 @@ void Player_Init(Player *player) {
     player->safeRecoveryTimer = 0.0f;
     player->glowStickTimer = 0.0f;
     player->speedBoostTimer = 0.0f;
+    player->attackCooldown = 0.0f;
     player->blurPulse = 0.0f;
     player->moveAnimElapsed = 0.0f;
     player->moveAnimDuration = 0.0f;
@@ -318,9 +346,10 @@ void Player_AddPoison(Player *player, float amount) {
 
     multiplier = player->hasProtectionSuit ? 0.60f : 1.0f;
     player->poison = ClampFloat(player->poison + amount * multiplier, 0.0f, MAX_POISON);
+    Player_SyncPoisonStatus(player);
 }
 
 void Player_ClearPoison(Player *player) {
     player->poison = 0.0f;
-    Player_ClearStatus(player, PLAYER_STATUS_POISONED);
+    Player_SyncPoisonStatus(player);
 }

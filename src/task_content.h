@@ -31,6 +31,7 @@ typedef struct TaskLogSeed {
     LocalizedText title;
     LocalizedText storyText;
     LocalizedText rewardDescription;
+    LocalizedText detailText;
 } TaskLogSeed;
 
 typedef struct TaskMonsterSpec {

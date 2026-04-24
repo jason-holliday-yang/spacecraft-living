@@ -1,10 +1,10 @@
-# SpaceCraft Living 西线 / 南线资源缺口清单（2026-04-11）
+# SpaceCraft Living 西线 / 南线资源缺口清单（2026-04-17）
 
 ## 1. 文档目的
 
-本文档用于回答两个问题：
+本文档当前用于回答两个问题：
 
-- 在西线 / 南线补完到 `W5`、`S5` 时，必须新增哪些图片资源。
+- 在当前 `W1-W5`、`S1-S5` 与 `X1-X3` 已接线的前提下，哪些资源属于“当前已完成基线”，哪些属于“后续剧情扩写或演出增强”的候选项。
 - 为后续演出增强，哪些视频资源值得准备，以及当前是否已具备播放接线。
 
 配套文档：
@@ -15,37 +15,35 @@
 
 ## 2. 当前资产状态快照
 
-- 已接线图片：`87` 张路径，`77` 张文件已存在，`10` 张为已接线缺图（地图可读性贴图）。
-- 已接线音频：`19` 个 `wav` 全部存在；`7` 个 `bgm_*_1.ogg` 全部存在。
+- 已接线图片：当前代码已引用 `119` 张 PNG，当前 `119/119` 全部存在。
+- 其中叙事图片：`48` 张；玩法 / 地图 / 角色 / UI / 敌人图片：`71` 张。
+- 已接线音频：当前代码主动加载 `33` 个运行时音频文件，当前 `33/33` 全部存在。
 - 视频播放接线：当前代码未检出 `mp4/webm/video` 播放链路。
 
 说明：
 
-- 现阶段“必须补”的第一优先级仍是图片，不是视频。
+- 当前活动版本已经不存在“已接线但缺图”的西线 / 南线硬缺口。
+- 本文档下面列出的图片与视频，更适合作为“后续剧情厚化 / 演出增强 / 长篇稿扩写”资源池，而不是再被表述成“当前缺失导致功能不完整”的必补项。
 - 视频资产可先进入规划池，待播放系统接线后再转生产优先级。
 
 ## 3. 图片资源新增清单
 
-### P0：已接线但缺图（必须先补）
+### P0：当前基线已完成（记录用）
 
-以下 `10` 张已被运行时代码引用，缺失会退回程序化渲染，但会降低地图可读性：
+此前地图可读性贴图缺口已经补齐；以下类型当前都已在工作区存在并完成接线：
 
-- `tile_ship_corridor_floor.png`
-- `tile_ship_room_floor.png`
-- `tile_swamp_outer_ground.png`
-- `tile_swamp_deep_ground.png`
-- `tile_ruins_path.png`
-- `tile_ruins_ring_floor.png`
-- `tile_tower_plateau_floor.png`
-- `tile_barrier_swamp.png`
-- `tile_barrier_deep.png`
-- `tile_barrier_ruins.png`
+- 飞船走廊 / 舱室地表
+- 外沼 / 深沼地表
+- 遗迹路径 / 石碑环区 / 塔顶平台地表
+- swamp / deep / ruins barrier 地块
+
+当前如需继续新增图片，应理解为“提升表现层密度”，而不是“补当前缺图”。
 
 ### P1：西线第二轮剧情图（W4-W5）
 
 对应剧情节点：`Echo Basin` 与 `Last Camp`。
 
-建议新增：
+当前已存在并作为命名基线的叙事图：
 
 - `story/main/main_14_echo_basin_lock.png`
   对应 `W4` 回声定位成功瞬间。
@@ -64,9 +62,12 @@
 - `story/logs/log_08_last_camp_testament.png`
   对应《Field Record: Last Camp Testament》。
 
-地图与场景补图建议：
+如果继续提高地图读感，当前西线已存在的基础地表是：
 
 - `tile_echo_basin_floor.png`
+
+在此基础上，优先新增的仍是场景补图：
+
 - `tile_echo_beacon_array.png`
 - `tile_last_camp_tent.png`
 - `tile_last_camp_archive_box.png`
@@ -76,7 +77,7 @@
 
 对应剧情节点：`Purifier Ring` 与 `Root Vault`。
 
-建议新增：
+当前已存在并作为命名基线的叙事图：
 
 - `story/main/main_17_purifier_ring_boot.png`
   对应 `S4` 净化环重启。
@@ -85,7 +86,7 @@
 - `story/main/main_19_root_vault_core.png`
   对应 `S5` 根系密库核心记录下载。
 - `story/logs/log_09_crash_recorder_black_box_residue.png`
-  对应《Crash Recorder: Black Box Residue》。
+  对应《Crash Recorder: Black Box Residue》；它本身是东线异常记录，但会在南线系统真相链里被再次引用。
 - `story/logs/log_10_purifier_outage_memo.png`
   对应《Facility Record: Purifier Outage Memo》。
 - `story/logs/log_11_vent_calibration_handover.png`
@@ -97,7 +98,7 @@
 - `story/logs/log_14_root_vault_core_dossier.png`
   对应《Facility Record: Root Vault Core Dossier》。
 
-地图与场景补图建议：
+如果继续提高地图读感，优先新增的仍是场景补图：
 
 - `tile_purifier_ring_core.png`
 - `tile_purifier_console.png`
@@ -107,7 +108,7 @@
 
 ### P2：跨区联动与终局反哺图（X1-X3）
 
-建议新增：
+当前已存在并作为命名基线的叙事图：
 
 - `story/main/main_20_trace_correlation.png`
   对应 `X1` 痕迹对照。
@@ -118,6 +119,11 @@
 - `story/endings/ending_05_heroic_with_records.png`
 - `story/endings/ending_06_peaceful_with_repair.png`
 - `story/endings/ending_07_settlement_with_legacy.png`
+
+如果后续继续加厚终局表现，优先新增的应是：
+
+- 结局页专用局部特写图，而不是重新改写现有 `ending_05-ending_07` 的命名体系
+- 与 `X1-X3` 对应的辅助场景 prop 图，保持 `world/tiles/props/` 归档，不要把环境补图混进 `story/`
 
 ## 4. 视频资源规划清单
 
@@ -163,7 +169,6 @@
 
 ## 6. 执行顺序建议
 
-1. 先补完 `P0` 的 10 张缺图，恢复地图可读性。
-2. 再补 `P1`（`W4-W5`、`S4-S5`）的剧情图与关键场景图。
-3. 最后补 `P2` 的跨区联动和结局反哺图。
-4. 视频资产仅入库规划，待代码接线后再转生产优先级。
+1. 当前不再把 `P0` 当成待补缺口；若继续做表现层增强，优先推进 `P1`（`W4-W5`、`S4-S5`）的剧情图与关键场景图。
+2. 再补 `P2` 的跨区联动和结局反哺图。
+3. 视频资产仅入库规划，待代码接线后再转生产优先级。

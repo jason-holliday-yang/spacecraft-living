@@ -6,6 +6,26 @@
 #include <cstdio>
 #include <cstring>
 
+static bool IsMainStoryScene(StoryScene scene) {
+    return scene >= STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY
+        && scene < (StoryScene)(STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY + STORY_MAIN_SCENE_COUNT);
+}
+
+static AudioCue GetEndingCue(GameEnding ending) {
+    switch (ending) {
+        case ENDING_PEACEFUL:
+            return AUDIO_CUE_ENDING_PEACEFUL;
+        case ENDING_SETTLEMENT:
+            return AUDIO_CUE_ENDING_SETTLEMENT;
+        case ENDING_HEROIC:
+            return AUDIO_CUE_ENDING;
+        case ENDING_FAILURE:
+        case ENDING_NONE:
+        default:
+            return AUDIO_CUE_WARNING;
+    }
+}
+
 void Game_PostMessage(Game *game, const char *text, float duration) {
     const char *displayText;
 
@@ -27,6 +47,38 @@ void Game_ClearMessage(Game *game) {
     game->hudMessage.timer = 0.0f;
 }
 
+void Game_EnterEndingState(Game *game) {
+    if (game == NULL || game->tasks.ending == ENDING_NONE) {
+        return;
+    }
+
+    game->state = GAME_STATE_ENDING;
+    Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
+    Audio_PlayCue(&game->audio, GetEndingCue(game->tasks.ending));
+}
+
+void Game_AdvanceWorldClock(Game *game, float deltaTime) {
+    if (game == NULL || !(deltaTime > 0.0f)) {
+        return;
+    }
+
+    game->elapsedSeconds += deltaTime;
+    TasksRuntime_UpdateDayCycle(&game->tasks, deltaTime);
+}
+
+void Game_MaybePostDayAdvanceMessage(Game *game, int previousDayCount) {
+    char message[96];
+    const char *formatText;
+
+    if (game == NULL || game->tasks.dayCount == previousDayCount) {
+        return;
+    }
+
+    formatText = Loc_PickLiteral("Day %d begins.", "第 %d 天开始");
+    std::snprintf(message, sizeof(message), formatText, game->tasks.dayCount + 1);
+    Game_PostMessage(game, message, 3.0f);
+}
+
 bool Game_OpenStoryScene(Game *game, StoryScene scene) {
     if (game == NULL || scene <= STORY_SCENE_NONE || scene >= STORY_SCENE_COUNT) {
         return false;
@@ -37,6 +89,9 @@ bool Game_OpenStoryScene(Game *game, StoryScene scene) {
     }
 
     game->storySceneShown[scene] = true;
+    if (IsMainStoryScene(scene) && game->tasks.shownMainStorySceneCount < STORY_MAIN_SCENE_COUNT) {
+        game->tasks.shownMainStorySceneCount += 1;
+    }
     game->storySceneOpen = true;
     game->storyScene = scene;
     game->storySceneElapsed = 0.0f;
@@ -77,9 +132,10 @@ AudioScene Game_SelectAudioScene(const Game *game) {
 
     if (!game->tasks.bossDefeated
         && game->tasks.stage >= 7
+        && (game->tasks.selectedEndingRoute == ENDING_HEROIC
+            || game->tasks.selectedEndingRoute == ENDING_SETTLEMENT)
         && locationName != NULL
-        && (std::strcmp(locationName, "Monolith Ring") == 0
-            || std::strcmp(locationName, "Signal Tower Plateau") == 0)) {
+        && std::strcmp(locationName, "Signal Tower Plateau") == 0) {
         return AUDIO_SCENE_BOSS;
     }
 
@@ -88,15 +144,15 @@ AudioScene Game_SelectAudioScene(const Game *game) {
             || std::strcmp(locationName, "Survey Break") == 0
             || std::strcmp(locationName, "Canopy Hollow") == 0
             || std::strcmp(locationName, "Echo Basin") == 0
-            || std::strcmp(locationName, "Last Camp") == 0) {
+            || std::strcmp(locationName, "Last Camp") == 0
+            || std::strcmp(locationName, "South Collapse") == 0) {
             return AUDIO_SCENE_FOREST_ROUTE;
         }
         if (std::strcmp(locationName, "Deep Gate") == 0
             || std::strcmp(locationName, "Deep Basin") == 0) {
             return AUDIO_SCENE_SWAMP_DEEP;
         }
-        if (std::strcmp(locationName, "South Collapse") == 0
-            || std::strcmp(locationName, "Vent Galleries") == 0
+        if (std::strcmp(locationName, "Vent Galleries") == 0
             || std::strcmp(locationName, "Service Shafts") == 0
             || std::strcmp(locationName, "Purifier Ring") == 0
             || std::strcmp(locationName, "Root Vault") == 0) {
@@ -199,17 +255,15 @@ static bool IsCrossX3Ready(const TaskSystem *tasks) {
 static bool IsShipBaseLocation(const char *locationName) {
     return locationName != NULL
         && (std::strcmp(locationName, "Central Corridor") == 0
-            || std::strcmp(locationName, "Command Deck") == 0
-            || std::strcmp(locationName, "Workshop") == 0
+            || std::strcmp(locationName, "Cargo Hold") == 0
+            || std::strcmp(locationName, "Crew Quarters") == 0
+            || std::strcmp(locationName, "Diagnostics") == 0
             || std::strcmp(locationName, "Terminal Bay") == 0
             || std::strcmp(locationName, "Life Support") == 0
-            || std::strcmp(locationName, "Life Support Bay") == 0
-            || std::strcmp(locationName, "Cargo Hold") == 0
-            || std::strcmp(locationName, "Diagnostics") == 0
-            || std::strcmp(locationName, "Recovery Zone") == 0
+            || std::strcmp(locationName, "Workshop") == 0
+            || std::strcmp(locationName, "Power Bay") == 0
             || std::strcmp(locationName, "Airlock Link") == 0
-            || std::strcmp(locationName, "Airlock Passage") == 0
-            || std::strcmp(locationName, "Power Bay") == 0);
+        );
 }
 
 static bool IsLogCollectedAtIndex(const TaskSystem *tasks, int logIndex) {
@@ -642,7 +696,7 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         }
 
         if (std::strcmp(locationName, "Deep Basin") == 0) {
-            Game_PostMessage(game, "Deep Basin: this is the full east-route commitment. Bring the Energy Core home from here so the power bay can turn eastern survival into a path north.", 3.4f);
+            Game_PostMessage(game, "Deep Basin: this is the full east-route commitment. Pull salvage parts from here, then return to the wreck and extract the Energy Core before the power bay can turn eastern survival into a path north.", 3.4f);
             return;
         }
     }

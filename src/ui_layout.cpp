@@ -115,6 +115,20 @@ Rectangle UI_GetAuthSwitchModeRect(int screenWidth, int screenHeight) {
     };
 }
 
+Rectangle UI_GetAuthExitButtonRect(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle panel;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetAuthPanelRect(screenWidth, screenHeight);
+    return Rectangle{
+        panel.x + panel.width - 184.0f * scale,
+        panel.y + 34.0f * scale,
+        132.0f * scale,
+        44.0f * scale
+    };
+}
+
 Rectangle UI_GetPauseMenuPanelRect(int screenWidth, int screenHeight) {
     float scale;
     Rectangle firstButton;
@@ -176,9 +190,9 @@ Rectangle UI_GetDeathPopupButtonRect(int screenWidth, int screenHeight, int butt
     float y;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    width = 200.0f * scale;
+    width = 180.0f * scale;
     height = 52.0f * scale;
-    startX = screenWidth * 0.5f - width - 12.0f * scale;
+    startX = screenWidth * 0.5f - (width * DEATH_POPUP_BUTTON_COUNT + 24.0f * scale * (DEATH_POPUP_BUTTON_COUNT - 1)) * 0.5f;
     y = screenHeight * 0.5f + 60.0f * scale;
 
     return Rectangle{
@@ -314,11 +328,12 @@ Rectangle UI_GetCommunicatorTabRect(int screenWidth, int screenHeight, int tabIn
     float tabWidth;
     float tabHeight;
     float gap;
+    const int communicatorTabCount = 3;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetCommunicatorOverlayRect(screenWidth, screenHeight);
     gap = 12.0f * scale;
-    tabWidth = (panel.width - 52.0f * scale - gap) * 0.5f;
+    tabWidth = (panel.width - 40.0f * scale - gap * (communicatorTabCount - 1)) / (float)communicatorTabCount;
     tabHeight = 52.0f * scale;
 
     return Rectangle{
@@ -359,6 +374,41 @@ Rectangle UI_GetCommunicatorLogContentRect(int screenWidth, int screenHeight) {
     };
 }
 
+Rectangle UI_GetCommunicatorLogImagePanelRect(int screenWidth, int screenHeight) {
+    Rectangle contentPanel;
+
+    contentPanel = UI_GetCommunicatorLogContentRect(screenWidth, screenHeight);
+    return contentPanel;
+}
+
+Rectangle UI_GetCommunicatorLogImageRect(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle imagePanel;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    imagePanel = UI_GetCommunicatorLogImagePanelRect(screenWidth, screenHeight);
+    return Rectangle{
+        imagePanel.x + 6.0f * scale,
+        imagePanel.y + 6.0f * scale,
+        imagePanel.width - 12.0f * scale,
+        imagePanel.height - 12.0f * scale
+    };
+}
+
+Rectangle UI_GetCommunicatorLogDetailOverlayRect(int screenWidth, int screenHeight) {
+    float scale;
+    Rectangle imagePanel;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    imagePanel = UI_GetCommunicatorLogImagePanelRect(screenWidth, screenHeight);
+    return Rectangle{
+        imagePanel.x + 24.0f * scale,
+        imagePanel.y + 24.0f * scale,
+        imagePanel.width - 48.0f * scale,
+        imagePanel.height - 48.0f * scale
+    };
+}
+
 Rectangle UI_GetCommunicatorVisibleLogEntryRect(int screenWidth, int screenHeight, int visibleIndex) {
     float scale;
     Rectangle listPanel;
@@ -372,7 +422,7 @@ Rectangle UI_GetCommunicatorVisibleLogEntryRect(int screenWidth, int screenHeigh
 
     return Rectangle{
         listPanel.x + 14.0f * scale,
-        listPanel.y + 86.0f * scale + visibleIndex * (rowHeight + gap),
+        listPanel.y + 14.0f * scale + visibleIndex * (rowHeight + gap),
         listPanel.width - 28.0f * scale,
         rowHeight
     };
@@ -390,7 +440,7 @@ int UI_GetCommunicatorVisibleLogCount(int screenWidth, int screenHeight) {
     listPanel = UI_GetCommunicatorLogListRect(screenWidth, screenHeight);
     rowHeight = 60.0f * scale;
     gap = 9.0f * scale;
-    availableHeight = listPanel.height - 124.0f * scale;
+    availableHeight = listPanel.height - 28.0f * scale;
     visibleCount = (int)((availableHeight + gap) / (rowHeight + gap));
 
     if (visibleCount < 1) {
@@ -626,7 +676,7 @@ Rectangle UI_GetSettlementConfirmPanelRect(int screenWidth, int screenHeight) {
     };
 }
 
-Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex) {
+Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex, int buttonCount) {
     float scale;
     Rectangle panel;
     float width;
@@ -639,7 +689,10 @@ Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, i
     panel = UI_GetSettlementConfirmPanelRect(screenWidth, screenHeight);
     width = 136.0f * scale;
     gap = 16.0f * scale;
-    totalWidth = width * SETTLEMENT_CONFIRM_BUTTON_COUNT + gap * (SETTLEMENT_CONFIRM_BUTTON_COUNT - 1);
+    if (buttonCount < 1) {
+        buttonCount = 1;
+    }
+    totalWidth = width * buttonCount + gap * (buttonCount - 1);
     startX = panel.x + panel.width * 0.5f - totalWidth * 0.5f;
     y = panel.y + panel.height - 78.0f * scale;
 

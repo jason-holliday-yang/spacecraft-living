@@ -15,8 +15,10 @@ typedef struct IntroSlideDef {
 } IntroSlideDef;
 
 const IntroSlideDef *UIStory_GetIntroSlideDef(int slideIndex);
+bool UIStory_IsMainStoryScene(StoryScene scene);
 const IntroSlideDef *UIStory_GetStorySceneDef(StoryScene scene);
 const TextureAsset *UIStory_GetStorySceneTexture(const AssetBundle *assets, StoryScene scene);
+const char *UIStory_GetStorySceneDetailText(StoryScene scene);
 void UIStory_DrawBackdropTexture(const TextureAsset *asset,
                                  const IntroSlideDef *slide,
                                  int slideIndex,

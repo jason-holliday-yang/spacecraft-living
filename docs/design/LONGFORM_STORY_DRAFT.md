@@ -1,6 +1,6 @@
 # SpaceCraft Living 长篇剧情扩写稿（雏形 v0.1）
 
-> 当前状态说明：本文档是“专属剧情长文档”的第一版雏形。它不替代 [`GAME_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/GAME_DESIGN.md)、[`EXPANSION_STORY_TASKS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_STORY_TASKS.md) 或 [`WEST_SOUTH_FULL_STORY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/WEST_SOUTH_FULL_STORY.md) 的设计职责，而是在它们之上，把现有故事扩写成更适合日志驱动游戏使用的“长篇叙事母稿”。
+> 当前状态说明：本文档是“专属剧情长文档”的第一版雏形。它不替代 [`GAME_DESIGN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/GAME_DESIGN.md)、[`EXPANSION_STORY_TASKS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/EXPANSION_STORY_TASKS.md) 或 [`WEST_SOUTH_FULL_STORY.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/WEST_SOUTH_FULL_STORY.md) 的设计职责，而是在它们之上，把现有故事扩写成更适合日志驱动游戏使用的“长篇叙事母稿”。当前运行时已接线的 `14` 份日志已经具备洛希终端 `detailText`；本文中的新增日志数量、`Loxi Synthesis` 层和北线 / 终局补充档案，仍应视为后续扩写目标，而不是已经全部进入运行时代码的现状。
 
 ## 1. 文档目的
 
@@ -62,6 +62,7 @@
   `英雄救援`
   `和平救援`
   `异星定居`
+- `Stage 7` 当前运行时的正式动作顺序已固定为 `归档复核 -> 路线确认 -> 对应执行段`；本稿新增的北线 / 终局补充档案只用于继续补厚，不应写成现有硬门槛
 - 西线负责补足：
   `船员为何分流`
   `为什么有人选择留下`
@@ -154,6 +155,13 @@
 - 后续实现时可以分批接线
 - 就算最后砍量，也是在“富余内容”里做减法，而不是继续在“过薄基线”上勉强运行
 
+当前实现口径仍然是：
+
+- 运行时已接线日志总数是 `14`
+- 这 `14` 份日志已经具备可在洛希终端查看的 `detailText`
+- 当前正式 UI 分类只有 `Main Archive / Supplemental Archive`
+- 下面的 `26` 份目录是“扩写方案”，不是“当前已上线内容表”
+
 ### 5.2 推荐的日志层级
 
 建议把日志分成三层来写，而不只是 `Main Archive / Supplemental Archive` 两层逻辑：
@@ -164,6 +172,11 @@
    用于补厚船员关系、设施职责、路线代价。
 3. `基地重写摘要 Loxi Synthesis`
    用于把玩家刚带回来的东西重新解释成“下一步为什么成立”。
+
+这里要特别注意：
+
+- 当前运行时正式分类仍只有 `Main Archive / Supplemental Archive`
+- `Loxi Synthesis` 在本稿里是写作层与表现层预留，不应直接误读成当前 UI 中已经上线的第三种档案页
 
 其中第三层不一定都以可拾取日志形式存在，也可以表现为：
 
@@ -197,11 +210,11 @@
 
 建议在现有五份基础上再补两份：
 
-- `West Signal Fragment 01`
-- `Survey Break Anchor Notes`
-- `Canopy Handoff Record`
-- `Echo Basin Topology Sketch`
-- `Last Camp Testament`
+- `Field Record: West Signal Fragment 01`
+- `Field Record: Survey Break Anchor Notes`
+- `Field Record: Canopy Handoff Record`
+- `Field Record: Echo Basin Topology Sketch`
+- `Field Record: Last Camp Testament`
 - `Field Record: West Frontier Return Stake`
   写第一批西行者为什么没有回到飞船，而是留下了“能让后来者走得更稳”的路标
 - `Field Record: Basin Relay Packet`
@@ -211,11 +224,11 @@
 
 建议在现有五份基础上再补两份：
 
-- `Purifier Outage Memo`
-- `Vent Calibration Handover`
-- `Service Shaft Sync Record`
-- `Purifier Ring Control Brief`
-- `Root Vault Core Dossier`
+- `Facility Record: Purifier Outage Memo`
+- `Facility Record: Vent Calibration Handover`
+- `Facility Record: Service Shaft Sync Record`
+- `Facility Record: Purifier Ring Control Brief`
+- `Facility Record: Root Vault Core Dossier`
 - `Facility Record: South Collapse Entry Seal`
   写设施入口当时为什么被封、谁决定封、为什么还是留下了解锁方法
 - `Facility Record: Ring Recovery Sequence`
@@ -231,6 +244,8 @@
   汇总西线与南线证据成同一条时间线
 - `Action Declaration Record`
   玩家最终确认行动路线时的归档文本底稿
+
+这四项当前更适合作为“后续补充档案 / 基地摘要 / 终局前文本增强”预留；在正式接线前，不应默认把它们写成 `Stage 7` 当前硬门槛。
 
 ## 6. 长篇剧情结构总览
 
@@ -518,15 +533,15 @@
 | `D1` | 幸存者被集中到可呼吸走廊，第一次物资再分配 | 建立飞船并非安全，而是临时维生点 | `Ship Log 04: Oxygen Triage Notes` |
 | `D2` | 值班层与洛希达成第一版分流决策 | 建立分组并非恐慌逃散 | `Ship Log 02: Split Roster` |
 | `D3` | 东线勘察发现加工石构与黑匣残留异常 | 建立“这里不是自然荒野” | `Crash Recorder: Black Box Residue` |
-| `D4` | 西线侦察组带着破损天线部件出发 | 建立西线的主动调查性质 | `West Signal Fragment 01` |
-| `D5` | 南线接管组取得通风与净化相关记录 | 建立南线是设施线，不是洞穴线 | `Purifier Outage Memo` |
-| `D6` | 林冠观察营地完成第一次正式交接 | 建立“留下也是职责” | `Canopy Handoff Record` |
+| `D4` | 西线侦察组带着破损天线部件出发 | 建立西线的主动调查性质 | `Field Record: West Signal Fragment 01` |
+| `D5` | 南线接管组取得通风与净化相关记录 | 建立南线是设施线，不是洞穴线 | `Facility Record: Purifier Outage Memo` |
+| `D6` | 林冠观察营地完成第一次正式交接 | 建立“留下也是职责” | `Field Record: Canopy Handoff Record` |
 | `D7` | 飞船内对生长环、雾潮与石碑节律形成第一版模式判断 | 建立维护系统世界观 | `Ship Log 03: Pattern, Not Wilderness` |
-| `D8` | 西线数据与南线窗口第一次对上时序 | 建立跨区协作仍在成立 | `Vent Calibration Handover` |
-| `D9` | 一名信使将关键数据送至南部设施门槛 | 建立人类接力仍未断裂 | `Echo Basin Topology Sketch` |
-| `D10` | 南部外圈入口被迫封闭，但留下重启顺序与手动解锁方法 | 建立“封门不是放弃，而是延迟崩坏” | `South Collapse Entry Seal` |
-| `D11` | 净化环短时恢复部分响应，记录显示工程可行性仍在 | 建立和平线的工程基础 | `Ring Recovery Sequence` |
-| `D12` | 最后营地整理三种立场归档，主记录停止 | 建立三结局的前史伦理 | `Last Camp Testament`、`Action Declaration Record` |
+| `D8` | 西线数据与南线窗口第一次对上时序 | 建立跨区协作仍在成立 | `Facility Record: Vent Calibration Handover` |
+| `D9` | 一名信使将关键数据送至南部设施门槛 | 建立人类接力仍未断裂 | `Field Record: Echo Basin Topology Sketch` |
+| `D10` | 南部外圈入口被迫封闭，但留下重启顺序与手动解锁方法 | 建立“封门不是放弃，而是延迟崩坏” | `Facility Record: South Collapse Entry Seal` |
+| `D11` | 净化环短时恢复部分响应，记录显示工程可行性仍在 | 建立和平线的工程基础 | `Facility Record: Ring Recovery Sequence` |
+| `D12` | 最后营地整理三种立场归档，主记录停止 | 建立三结局的前史伦理 | `Field Record: Last Camp Testament` |
 
 ### 11.3 这条时间线要给玩家什么感受
 
@@ -781,8 +796,8 @@
 | --- | --- | --- | --- | --- |
 | `X-01` | `Monolith Reading 01: Damping, Not Power` | `Main Archive` | 石碑环区 | 建立石碑是阻尼器而非能量源 |
 | `X-02` | `North Archive: Tower Commitment Window` | `Main Archive` | 信号塔前置终端 | 建立塔楼是选择，不是按钮 |
-| `X-03` | `Loxi Synthesis: Shared Timeline` | `Loxi Synthesis` | 回船后自动归档 | 把西线和南线证据并成一条时间线 |
-| `X-04` | `Action Declaration Record` | `Loxi Synthesis` | 终局选择前 | 把玩家最终立场写成正式归档 |
+| `X-03` | `Loxi Synthesis: Shared Timeline` | `Loxi Synthesis` | 回船后自动归档 | 把西线和南线证据并成一条时间线；当前更适合作为基地总结 / 终局前长摘要预留 |
+| `X-04` | `Action Declaration Record` | `Loxi Synthesis` | 终局选择前 | 把玩家最终立场写成正式归档；它属于玩家终局动作，不属于船员前史日志 |
 
 ## 15. 第一批日志长文母稿（可直接继续扩写）
 

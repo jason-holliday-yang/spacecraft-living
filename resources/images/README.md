@@ -8,46 +8,119 @@
 
 ## 当前快照
 
-审计日期：`2026-04-15`
+审计日期：`2026-04-24`
 
-- 当前代码共引用 `119` 张 PNG 路径
-- 当前目录中存在 `119` 张 PNG，当前全部已被代码引用
-- 当前已接线 PNG 缺口为 `0`
-- 当前目录中没有“已落盘但未接线”的 PNG 文件
+- `resources/images/` 当前共落盘 `151` 张 PNG。
+- 主线剧情图的正式命名口径已经统一为 `story_main_m##_<scene_slug>_v001.png`。
+- `resources/images/story/main/` 当前共存在 `52` 个 PNG 文件：
+  - `30` 张已经具备正式命名文件。
+  - `22` 张仍作为历史 `main_##` 兼容文件保留。
+- 主线剧情的逻辑槽位仍是 `30` 个；当前 `30 / 30` 都已经具备正式 PNG 文件。
 
-## 分类总览
+## 目录分类总览
 
-### A. 已接线且存在
+### 叙事资源 `resources/images/story/`（`78` 张）
 
-叙事图片 `48` 张：
+- `resources/images/story/cutscenes/`：`5` 张开场分镜
+- `resources/images/story/main/`：`52` 张文件，对应 `30` 个主线剧情槽位
+- `resources/images/story/logs/`：`14` 张日志剧情图
+- `resources/images/story/endings/`：`7` 张结局背景图
 
-- 开场分镜：`5`
-- 主线剧情图：`22`
-- 日志剧情图：`14`
-- 结局背景图：`7`
+运行时入口：
 
-玩法 / 地图 / 角色图片 `71` 张：
+- [`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp)
+- [`src/ui_narrative_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_narrative_panels.cpp)
+- [`src/game_play_story.c`](/Users/jason/Documents/SpaceCraftLivng/src/game_play_story.c)
+- [`src/ui_ending_panel.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_ending_panel.cpp)
 
-- 角色与 NPC：`3`
-- 地表与场景物件：`29`
-- 资源节点：`16`
-- 制作 / 装备图标：`7`
-- 状态图标：`8`
-- 怪物与 Boss：`8`
+### 角色资源 `resources/images/characters/`（`3` 张）
 
-### B. 已接线但缺文件
+- `resources/images/characters/player/`
+  - `my_astronaut.png`
+  - `player_astronaut.png`
+- `resources/images/characters/npc/`
+  - `npc_loxi_terminal.png`
 
-- `0`
+运行时入口：
 
-### C. 已入库未接线
+- [`src/assets.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets.cpp)
+- [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp)
 
-- `0`
+### 世界资源 `resources/images/world/`（`45` 张）
 
-## 按内容职责分类
+- `resources/images/world/tiles/terrain/`：`12` 张地表 / 地形图
+- `resources/images/world/tiles/props/`：`14` 张场景物件 / 交互设施图
+- `resources/images/world/tiles/barriers/`：`3` 张导流 barrier 图
+- `resources/images/world/nodes/`：`16` 张采集 / 掉落节点图
 
-### 开场分镜 `cutscenes/`
+运行时入口：
 
-当前已接线 `5` 张：
+- [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp)
+- [`src/map_render_ground_assets.c`](/Users/jason/Documents/SpaceCraftLivng/src/map_render_ground_assets.c)
+- [`src/map_render_props.c`](/Users/jason/Documents/SpaceCraftLivng/src/map_render_props.c)
+
+### UI 资源 `resources/images/ui/`（`17` 张）
+
+- `resources/images/ui/icons/`：`9` 张制作 / 装备 / 功能图标
+- `resources/images/ui/status/`：`8` 张状态栏图标
+
+运行时入口：
+
+- [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp)
+- [`src/ui_hud_status.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_hud_status.cpp)
+- [`src/ui_inventory_data.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_inventory_data.cpp)
+- [`src/ui_hud.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_hud.cpp)
+- [`src/ui_info_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_info_panels.cpp)
+
+### 敌人资源 `resources/images/enemies/`（`8` 张）
+
+- `mob_thorn_larva.png`
+- `mob_wing_bug.png`
+- `mob_raptor.png`
+- `mob_swamp_stalker.png`
+- `mob_sentinel_jelly.png`
+- `mob_fog_worm.png`
+- `mob_relic_guard.png`
+- `mob_final_boss.png`
+
+运行时入口：
+
+- [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp)
+
+## 剧情对齐索引
+
+### 叙事图命名与剧情分段
+
+- `intro_01-intro_05`
+  对应开场五张分镜，顺序与 [`src/ui_narrative_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_narrative_panels.cpp) 的 `kIntroSlideDefs` 一一对应。
+- `story_main_m01-story_main_m30`
+  现在是主线剧情唯一的正式命名口径，也是运行时槽位编号语义，和 [`docs/design/MAINLINE_STORY_DETAIL_BRIEFS.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/MAINLINE_STORY_DETAIL_BRIEFS.md) 保持一致。
+- `main_01-main_22`
+  仅作为历史兼容文件保留，不再视为主线剧情的正式命名来源。运行时会优先加载新的 `story_main_m##` 文件；若对应新文件尚未落盘，则才回退到兼容的旧 `main_##` 资源或程序化背景。
+- `log_01-log_03`
+  对应飞船起始三份档案。
+- `log_04-log_08`
+  对应西线五份档案。
+- `log_09`
+  对应东线主线异常记录《Crash Recorder: Black Box Residue》。
+- `log_10-log_14`
+  对应南线五份设施档案。
+- `ending_01-ending_04`
+  对应基础结局背景：定居 / 失败 / 强行救援 / 和平救援。
+- `ending_05-ending_07`
+  对应西南档案闭环后的增强结局背景。
+
+### 当前命名规则
+
+- 主线剧情的逻辑编号统一以 `M01-M30` 为准，运行时代码按槽位映射资源，不再直接把单个历史文件名当成剧情身份。
+- 主线剧情的正式文件名统一使用 `story_main_m##_<scene_slug>_v001.png`。
+- 已落地的历史主线资源继续保留 `main_##_<scene_slug>.png`，但只承担兼容与回退职责。
+- 日志与结局资源仍保持 `log_##_<scene_slug>.png`、`ending_##_<scene_slug>.png`。
+- `scene_slug` 以剧情卡的稳定英文短语为准，不重复再嵌入 `story`、`archive` 等泛词。
+
+## 按路径展开
+
+### `resources/images/story/cutscenes/`
 
 - `intro_01_unmarked_call.png`
 - `intro_02_orbit_collapse.png`
@@ -55,14 +128,42 @@
 - `intro_04_world_watches_back.png`
 - `intro_05_stay_alive_first.png`
 
-运行时入口：
+### `resources/images/story/main/`
 
-- [`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp)
-- [`src/ui_narrative_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_narrative_panels.cpp)
+正式命名文件 `30 / 30`：
 
-### 主线剧情图 `story/main/`
+- `story_main_m01_air_for_one_more_day_v001.png`
+- `story_main_m02_oxygen_cycle_restored_v001.png`
+- `story_main_m03_loxi_full_sync_v001.png`
+- `story_main_m04_airlock_opening_v001.png`
+- `story_main_m05_signal_answers_back_v001.png`
+- `story_main_m06_crash_not_accident_v001.png`
+- `story_main_m07_deep_scan_online_v001.png`
+- `story_main_m08_relic_pattern_decode_v001.png`
+- `story_main_m09_east_wreck_confirmation_v001.png`
+- `story_main_m10_basin_access_qualification_v001.png`
+- `story_main_m11_west_route_confirmed_v001.png`
+- `story_main_m12_survey_break_relay_v001.png`
+- `story_main_m13_canopy_handoff_v001.png`
+- `story_main_m14_echo_basin_reconstruction_v001.png`
+- `story_main_m15_last_camp_positions_v001.png`
+- `story_main_m16_south_facility_wakes_v001.png`
+- `story_main_m17_vent_network_calibrated_v001.png`
+- `story_main_m18_service_shaft_backbone_v001.png`
+- `story_main_m19_purifier_ring_sequence_v001.png`
+- `story_main_m20_root_vault_truth_v001.png`
+- `story_main_m21_west_south_correlation_v001.png`
+- `story_main_m22_loxi_conclusion_rewrite_v001.png`
+- `story_main_m23_monolith_true_role_v001.png`
+- `story_main_m24_north_route_commitment_v001.png`
+- `story_main_m25_tower_not_button_v001.png`
+- `story_main_m26_three_costs_revealed_v001.png`
+- `story_main_m27_action_declaration_v001.png`
+- `story_main_m28_heroic_route_commitment_v001.png`
+- `story_main_m29_peaceful_route_commitment_v001.png`
+- `story_main_m30_settlement_route_commitment_v001.png`
 
-当前已接线 `22` 张：
+历史兼容文件 `22`：
 
 - `main_01_air_for_one_more_day.png`
 - `main_02_breathing_room_restored.png`
@@ -87,22 +188,7 @@
 - `main_21_loxi_sync_rewrite.png`
 - `main_22_final_stance.png`
 
-当前触发层级：
-
-- 基础主线节点
-- `W4-W5`
-- `S4-S5`
-- `X1-X3`
-
-运行时入口：
-
-- [`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp)
-- [`src/ui_narrative_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_narrative_panels.cpp)
-- [`src/game_play_story.c`](/Users/jason/Documents/SpaceCraftLivng/src/game_play_story.c)
-
-### 日志剧情图 `story/logs/`
-
-当前已接线 `14` 张，已实现与游戏内 `14` 篇日志 `1:1` 对应：
+### `resources/images/story/logs/`
 
 - `log_01_impact_protocol.png`
 - `log_02_split_roster.png`
@@ -119,15 +205,7 @@
 - `log_13_purifier_ring_control_brief.png`
 - `log_14_root_vault_core_dossier.png`
 
-运行时入口：
-
-- [`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp)
-- [`src/ui_narrative_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_narrative_panels.cpp)
-- [`src/game_play_story.c`](/Users/jason/Documents/SpaceCraftLivng/src/game_play_story.c)
-
-### 结局背景图 `story/endings/`
-
-当前已接线 `7` 张：
+### `resources/images/story/endings/`
 
 - `ending_01_alien_settlement.png`
 - `ending_02_failed_survival.png`
@@ -137,32 +215,16 @@
 - `ending_06_peaceful_with_repair.png`
 - `ending_07_settlement_with_legacy.png`
 
-当前结局图职责：
-
-- 基础结局图：默认英雄 / 和平 / 定居 / 失败
-- 强化结局图：在 `X3` 就绪后用于更完整的成功路线收束
-
-运行时入口：
-
-- [`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp)
-- [`src/ui_ending_panel.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_ending_panel.cpp)
-
-### 角色与 NPC
-
-当前已接线 `3` 张：
+### `resources/images/characters/player/`
 
 - `my_astronaut.png`
 - `player_astronaut.png`
+
+### `resources/images/characters/npc/`
+
 - `npc_loxi_terminal.png`
 
-说明：
-
-- 玩家优先使用 `my_astronaut.png` 精灵表
-- 缺失时回退到 `player_astronaut.png`
-
-### 地表与场景物件
-
-当前已接线且存在 `29` 张：
+### `resources/images/world/tiles/terrain/`
 
 - `tile_base_floor.png`
 - `tile_ship_corridor_floor.png`
@@ -176,6 +238,9 @@
 - `tile_ruins_path.png`
 - `tile_ruins_ring_floor.png`
 - `tile_tower_plateau_floor.png`
+
+### `resources/images/world/tiles/props/`
+
 - `tile_tree_dense.png`
 - `tile_rock_large.png`
 - `tile_tech_table.png`
@@ -190,19 +255,14 @@
 - `tile_signal_tower.png`
 - `tile_crash_clue.png`
 - `tile_monolith.png`
+
+### `resources/images/world/tiles/barriers/`
+
 - `tile_barrier_swamp.png`
 - `tile_barrier_deep.png`
 - `tile_barrier_ruins.png`
 
-运行时入口：
-
-- [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp)
-- [`src/map_render_ground_assets.c`](/Users/jason/Documents/SpaceCraftLivng/src/map_render_ground_assets.c)
-- [`src/map_render_props.c`](/Users/jason/Documents/SpaceCraftLivng/src/map_render_props.c)
-
-### 资源节点
-
-当前已接线 `16` 张：
+### `resources/images/world/nodes/`
 
 - `node_wood.png`
 - `node_ore.png`
@@ -221,9 +281,7 @@
 - `node_boss_scale.png`
 - `node_alien_slime.png`
 
-### 制作 / 装备图标
-
-当前已接线 `7` 张：
+### `resources/images/ui/icons/`
 
 - `icon_glow_stick.png`
 - `icon_rope.png`
@@ -232,10 +290,10 @@
 - `icon_protection_suit.png`
 - `icon_signal_amplifier.png`
 - `icon_field_camp.png`
+- `icon_inventory_button.png`
+- `icon_map_button.png`
 
-### 状态图标 `status_*.png`
-
-当前已接线 `8` 张：
+### `resources/images/ui/status/`
 
 - `status_poisoned.png`
 - `status_oxygen_leak.png`
@@ -246,15 +304,7 @@
 - `status_oxygen_reserve.png`
 - `status_camp_recovery.png`
 
-当前状态：
-
-- 图片文件已经落盘并完成接线
-- 当前 HUD 优先显示状态图标；缺图时仍会回退到程序绘制的双色状态牌和两字母缩写
-- 主要接线位置见 [`include/assets.h`](/Users/jason/Documents/SpaceCraftLivng/include/assets.h)、[`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp) 与 [`src/ui_hud_status.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_hud_status.cpp)
-
-### 怪物与 Boss
-
-当前已接线 `8` 张：
+### `resources/images/enemies/`
 
 - `mob_thorn_larva.png`
 - `mob_wing_bug.png`
@@ -265,28 +315,10 @@
 - `mob_relic_guard.png`
 - `mob_final_boss.png`
 
-## 当前接线路径
-
-- [`src/assets.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets.cpp)
-  统一加载角色、叙事图、地图贴图与 UI 字体
-- [`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp)
-  统一加载开场 / 主线 / 日志 / 结局图
-- [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp)
-  统一加载地图、物件、节点、图标、怪物贴图
-- [`src/game_play_story.c`](/Users/jason/Documents/SpaceCraftLivng/src/game_play_story.c)
-  负责打开主线节点、日志、`W4-W5`、`S4-S5`、`X1-X3` 的剧情卡
-- [`src/ui_narrative_panels.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_narrative_panels.cpp)
-  负责剧情卡文案与图片回退显示
-- [`src/ui_ending_panel.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_ending_panel.cpp)
-  负责结局背景图选择
-- [`src/map_render_ground_assets.c`](/Users/jason/Documents/SpaceCraftLivng/src/map_render_ground_assets.c)
-  负责飞船、沼泽、遗迹和 Echo Basin 地表贴图选择
-- [`src/ui_hud_status.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/ui_hud_status.cpp)
-  负责状态图标显示，并在缺图时回退到程序绘制的状态牌
-
 ## 维护规则
 
-- 叙事图片命名继续使用稳定编号和 slug。
-- 新增 PNG 如果已经被代码引用，必须同步更新本文档。
-- 如果 PNG 已存在但还没接线，必须单独标成“已入库未接线”。
-- 如果代码已引用但文件缺失，必须列入“已接线但缺文件”。
+- 新图片先按职责选择目录，不再直接平铺到 `resources/images/` 根目录。
+- 叙事图统一进入 `story/...`；角色图统一进入 `characters/...`；地图 / 节点统一进入 `world/...`；HUD / 背包 / 状态图统一进入 `ui/...`；怪物图统一进入 `enemies/`。
+- 功能型 UI 图标优先沿用 `icon_<subject>_button.png` 命名，避免与物品 / 状态类图标混淆。
+- 如果后续新增图片文件，请同步检查 [`src/assets.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets.cpp)、[`src/assets_story_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_story_content.cpp) 和 [`src/assets_gameplay_content.cpp`](/Users/jason/Documents/SpaceCraftLivng/src/assets_gameplay_content.cpp) 的接线路径。
+- `.DS_Store` 不计入资源统计。

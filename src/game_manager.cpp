@@ -91,8 +91,16 @@ static void ResolveScreenTransition(Game *game) {
         case SCREEN_TRANSITION_APPLY_LANGUAGE:
             Game_ApplyLanguage(game, game->pendingLanguage);
             return;
-        case SCREEN_TRANSITION_SLEEP_REST:
+        case SCREEN_TRANSITION_SLEEP_REST: {
+            const int previousDayCount = game->tasks.dayCount;
+
+            Game_AdvanceWorldClock(game, SLEEP_TIME_ADVANCE_SECONDS);
+            Game_MaybePostDayAdvanceMessage(game, previousDayCount);
             Game_ResetTransientGameplayState(game);
+            return;
+        }
+        case SCREEN_TRANSITION_ENTER_ENDING:
+            Game_EnterEndingState(game);
             return;
         case SCREEN_TRANSITION_NONE:
         default:

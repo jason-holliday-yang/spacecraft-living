@@ -121,6 +121,7 @@ typedef struct SaveSnapshot {
     SavedNodeSnapshot nodes[MAX_RESOURCE_NODES];
     SavedMonsterSnapshot monsters[MAX_MONSTERS];
     SavedLogSnapshot logs[MAX_LOGS];
+    bool storyMainSceneShown[STORY_MAIN_SCENE_COUNT];
     bool communicatorUnlocked;
 } SaveSnapshot;
 

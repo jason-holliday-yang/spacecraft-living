@@ -258,33 +258,28 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     };
     Rectangle textPanel{
         contentPanel.x,
-        contentPanel.y + 80.0f * scale,
+        contentPanel.y + 64.0f * scale,
         contentPanel.width,
-        contentPanel.height - 230.0f * scale,
+        contentPanel.height - 186.0f * scale,
     };
     Rectangle routePanel{
         contentPanel.x,
-        contentPanel.y + contentPanel.height - 142.0f * scale,
+        contentPanel.y + contentPanel.height - 118.0f * scale,
         contentPanel.width,
-        142.0f * scale,
+        118.0f * scale,
     };
     Rectangle storyRect{
-        textPanel.x + 15.0f * scale,
-        textPanel.y + 15.0f * scale,
-        textPanel.width - 30.0f * scale,
-        textPanel.height - 56.0f * scale,
-    };
-    Rectangle rewardRect{
-        textPanel.x + 15.0f * scale,
-        textPanel.y + textPanel.height - 34.0f * scale,
-        textPanel.width - 30.0f * scale,
-        20.0f * scale,
+        textPanel.x + 18.0f * scale,
+        textPanel.y + 18.0f * scale,
+        textPanel.width - 36.0f * scale,
+        textPanel.height - 34.0f * scale,
     };
     char buffer[128];
     char locationBuffer[128];
     char routeBuffer[192];
     char sanitizedBuffer[256];
     char sanitizedNote[512];
+    const char *bodyText = "";
     int collectedCount = Tasks_GetCollectedLogCount(tasks);
     int mainCollectedCount = CountLogsByCategory(tasks, SHIP_LOG_MAINLINE, true);
     int mainTotalCount = CountLogsByCategory(tasks, SHIP_LOG_MAINLINE, false);
@@ -368,20 +363,26 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     }
 
     if (log != nullptr) {
-        UIRuntime_DrawWrappedText(assets, Tasks_GetLogTitle(log), Rectangle{contentPanel.x, contentPanel.y, contentPanel.width, 28.0f * scale}, 22.0f * scale, 22.0f * scale, Color{166, 255, 226, 255});
+        bodyText = Tasks_GetLogDetailText(log);
+        if (bodyText[0] == '\0') {
+            bodyText = Tasks_GetLogStoryText(log);
+        }
+
+        UIRuntime_DrawWrappedText(assets,
+                                  Tasks_GetLogTitle(log),
+                                  Rectangle{contentPanel.x, contentPanel.y + 2.0f * scale, contentPanel.width, 24.0f * scale},
+                                  19.5f * scale,
+                                  21.0f * scale,
+                                  Color{166, 255, 226, 255});
         std::snprintf(locationBuffer,
                       sizeof(locationBuffer),
                       "%s  |  %s: %s",
                       GetLogCategoryLabel(log),
                       Loc_PickLiteral("Location", "位置"),
                       Loc_GetLocationNameText(Map_GetLocationNameAt(log->gridX, log->gridY)));
-        UIRuntime_DrawText(assets, locationBuffer, Vector2{contentPanel.x, contentPanel.y + 40.0f * scale}, 16.0f * scale, Color{194, 224, 255, 255});
+        UIRuntime_DrawText(assets, locationBuffer, Vector2{contentPanel.x, contentPanel.y + 30.0f * scale}, 14.8f * scale, Color{194, 224, 255, 255});
         UIRuntime_DrawPanel(textPanel, Color{14, 26, 42, 220}, Color{255, 255, 255, 22});
-        UIRuntime_DrawWrappedText(assets, Tasks_GetLogStoryText(log), storyRect, 17.0f * scale, 22.0f * scale, Color{220, 235, 248, 255});
-
-        if (Tasks_GetLogRewardDescription(log)[0] != '\0') {
-            UIRuntime_DrawWrappedText(assets, Tasks_GetLogRewardDescription(log), rewardRect, 15.0f * scale, 18.0f * scale, Color{255, 220, 150, 255});
-        }
+        UIRuntime_DrawWrappedText(assets, bodyText, storyRect, 18.2f * scale, 24.8f * scale, Color{220, 235, 248, 255});
     } else {
         UIRuntime_DrawText(
             assets,
@@ -393,20 +394,20 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     }
 
     UIRuntime_DrawPanel(routePanel, Color{13, 24, 40, 220}, Color{115, 175, 214, 52});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Expedition Summary", "远征总览"), Vector2{routePanel.x + 16.0f * scale, routePanel.y + 10.0f * scale}, 20.0f * scale, Color{201, 228, 250, 255});
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Expedition Summary", "远征总览"), Vector2{routePanel.x + 16.0f * scale, routePanel.y + 9.0f * scale}, 18.0f * scale, Color{201, 228, 250, 255});
     std::snprintf(routeBuffer, sizeof(routeBuffer), "%s  %s", Loc_GetLocationNameText("West Frontier"), GetWestRouteArchiveStatus(tasks));
     TasksRuntime_SanitizeDisplayText(routeBuffer, sanitizedBuffer, sizeof(sanitizedBuffer));
-    UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 38.0f * scale}, 15.0f * scale, Color{184, 214, 240, 255});
+    UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 34.0f * scale}, 14.2f * scale, Color{184, 214, 240, 255});
     TasksRuntime_SanitizeDisplayText(GetWestRouteArchiveNote(tasks), sanitizedNote, sizeof(sanitizedNote));
-    UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 188.0f * scale, routePanel.y + 34.0f * scale, routePanel.width - 204.0f * scale, 22.0f * scale}, 13.0f * scale, 14.0f * scale, Color{172, 194, 214, 255});
+    UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 176.0f * scale, routePanel.y + 30.0f * scale, routePanel.width - 192.0f * scale, 20.0f * scale}, 12.4f * scale, 13.8f * scale, Color{172, 194, 214, 255});
     std::snprintf(routeBuffer, sizeof(routeBuffer), "%s  %s", Loc_GetLocationNameText("South Collapse"), GetSouthRouteArchiveStatus(tasks));
     TasksRuntime_SanitizeDisplayText(routeBuffer, sanitizedBuffer, sizeof(sanitizedBuffer));
-    UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 68.0f * scale}, 15.0f * scale, Color{184, 214, 240, 255});
+    UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 58.0f * scale}, 14.2f * scale, Color{184, 214, 240, 255});
     TasksRuntime_SanitizeDisplayText(GetSouthRouteArchiveNote(tasks), sanitizedNote, sizeof(sanitizedNote));
-    UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 188.0f * scale, routePanel.y + 64.0f * scale, routePanel.width - 204.0f * scale, 22.0f * scale}, 13.0f * scale, 14.0f * scale, Color{172, 194, 214, 255});
+    UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 176.0f * scale, routePanel.y + 54.0f * scale, routePanel.width - 192.0f * scale, 20.0f * scale}, 12.4f * scale, 13.8f * scale, Color{172, 194, 214, 255});
     std::snprintf(routeBuffer, sizeof(routeBuffer), "%s  %s", Loc_PickLiteral("Shared Truth", "共通真相"), GetCrossRouteArchiveStatus(tasks));
     TasksRuntime_SanitizeDisplayText(routeBuffer, sanitizedBuffer, sizeof(sanitizedBuffer));
-    UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 98.0f * scale}, 15.0f * scale, Color{188, 225, 196, 255});
+    UIRuntime_DrawText(assets, sanitizedBuffer, Vector2{routePanel.x + 16.0f * scale, routePanel.y + 82.0f * scale}, 14.2f * scale, Color{188, 225, 196, 255});
     TasksRuntime_SanitizeDisplayText(GetCrossRouteArchiveNote(tasks), sanitizedNote, sizeof(sanitizedNote));
-    UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 188.0f * scale, routePanel.y + 94.0f * scale, routePanel.width - 204.0f * scale, 28.0f * scale}, 13.0f * scale, 14.0f * scale, Color{172, 194, 214, 255});
+    UIRuntime_DrawWrappedText(assets, sanitizedNote, Rectangle{routePanel.x + 176.0f * scale, routePanel.y + 78.0f * scale, routePanel.width - 192.0f * scale, 24.0f * scale}, 12.4f * scale, 13.8f * scale, Color{172, 194, 214, 255});
 }

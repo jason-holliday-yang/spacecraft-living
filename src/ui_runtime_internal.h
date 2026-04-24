@@ -28,11 +28,17 @@ void UIRuntime_DrawHudStatusTooltip(const AssetBundle *assets,
                                     Rectangle anchorRect,
                                     int screenWidth,
                                     int screenHeight);
+void UIRuntime_DrawShortcutIcon(Rectangle rect,
+                                const TextureAsset *iconTexture,
+                                int iconKind,
+                                Color primary,
+                                Color secondary);
 void UIRuntime_DrawHudShortcut(const AssetBundle *assets,
                                Rectangle rect,
                                const char *label,
                                const char *subtitle,
                                const char *keyLabel,
+                               const TextureAsset *iconTexture,
                                int iconKind,
                                Color primary,
                                Color secondary);

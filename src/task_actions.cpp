@@ -4,6 +4,8 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
     Monster *target;
     float damage;
     float oxygenCost;
+    float attackCooldown;
+    bool bossWeakPointHit;
 
     (void)map;
 
@@ -17,6 +19,10 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
         TasksRuntime_WriteMessage(message, messageSize, "You are too injured to keep the fight stable right now.");
         return false;
     }
+    if (player->attackCooldown > 0.0f) {
+        TasksRuntime_WriteMessage(message, messageSize, "Your weapon is still recovering from the last strike.");
+        return false;
+    }
 
     oxygenCost = player->hasLaserGun ? 3.2f : 2.2f;
     if (player->oxygen <= oxygenCost + 3.0f || Player_HasStatus(player, PLAYER_STATUS_SUFFOCATING)) {
@@ -25,12 +31,13 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
     }
 
     Player_DamageOxygen(player, oxygenCost);
+    attackCooldown = player->hasLaserGun ? 0.42f : 0.28f;
+    player->attackCooldown = attackCooldown;
     damage = Player_GetAttackPower(player);
-    if (target->type == MONSTER_FINAL_BOSS && player->gridX > target->gridX + MONSTER_FOOTPRINT_SIZE - 1) {
-        damage *= 2.0f;
-    }
-    if (tasks->monolithsLit > 0 && target->type == MONSTER_FINAL_BOSS) {
-        damage *= 1.0f + 0.10f * tasks->monolithsLit;
+    bossWeakPointHit = target->type == MONSTER_FINAL_BOSS && target->weakPointTimer > 0.0f;
+    if (bossWeakPointHit) {
+        damage *= 1.55f + 0.05f * (float)tasks->monolithsLit;
+        target->weakPointTimer = 0.0f;
     }
 
     target->health -= damage;
@@ -38,16 +45,10 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
         target->active = false;
         TasksRuntime_DropMonsterRewards(tasks, player, target);
         if (target->type == MONSTER_FINAL_BOSS) {
-            if (map != NULL) {
-                Map_UnlockSwampOuter(map);
-            }
-            player->gridX = BOSS_ARENA_RETURN_X;
-            player->gridY = BOSS_ARENA_RETURN_Y;
-            player->facingX = 1;
-            player->facingY = 0;
-            Player_UpdateWorldPosition(player);
             Tasks_UpdateObjective(tasks, player);
-            TasksRuntime_WriteMessage(message, messageSize, "The guardian collapses and the breach spits you back to the ship-side airlock. The Signal Tower is now the final step.");
+            TasksRuntime_WriteMessage(message,
+                                      messageSize,
+                                      "The guardian collapses in the northwest ruins. The path to the Signal Tower is finally open, and Loxi can now confirm any settlement plan back at the ship.");
         } else {
             TasksRuntime_WriteMessage(message, messageSize, "Target eliminated. Loot collected.");
         }
@@ -61,6 +62,10 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
         Player_DamageHealth(player, 1.0f);
     }
 
-    TasksRuntime_WriteMessage(message, messageSize, "Attack connected.");
+    if (bossWeakPointHit) {
+        TasksRuntime_WriteMessage(message, messageSize, "Weak point hit. The guardian staggers under the strike.");
+    } else {
+        TasksRuntime_WriteMessage(message, messageSize, "Attack connected.");
+    }
     return true;
 }

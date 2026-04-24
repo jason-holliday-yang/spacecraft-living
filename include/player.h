@@ -82,6 +82,7 @@ typedef struct Player {
     float safeRecoveryTimer;
     float glowStickTimer;
     float speedBoostTimer;
+    float attackCooldown;
     float blurPulse;
     float moveAnimElapsed;
     float moveAnimDuration;
@@ -130,6 +131,7 @@ void Player_AddOxygen(Player *player, float amount);
 void Player_DamageOxygen(Player *player, float amount);
 void Player_AddPoison(Player *player, float amount);
 void Player_ClearPoison(Player *player);
+void Player_SyncPoisonStatus(Player *player);
 bool Player_HasStatus(const Player *player, PlayerStatusType status);
 const PlayerStatusEffect *Player_GetStatusEffect(const Player *player, PlayerStatusType status);
 void Player_SetStatus(Player *player, PlayerStatusType status, int level, float remainingTime, float magnitude);

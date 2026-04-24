@@ -265,7 +265,17 @@ void Game_Draw(Game *game) {
     }
 
     if (game->state == GAME_STATE_OPENING) {
-        UI_DrawOpeningCutscene(&game->assets, game->openingSlideIndex, game->openingCutsceneElapsed, screenWidth, screenHeight);
+        if (game->openingAwaitingFirstAdvance) {
+            static constexpr float kOpeningInitialBlackHoldDuration = 1.5f;
+
+            UI_DrawOpeningStandby(&game->assets,
+                                  game->openingCutsceneElapsed >= kOpeningInitialBlackHoldDuration,
+                                  screenWidth,
+                                  screenHeight,
+                                  game->elapsedSeconds);
+        } else {
+            UI_DrawOpeningCutscene(&game->assets, game->openingSlideIndex, game->openingCutsceneElapsed, screenWidth, screenHeight);
+        }
         {
             const float overlayAlpha = GetNarrativeOverlayAlpha(game);
             if (overlayAlpha > 0.0f) {
@@ -306,6 +316,9 @@ void Game_Draw(Game *game) {
                                       &game->tasks,
                                       screenWidth,
                                       screenHeight,
+                                      Tasks_GetAvailableEndingCount(&game->tasks) > 1
+                                          ? Tasks_GetAvailableEndingCount(&game->tasks) + 1
+                                          : 2,
                                       game->settlementConfirmSelection);
     } else if (game->showDeathPopup) {
         UI_DrawDeathPopup(&game->player, game->hasSaveFile, &game->assets, screenWidth, screenHeight, game->deathPopupSelection);
@@ -342,9 +355,13 @@ void Game_Draw(Game *game) {
         if (game->communicatorOpen) {
             UI_DrawCommunicatorOverlay(&game->assets,
                                        &game->tasks,
+                                       game->storySceneShown,
                                        game->communicatorTab,
                                        game->selectedLogIndex,
                                        game->communicatorFirstVisibleLogIndex,
+                                       game->selectedStorySceneIndex,
+                                       game->communicatorFirstVisibleStorySceneIndex,
+                                       game->communicatorLogDetailVisibility,
                                        screenWidth,
                                        screenHeight);
         }

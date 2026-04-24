@@ -59,45 +59,68 @@ static bool TryUseCommRelay(TaskSystem *tasks, GameMap *map, Player *player, cha
             TasksRuntime_UnlockStageIfNeeded(tasks, map, 4);
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("The comm relay is restored. Loxi can now read the east route properly, and the west frontier archive has become recoverable as a real log trail instead of background debris.",
-                                                      "通讯中继已经恢复。洛希现在可以正确读取东线路线，而西部前线档案也终于能作为真正的日志线索被回收，而不再只是背景残骸。"));
+                                      Loc_PickLiteral("The comm relay is alive again. Loxi can finally read the east route cleanly, and the West Frontier archive now resolves into a real trail instead of ruined noise.",
+                                                      "通讯中继重新活过来了。洛希终于能清楚读懂东线路线，而西部前线档案也不再只是残骸里的噪声，终于显出一条真正的线索。"));
             return true;
         }
 
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("Comm relay repair still needs 2 Vines, 2 Shell Fruit, and 1 Special Fungus.",
-                                                  "通讯中继修复仍需要 2 份藤蔓、2 份壳果和 1 份特殊菌株。"));
+                                  Loc_PickLiteral("The comm relay still needs 2 Vines, 2 Shell Fruit, and 1 Special Fungus before its voice comes back.", "通讯中继还需要 2 份藤蔓、2 份壳果和 1 份特殊菌株，才能重新把声音送回来。"));
         return true;
     }
 
-    TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("The comm relay is stable.", "通讯中继运行稳定。"));
+    TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("The comm relay is stable, humming through the fog like it never wanted to go silent.", "通讯中继运行稳定，在雾里低低作响，像它从未甘心真正沉默过。"));
     return true;
 }
 
-static bool TryInspectCrashClue(TaskSystem *tasks, GameMap *map, const Player *player, char *message, size_t messageSize) {
-    if (tasks->crashClueFound) {
-        TasksRuntime_WriteMessage(message,
-                                  messageSize,
-                                  Loc_PickLiteral("The wreck has already been fully explored. The residue trail is logged, and the eastern lead is now part of your route data.",
-                                                  "这处残骸已经彻底探索完毕。残留物轨迹已被记录，东线线索也已经纳入路线数据。"));
-        return true;
-    }
-
-    if (tasks->stage == 4 && player->hasLaserGun && player->hasProtectionSuit) {
+static bool TryInspectCrashClue(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize) {
+    if (tasks->stage == 4 && !tasks->crashClueFound && player->hasLaserGun && player->hasProtectionSuit) {
         tasks->crashClueFound = true;
         TasksRuntime_UnlockStageIfNeeded(tasks, map, 5);
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("You found the crash clue. The residue points deeper east, the deep swamp entrance is now unlocked for the real qualification run, and the wreck's black-box log can finally be recovered.",
-                                                  "你找到了坠毁线索。残留物指向更深的东侧区域，深层沼泽入口现已开放，而残骸中的黑匣子日志也终于可以回收。"));
+                                  Loc_PickLiteral("You found the real wreck lead. The residue drags farther east, the black-box trail can now be recovered, and an emergency Energy Core is still fused inside the hull. Bring back 1 Junk Metal, 1 Protective Fiber, and 1 Energy Crystal so you can brace the frame, insulate the channel, and wake the housing before extraction.", "你找到了真正的坠毁线索。残留物一路把方向拖向更深的东侧，黑匣子轨迹已经能被回收，而残骸内部还卡着一枚应急能源核心。带回 1 份废旧金属、1 份防护纤维和 1 份能量晶体，才能先撑住结构、做绝缘，再唤醒核心仓，把它安全拆出来。"));
+        return true;
+    }
+
+    if (tasks->stage == 5 && tasks->crashClueFound) {
+        if (player->resources[RESOURCE_ENERGY_CORE] > 0) {
+            TasksRuntime_WriteMessage(message,
+                                      messageSize,
+                                      Loc_PickLiteral("The wreck cavity is empty now. The black box is logged, the emergency core is gone, and the shell has become nothing but evidence.", "残骸核心仓现在已经空了。黑匣子已经归档，应急能源核心也已取走，剩下的外壳只剩下作为证据存在的意义。"));
+            return true;
+        }
+
+        if (Player_HasResources(player, RESOURCE_JUNK_METAL, 1)
+            && Player_HasResources(player, RESOURCE_PROTECTIVE_FIBER, 1)
+            && Player_HasResources(player, RESOURCE_ENERGY_CRYSTAL, 1)) {
+            Player_SpendResource(player, RESOURCE_JUNK_METAL, 1);
+            Player_SpendResource(player, RESOURCE_PROTECTIVE_FIBER, 1);
+            Player_SpendResource(player, RESOURCE_ENERGY_CRYSTAL, 1);
+            Player_AddResource(player, RESOURCE_ENERGY_CORE, 1);
+            TasksRuntime_WriteMessage(message,
+                                      messageSize,
+                                      Loc_PickLiteral("You braced the wreck with junk metal, wrapped the live channel in protective fiber, and used the crystal pulse to wake the housing just long enough to tear the Energy Core free. Bring it back to Power Bay and finish the repair there.", "你用废旧金属撑住残骸，用防护纤维裹住带电通道，再借助能量晶体的脉冲短暂唤醒核心仓，终于把能源核心硬生生拆了出来。把它带回动力舱，完成后续修复。"));
+            return true;
+        }
+
+        TasksRuntime_WriteMessage(message,
+                                  messageSize,
+                                  Loc_PickLiteral("The wreck core is still fused in place. You still need 1 Junk Metal for a brace, 1 Protective Fiber for insulation, and 1 Energy Crystal to wake the housing before extraction is even possible.", "残骸里的核心仍然卡死在原位。你还需要 1 份废旧金属做支架、1 份防护纤维做绝缘，以及 1 份能量晶体来短暂唤醒核心仓，否则根本无从拆取。"));
+        return true;
+    }
+
+    if (tasks->crashClueFound) {
+        TasksRuntime_WriteMessage(message,
+                                  messageSize,
+                                  Loc_PickLiteral("The wreck is already logged. Follow the eastern trail, gather what the extraction needs, then come back when you are ready to cut the core loose.", "这处残骸已经完成初步记录。继续沿着东线搜集提取所需的东西，准备好之后再回来把核心拆出来。"));
         return true;
     }
 
     TasksRuntime_WriteMessage(message,
                               messageSize,
-                              Loc_PickLiteral("The wreck is leaking dangerous residue. Better prepare a weapon and suit first if you want this clue to turn into a real lead.",
-                                              "这处残骸仍在泄露危险残留物。如果你想把这条线索真正变成突破口，最好先准备好武器和防护服。"));
+                              Loc_PickLiteral("The wreck is still sweating dangerous residue. Bring a weapon and a sealed suit first if you want this clue to become anything more than a warning.", "这处残骸还在不断渗出危险残留物。如果你想让这条线索不只是警告，最好先带上武器和防护服。"));
     return true;
 }
 
@@ -106,7 +129,7 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
     int nextIndex;
 
     if (tasks->stage < 7) {
-        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("The monolith is still dormant. Loxi suggests finishing the main prep first.", "石碑仍处于沉寂状态。洛希建议先完成主要准备工作。"));
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("The monolith is still dormant, like it is listening but refusing to answer. Loxi suggests finishing the main preparation first.", "石碑仍处于沉寂状态，像是在听，却不肯回应。洛希建议先把主要准备工作做完。"));
         return true;
     }
 
@@ -120,8 +143,8 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         std::snprintf(message,
                       messageSize,
                       "%s %s",
-                      Loc_PickLiteral("The monolith hums to life. Solve the sequence to strengthen your boss damage, soften the tower approach, and let the ring explain how the guardian and Signal Tower are tied together before the final choice.",
-                                      "石碑开始低鸣。解开这段顺序能强化你对最终首领的伤害、减轻塔楼路径的压力，并让石碑环在最终抉择前解释守卫与信号塔之间的联系。"),
+                      Loc_PickLiteral("The monolith hums to life. Solve the sequence to harden your strikes against the guardian, take some strain off the tower climb, and let the ring explain what binds the two together before the final choice.",
+                                      "石碑开始低鸣。解开这段顺序能让你对守卫的攻击更有力，也会替攀塔路线卸掉一部分压力，并在最终抉择前解释清楚守卫与信号塔之间究竟被什么联系着。"),
                       hint);
         return true;
     }
@@ -129,8 +152,7 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
     if (tasks->monolithPuzzle.solved) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("This monolith is already active. The full set is empowering your attacks against the final boss and easing the final tower climb.",
-                                                  "这座石碑已经激活。整组石碑的共鸣正在强化你对最终首领的攻击，并减轻最后登塔的压力。"));
+                                  Loc_PickLiteral("This monolith is already active. The ring's full resonance is still strengthening your attacks and easing the tower climb.", "这座石碑已经激活。整组石碑的共鸣仍在强化你的攻击，并减轻最后攀塔时的压力。"));
         return true;
     }
 
@@ -144,13 +166,11 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         } else if (nextIndex == monolithIndex) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("This monolith is already resonating at the front of the sequence. Follow the ring to the next silent stone.",
-                                                      "这座石碑已经处在当前序列的起点共鸣中。沿着石碑环去寻找下一座沉默石碑吧。"));
+                                      Loc_PickLiteral("This monolith is already resonating at the front of the sequence. Follow the ring until the next silent stone answers.", "这座石碑已经处在当前序列的起点共鸣中。顺着石碑环继续走，直到下一座沉默石碑回应。"));
         } else {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("This monolith is already active. Follow the resonance to the next silent stone in the ring.",
-                                                      "这座石碑已经激活。顺着共鸣去寻找石碑环中下一座沉默石碑。"));
+                                      Loc_PickLiteral("This monolith is already active. Follow the resonance through the ring to the next silent stone.", "这座石碑已经激活。沿着石碑环中的共鸣去找下一座沉默石碑。"));
         }
         return true;
     }
@@ -159,8 +179,7 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
     if (monolithIndex != nextIndex) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("The ring rejects that order. Another silent stone should answer before this one.",
-                                                  "石碑环拒绝了这个顺序。应该先由另一座沉默石碑回应。"));
+                                  Loc_PickLiteral("The ring rejects that order. Another silent stone is supposed to answer before this one.", "石碑环拒绝了这个顺序。应该先由另一座沉默石碑回应，而不是它。"));
         return true;
     }
 
@@ -170,18 +189,15 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         tasks->monolithPuzzle.solved = true;
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("All three monoliths resonate in harmony! Your attacks against the final boss now deal 30% more damage, the tower route loses part of its oxygen-leak strain, and the ring has made the heroic path fully legible. This is the cleanest heroic timing you have had so far.",
-                                                  "三座石碑已经完全共鸣！你对最终首领的攻击现在会额外造成 30% 伤害，塔楼路线的漏氧压力也有所减轻，而石碑环终于让强行救援路线变得清晰可读。这是你目前最理想的一次强攻时机。"));
+                                  Loc_PickLiteral("All three monoliths resonate in harmony. Your attacks against the guardian now hit harder, the tower route bleeds less oxygen, and the heroic path finally reads like a plan instead of a gamble.", "三座石碑已经完全共鸣。你对守卫的攻击会更重，塔楼路线的漏氧压力也减轻了，而强行救援这条路终于更像一套计划，而不只是一次豪赌。"));
     } else if (tasks->monolithsLit == 1) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("The first monolith locks into resonance. The guardian's grip weakens slightly, the tower climb leaks a little less oxygen, and the ruins are starting to explain what the ring is really doing. 2 silent stones remain.",
-                                                  "第一座石碑已锁定共鸣。守卫的压制略有减弱，攀塔过程中的漏氧也稍微缓和，遗迹开始解释石碑环真正的作用。还剩 2 座沉默石碑。"));
+                                  Loc_PickLiteral("The first monolith locks into resonance. The guardian's hold loosens slightly, the tower climb bleeds a little less oxygen, and the ring begins to explain itself. 2 silent stones remain.", "第一座石碑已锁定共鸣。守卫的压制稍微松了一点，攀塔时的漏氧也略有缓和，而石碑环终于开始解释自己的用途。还剩 2 座沉默石碑。"));
     } else {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("The second monolith joins the resonance. The guardian weakens further, the tower climb steadies again, and only 1 silent stone remains before the ring fully turns the heroic route into a clear execution path.",
-                                                  "第二座石碑加入了共鸣。守卫进一步削弱，攀塔路线也再次稳定下来；只要再点亮 1 座沉默石碑，石碑环就会把强行救援路线彻底转变为清晰的执行路径。"));
+                                  Loc_PickLiteral("The second monolith joins the resonance. The guardian weakens further, the tower climb steadies again, and only 1 silent stone remains before the ring turns the heroic route into a clear execution path.", "第二座石碑加入共鸣。守卫进一步削弱，攀塔路线也再次稳定下来；只要再点亮 1 座沉默石碑，石碑环就能把强行救援彻底变成一条清晰可执行的路线。"));
     }
 
     Tasks_UpdateObjective(tasks, player);
@@ -192,15 +208,14 @@ static bool TryUseSignalTower(TaskSystem *tasks, const Player *player, char *mes
     GameEnding selectedRoute;
 
     if (tasks->stage < 7) {
-        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("The Signal Tower is still offline. Loxi suggests finishing the endgame prep first.", "信号塔仍未上线。洛希建议先完成终局准备。"));
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("The Signal Tower is still offline, its silhouette doing nothing but watch. Loxi suggests finishing the endgame preparation first.", "信号塔仍未上线，只剩轮廓立在那里无声俯视。洛希建议先完成终局准备。"));
         return true;
     }
 
     if (!Tasks_IsEndingBranchReady(tasks)) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("The tower still reads like noise. Recover the remaining mainline logs, finish the route archive work, then return to Loxi before you turn any ending into a commitment.",
-                                                  "塔楼的读数仍然像一团噪音。请先找回剩余主线日志，完成路线档案工作，再回到洛希那里，别让任何结局在你准备好之前变成既定承诺。"));
+                                  Loc_PickLiteral("The tower still reads like noise. Recover the remaining mainline logs, finish the route archive work, and return to Loxi before this place turns uncertainty into commitment.", "塔楼的读数仍然像一团噪音。先找回剩余主线日志，完成路线档案工作，再回洛希那里，别让这里在你准备好之前把犹豫变成既定承诺。"));
         return true;
     }
 
@@ -208,16 +223,20 @@ static bool TryUseSignalTower(TaskSystem *tasks, const Player *player, char *mes
     if (selectedRoute == ENDING_NONE) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("Do not commit at the tower blind. Return to Loxi, review the complete archive, and choose your ending route at the ship before this place makes the choice for you.",
-                                                  "不要在毫无准备的情况下于塔楼仓促作出承诺。先回到洛希那里复核完整档案，在飞船内确认你的结局路线，别让这里替你做决定。"));
+                                  Loc_PickLiteral("Do not commit at the tower blind. Go back to Loxi, review the assembled archive, and choose your route aboard the ship before this place chooses the mood for you.", "不要在一知半解的情况下在塔楼这里仓促下决定。先回洛希那里把拼齐的档案再过一遍，在飞船里确认路线，别让这里替你把气氛推成既成事实。"));
         return true;
     }
 
     if (selectedRoute == ENDING_SETTLEMENT) {
-        TasksRuntime_WriteMessage(message,
-                                  messageSize,
-                                  Loc_PickLiteral("The settlement route has already been chosen. The tower is no longer part of this ending.",
-                                                  "你已经选择了定居路线，信号塔不再属于这个结局的一部分。"));
+        if (tasks->bossDefeated) {
+            TasksRuntime_WriteMessage(message,
+                                      messageSize,
+                                      Loc_PickLiteral("The settlement route has already been chosen. The tower no longer belongs to that ending, so return to Loxi and confirm your decision to stay.", "你已经选择了定居路线。信号塔已经不属于这个结局的一部分，请回到洛希那里，确认你留下的决定。"));
+        } else {
+            TasksRuntime_WriteMessage(message,
+                                      messageSize,
+                                      Loc_PickLiteral("Settlement cannot be finalized here. Clear the guardian in the northwest ruins first, then return to Loxi if staying is still what you mean.", "定居路线不能在这里完成。先去清除西北遗迹里的守卫，如果那之后你仍然决定留下，再回洛希那里确认。"));
+        }
         return true;
     }
 
@@ -255,8 +274,8 @@ static bool TryUseSignalTower(TaskSystem *tasks, const Player *player, char *mes
         if (IsCrossX3Ready(tasks)) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("The Signal Amplifier stabilized the tower without another fight. With west and south records aligned, this peaceful rescue lands as a full-system repair choice chosen with full context back at the ship.",
-                                                      "信号放大器在没有再度战斗的情况下稳定了塔楼。当西线与南线记录拼合之后，这次和平救援更像是在飞船内作出的、基于完整背景的整套系统修复选择。"));
+                                      Loc_PickLiteral("The Signal Amplifier stabilized the tower without another fight. With west and south records finally fitting together, this peaceful rescue lands as a deliberate repair choice that was confirmed back at the ship.",
+                                                      "信号放大器在没有再度战斗的情况下稳定了塔楼。当西线与南线记录终于拼到一起后，这次和平救援更像是一种在飞船里确认过的、主动承担的修复选择。"));
         } else if (IsCrossX2Ready(tasks)) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
@@ -276,18 +295,18 @@ static bool TryUseSignalTower(TaskSystem *tasks, const Player *player, char *mes
         if (tasks->monolithsLit >= 3) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("The heroic route is locked in, but the tower is waiting on the isolated guardian breach. Open the ship airlock, clear the arena, then return here.",
-                                                      "强行救援路线已经锁定，但塔楼仍在等待那场隔离守卫战。打开飞船气闸，清空战场，然后再回到这里。"));
+                                      Loc_PickLiteral("The heroic route is locked in, but the tower is still waiting on the guardian kill in the northwest ruins. The full monolith ring will help once you push that fight, then return here.",
+                                                      "强行救援路线已经锁定，但塔楼仍在等待你清掉西北遗迹里的守卫。完整石碑环会在你推进那场战斗时提供帮助，然后再回到这里。"));
         } else if (tasks->monolithsLit > 0) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("The heroic route is locked in. The arena breach is ready at the ship airlock, and your lit monoliths will still help once the guardian engages.",
-                                                      "强行救援路线已经锁定。守卫战场入口已在飞船气闸处待命，而你已点亮的石碑仍会在战斗开始后继续发挥作用。"));
+                                      Loc_PickLiteral("The heroic route is locked in. The guardian is still holding the northwest ruins, and your lit monoliths will keep helping once it engages.",
+                                                      "强行救援路线已经锁定。守卫仍在把守西北遗迹，而你已点亮的石碑会在战斗开始后继续发挥作用。"));
         } else {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("The heroic route is locked in. The ship airlock now leads into the guardian arena. Clear that fight before trying to launch the tower.",
-                                                      "强行救援路线已经锁定。飞船气闸现在会直接通向守卫战场。先赢下那场战斗，再尝试启动塔楼。"));
+                                      Loc_PickLiteral("The heroic route is locked in. Hunt the guardian in the northwest ruins before trying to launch the tower.",
+                                                      "强行救援路线已经锁定。先去西北遗迹猎杀守卫，再尝试启动塔楼。"));
         }
     } else if (player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
         if (tasks->monolithsLit >= 3) {
@@ -339,8 +358,7 @@ static bool TryUseFieldCamp(const GameMap *map, Player *player, char *message, s
     Player_SetStatus(player, PLAYER_STATUS_CAMP_RECOVERY, 1, 45.0f, SAFE_RECOVERY_AMOUNT);
     TasksRuntime_WriteMessage(message,
                               messageSize,
-                              Loc_PickLiteral("You rested at the field camp and recovered part of your health and oxygen. It is a safe outdoor fallback, not a full reset, and it leaves a short Camp Recovery boost.",
-                                              "你在野外营地休息了一次，恢复了部分生命与氧气。这里是安全的户外回撤点，但并非完全重置，同时还会留下短暂的营地恢复增益。"));
+                              Loc_PickLiteral("You rest at the field camp long enough to steady your hands and breathing. It is a safe outdoor fallback, not true safety, but it restores part of your health and oxygen and leaves a short Camp Recovery boost for one more push.", "你在野外营地休息了一阵，直到手不再发抖、呼吸重新稳住。这里是一个安全的户外回撤点，却算不上真正的安全，但它会恢复部分生命与氧气，并留下短暂的营地恢复增益，帮你再推进一次。"));
     return true;
 }
 
@@ -361,8 +379,7 @@ static bool TryUseRopeBridge(GameMap *map, const Player *player, char *message, 
     Map_CreateRopeBridge(map, targetX, targetY);
     TasksRuntime_WriteMessage(message,
                               messageSize,
-                              Loc_PickLiteral("You used the rope to secure a shortcut across the hazardous terrain.",
-                                              "你用绳索固定出了一条穿越危险地形的捷径。"));
+                              Loc_PickLiteral("You cinch the rope tight and force a crossing through the hazard, turning dead ground into a usable shortcut.", "你把绳索狠狠勒紧，硬是在险地上拽出一条通路，把原本的死地变成了可用捷径。"));
     return true;
 }
 

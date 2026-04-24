@@ -40,19 +40,18 @@ void TasksRuntime_RespawnNodes(TaskSystem *tasks, const Player *player, float de
 }
 
 void TasksRuntime_UpdateDayCycle(TaskSystem *tasks, float deltaTime) {
-    float previousTimer;
     int previousDay;
     float cycleTime;
 
-    previousTimer = tasks->cycleTimer;
     previousDay = tasks->dayCount;
     tasks->cycleTimer += deltaTime;
     tasks->elapsedSeconds += deltaTime;
 
     while (tasks->cycleTimer >= FULL_CYCLE_SECONDS) {
         tasks->cycleTimer -= FULL_CYCLE_SECONDS;
-        tasks->dayCount += 1;
     }
+
+    tasks->dayCount = (int)(tasks->elapsedSeconds / DAY_COUNT_DURATION_SECONDS);
 
     cycleTime = tasks->cycleTimer;
     if (cycleTime < DAY_DURATION_SECONDS) {
@@ -63,7 +62,7 @@ void TasksRuntime_UpdateDayCycle(TaskSystem *tasks, float deltaTime) {
         tasks->phase = DAY_PHASE_NIGHT;
     }
 
-    if (tasks->dayCount != previousDay || (previousTimer > tasks->cycleTimer && tasks->cycleTimer < 1.0f)) {
+    if (tasks->dayCount != previousDay) {
         tasks->currentEvent = TasksContent_GetDailyEvent(tasks->dayCount);
     }
 }

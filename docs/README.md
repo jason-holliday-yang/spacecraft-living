@@ -12,7 +12,7 @@
 - 当前目标是在补齐 `西线 Echo Wilds` 与 `南线 Subsurface Sink` 内容后冻结地图与剧情范围
 - 在此之前，不再继续扩展超出西线 / 南线补完之外的新地图、新剧情主线或大型新玩法系统
 - 核心游玩体验固定为 `求生 + 搜集真相 + 主动选择结局`，而不是以连续战斗清场为主
-- 主线剧情推进固定以 `任务 -> 日志 / 调查回收 -> 回船总结 -> 洛希分支确认 -> 路线执行` 为骨架
+- 主线剧情推进固定以 `任务 -> 日志 / 调查回收 -> 回船总结 -> 洛希归档复核 -> 路线确认 -> 路线执行` 为骨架
 - 活动开发围绕 `西线补完`、`南线补完`、`主线整合`、`平衡性`、`稳定性` 与 `发布级收尾` 展开
 
 ## 当前最值得先看
@@ -21,6 +21,8 @@
   当前设计基线，定义固定玩法、世界布局、日志驱动推进与结局结构。
 - [`design/CURRENT_STATUS.md`](design/CURRENT_STATUS.md)
   当前代码真实落地状态，回答“已经做到哪里”，并核对日志解锁、Loxi 分支点、英雄路线气闸 Boss 战与战斗轻量化是否已落地。
+- [`design/TERMINOLOGY.md`](design/TERMINOLOGY.md)
+  当前统一术语表，后续开发和文档修订优先沿用它。
 - [`design/STAGE_FLOW_CODE_VERIFIED.md`](design/STAGE_FLOW_CODE_VERIFIED.md)
   代码校准版主线流程文档，逐阶段写清楚需要什么、在哪里完成、解锁什么，以及 objective marker 当前如何指向。
 - [`design/EXPANSION_MAP_DESIGN.md`](design/EXPANSION_MAP_DESIGN.md)
@@ -29,8 +31,16 @@
   西线 / 南线任务链与结局反哺的当前活动剧情设计文档。
 - [`design/WEST_SOUTH_FULL_STORY.md`](design/WEST_SOUTH_FULL_STORY.md)
   西线 / 南线完整剧情稿，覆盖五段西线调查、五段南线设施线与三段跨区联动的完整叙事流程。
+- [`design/LONGFORM_STORY_DRAFT.md`](design/LONGFORM_STORY_DRAFT.md)
+  长篇剧情母稿，用于后续扩写日志、基地总结、洛希重写分析和结局文案；它是写作层参考，不是当前运行时实现清单。
+- [`design/LOG_ARCHIVE_DETAIL_BRIEFS.md`](design/LOG_ARCHIVE_DETAIL_BRIEFS.md)
+  日志详细描述与资源 Brief，用于当前 14 份日志与后续扩写目标的写作对照。
+- [`design/MAINLINE_STORY_DETAIL_BRIEFS.md`](design/MAINLINE_STORY_DETAIL_BRIEFS.md)
+  主线剧情详细描述与资源 Brief，用于主线剧情图与剧情层扩写对照。
 - [`design/WEST_SOUTH_RESOURCE_GAP.md`](design/WEST_SOUTH_RESOURCE_GAP.md)
   西线 / 南线补完所需新增图片与视频资源清单。
+- [`plans/STORY_DOCUMENT_REPAIR_CHECKLIST.md`](plans/STORY_DOCUMENT_REPAIR_CHECKLIST.md)
+  新剧情母稿与活动文档的修正清单，用于统一“当前已实现”和“后续扩写目标”的口径。
 - [`plans/BALANCE_TUNING_PLAN.md`](plans/BALANCE_TUNING_PLAN.md)
   当前主执行计划之一，聚焦数值、路线压力和测试护栏。
 - [`plans/NEXT_STEPS.md`](plans/NEXT_STEPS.md)
@@ -46,12 +56,16 @@
   当前西线 / 南线剧情任务设计，用于固定两条调查链和跨区联动任务的推进结构。
 - [`design/WEST_SOUTH_FULL_STORY.md`](design/WEST_SOUTH_FULL_STORY.md)
   西线 / 南线完整剧情正文，用于统一任务推进时的剧情事件与结局反哺语义。
+- [`design/LONGFORM_STORY_DRAFT.md`](design/LONGFORM_STORY_DRAFT.md)
+  长篇剧情母稿，用于补厚日志驱动叙事的写作层内容；若与当前代码状态冲突，视为后续扩写目标而非现状。
 - [`design/WEST_SOUTH_RESOURCE_GAP.md`](design/WEST_SOUTH_RESOURCE_GAP.md)
   西线 / 南线资源缺口清单，用于统一图片和视频资产新增优先级。
 - [`design/STAGE_FLOW_CODE_VERIFIED.md`](design/STAGE_FLOW_CODE_VERIFIED.md)
   当前代码版主线阶段说明，用于核对每一阶段的材料、交互点、坐标、解锁结果与终局开放条件。
 - [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](plans/MAP_STORY_ALIGNMENT_PLAN.md)
   地图与剧情联动补齐执行单，用来固定基地、东线、北线、西线与南线职责。
+- [`plans/STORY_DOCUMENT_REPAIR_CHECKLIST.md`](plans/STORY_DOCUMENT_REPAIR_CHECKLIST.md)
+  新剧情稿修正清单，用于维护长篇母稿、活动剧情文档和当前实现之间的一致性。
 
 ## 工程文档
 
@@ -88,4 +102,4 @@
 
 - 活动文档优先于历史参考。
 - 如果文档和当前代码冲突，以当前代码为准。
-- 如果活动文档之间有冲突，以 `GAME_DESIGN.md`、`CURRENT_STATUS.md`、`EXPANSION_MAP_DESIGN.md` 和 `NEXT_STEPS.md` 为准。
+- 如果活动文档之间有冲突，以 `GAME_DESIGN.md`、`CURRENT_STATUS.md`、`STAGE_FLOW_CODE_VERIFIED.md`、`EXPANSION_MAP_DESIGN.md` 和 `NEXT_STEPS.md` 为准。

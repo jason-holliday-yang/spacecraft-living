@@ -1,6 +1,7 @@
 #include "game_manager.h"
 #include "../src/game_manager_internal.h"
 #include "../src/game_play_internal.h"
+#include "../src/task_runtime_internal.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -65,6 +66,7 @@ int main(void) {
     Game game;
     GameSettings loadedSettings;
     char authMessage[SAVE_AUTH_MESSAGE_MAX];
+    int shownMainStorySceneCount;
 
     ConfigureIsolatedSaveHome();
     Require(SaveSystem_Register("session", "pass1234", authMessage, sizeof(authMessage)),
@@ -98,8 +100,8 @@ int main(void) {
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BASE,
             "ship cabin opening should use base music");
 
-    game.player.gridX = EXTERIOR_X(94);
-    game.player.gridY = EXTERIOR_Y(57);
+    game.player.gridX = EXTERIOR_X(70);
+    game.player.gridY = EXTERIOR_Y(74);
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST,
             "general crash forest should keep the standard forest music");
 
@@ -107,16 +109,39 @@ int main(void) {
     game.player.gridY = EXTERIOR_Y(72);
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST_ROUTE,
             "west-route investigation shelves should use the alternate forest music");
+    if (game.audio.ready) {
+        Audio_SetScene(&game.audio, AUDIO_SCENE_FOREST_ROUTE);
+        Audio_Update(&game.audio);
+        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
+                "forest-route audio should start from the route-specific forest track instead of the generic forest loop");
+    }
 
-    game.player.gridX = EXTERIOR_X(114);
-    game.player.gridY = EXTERIOR_Y(72);
+    game.player.gridX = EXTERIOR_X(111);
+    game.player.gridY = EXTERIOR_Y(48);
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_SWAMP_DEEP,
             "deep swamp objectives should use the deeper swamp music variant");
+    if (game.audio.ready) {
+        Audio_SetScene(&game.audio, AUDIO_SCENE_SWAMP_DEEP);
+        Audio_Update(&game.audio);
+        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
+                "deep-swamp audio should start from the deep-swamp track instead of the shallow-swamp loop");
+    }
+
+    game.player.gridX = EXTERIOR_X(80);
+    game.player.gridY = EXTERIOR_Y(98);
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST_ROUTE,
+            "south-collapse entry shelf should keep the forest-route music while the terrain still reads as forest");
 
     game.player.gridX = EXTERIOR_X(92);
     game.player.gridY = EXTERIOR_Y(98);
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_RUINS_FACILITY,
             "southern facility route should no longer fall back to forest music");
+    if (game.audio.ready) {
+        Audio_SetScene(&game.audio, AUDIO_SCENE_RUINS_FACILITY);
+        Audio_Update(&game.audio);
+        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
+                "southern facility audio should start from the facility track instead of the surface ruins loop");
+    }
 
     game.tasks.stage = 7;
     game.tasks.bossDefeated = false;
@@ -128,7 +153,13 @@ int main(void) {
     game.player.gridX = BOSS_ARENA_BOSS_X;
     game.player.gridY = BOSS_ARENA_BOSS_Y;
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BOSS_ARENA,
-            "isolated boss arena should use the dedicated arena music variant");
+            "Northwest Ruins guardian fight should use the dedicated boss music variant");
+    if (game.audio.ready) {
+        Audio_SetScene(&game.audio, AUDIO_SCENE_BOSS_ARENA);
+        Audio_Update(&game.audio);
+        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
+                "guardian-fight audio should start from the boss track instead of the tower pre-boss loop");
+    }
 
     {
         StoryTriggerSnapshot storyBefore;
@@ -156,15 +187,18 @@ int main(void) {
         GamePlay_CaptureStoryTriggerSnapshot(&game, &storyBefore);
         game.tasks.logs[purifierRingControlBriefIndex].collected = true;
         GamePlay_TryOpenStorySceneFromSnapshot(&game, &storyBefore);
-        Require(!game.storySceneOpen,
-                "collecting the purifier ring control brief should archive it quietly instead of forcing a full-screen story image");
+        Require(game.storySceneOpen,
+                "collecting the purifier ring control brief should now open the related mainline story scene");
+        Require(game.storyScene == STORY_SCENE_MAIN_MONOLITH_TRUE_ROLE,
+                "the purifier ring control brief should map to the monolith true role story scene");
+        Game_CloseStoryScene(&game);
     }
 
     {
         StoryTriggerSnapshot storyBefore;
 
         Game_CloseStoryScene(&game);
-        game.storySceneShown[STORY_SCENE_MAIN_FINAL_STANCE] = false;
+        game.storySceneShown[STORY_SCENE_MAIN_THREE_COSTS_REVEALED] = false;
         game.tasks.stage = 7;
         game.tasks.westW5Completed = true;
         game.tasks.southS5Completed = true;
@@ -172,15 +206,15 @@ int main(void) {
         GamePlay_CaptureStoryTriggerSnapshot(&game, &storyBefore);
         GamePlay_TryOpenStorySceneFromSnapshot(&game, &storyBefore);
         Require(!game.storySceneOpen,
-                "final stance story should stay quiet while the archive review step is still incomplete");
+                "the route-costs story should stay quiet while the archive review step is still incomplete");
 
         GamePlay_CaptureStoryTriggerSnapshot(&game, &storyBefore);
         game.tasks.endingArchiveReviewed = true;
         GamePlay_TryOpenStorySceneFromSnapshot(&game, &storyBefore);
         Require(game.storySceneOpen,
-                "final stance story should open once the final archive review is completed");
-        Require(game.storyScene == STORY_SCENE_MAIN_FINAL_STANCE,
-                "archive review completion should map to the final stance story scene");
+                "the route-costs story should open once the final archive review is completed");
+        Require(game.storyScene == STORY_SCENE_MAIN_THREE_COSTS_REVEALED,
+                "archive review completion should map to the route-costs story scene");
         Game_CloseStoryScene(&game);
     }
 
@@ -190,6 +224,34 @@ int main(void) {
 
     Game_CloseSavePanel(&game);
     Require(!game.savePanelOpen, "closing the save panel should hide it");
+
+    {
+        const int startingDayCount = game.tasks.dayCount;
+
+        TasksRuntime_UpdateDayCycle(&game.tasks, DAY_COUNT_DURATION_SECONDS - 1.0f);
+        Require(game.tasks.dayCount == startingDayCount,
+                "day count should not advance before five real-time minutes have elapsed");
+        TasksRuntime_UpdateDayCycle(&game.tasks, 1.0f);
+        Require(game.tasks.dayCount == startingDayCount + 1,
+                "day count should advance exactly once when five real-time minutes are reached");
+    }
+
+    {
+        Game sleepGame;
+        const int startingDayCount = 0;
+
+        PrepareGame(&sleepGame);
+        sleepGame.tasks.elapsedSeconds = DAY_COUNT_DURATION_SECONDS - SLEEP_TIME_ADVANCE_SECONDS * 0.5f;
+        sleepGame.tasks.dayCount = startingDayCount;
+        sleepGame.tasks.cycleTimer = 0.0f;
+        Game_AdvanceWorldClock(&sleepGame, SLEEP_TIME_ADVANCE_SECONDS);
+        Game_MaybePostDayAdvanceMessage(&sleepGame, startingDayCount);
+        Require(sleepGame.tasks.dayCount == startingDayCount + 1,
+                "sleep transition should fast-forward one minute and allow that jump to begin the next day");
+        Require(strstr(sleepGame.hudMessage.text, "Day 2 begins.") != NULL
+                    || strstr(sleepGame.hudMessage.text, "第 2 天开始") != NULL,
+                "crossing into a new day should post a short next-day message");
+    }
 
     game.tasks.stage = 5;
     game.tasks.dayCount = 3;
@@ -245,6 +307,11 @@ int main(void) {
     game.player.resources[RESOURCE_WOOD] = 5;
     game.player.resources[RESOURCE_FRUIT] = 2;
     game.player.deathCount = 1;
+    memset(game.storySceneShown, 0, sizeof(game.storySceneShown));
+    game.storySceneShown[STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY] = true;
+    game.storySceneShown[STORY_SCENE_MAIN_MONOLITH_TRUE_ROLE] = true;
+    game.storySceneShown[STORY_SCENE_MAIN_SETTLEMENT_ROUTE_COMMITMENT] = true;
+    game.tasks.shownMainStorySceneCount = 3;
     game.player.hasFieldCamp = true;
     game.map.campPlaced = true;
     game.map.campX = PLAYER_START_X + 2;
@@ -302,6 +369,20 @@ int main(void) {
             "load flow should restore persisted south-route S4 progression");
     Require(!game.tasks.southS5Started && !game.tasks.southS5Completed,
             "load flow should restore persisted south-route S5 progression");
+    Require(game.storySceneShown[STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY],
+            "load flow should restore the opening main-story archive entry");
+    Require(game.storySceneShown[STORY_SCENE_MAIN_MONOLITH_TRUE_ROLE],
+            "load flow should restore later main-story archive entries");
+    Require(game.storySceneShown[STORY_SCENE_MAIN_SETTLEMENT_ROUTE_COMMITMENT],
+            "load flow should preserve reserved late-story archive slots");
+    shownMainStorySceneCount = 0;
+    for (int scene = STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY;
+         scene < STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY + STORY_MAIN_SCENE_COUNT;
+         scene++) {
+        shownMainStorySceneCount += game.storySceneShown[scene] ? 1 : 0;
+    }
+    Require(game.tasks.shownMainStorySceneCount == shownMainStorySceneCount,
+            "load flow should keep ending-score story counts aligned with the restored archive state");
     Require(game.map.campPlaced && game.map.campX == PLAYER_START_X + 2 && game.map.campY == PLAYER_START_Y - 1,
             "load flow should restore the placed field camp");
     Require(game.camera.target.x == game.player.worldPos.x && game.camera.target.y == game.player.worldPos.y,
@@ -439,6 +520,24 @@ int main(void) {
     }
 
     {
+        Game endingTransitionGame;
+
+        PrepareGame(&endingTransitionGame);
+        endingTransitionGame.tasks.ending = ENDING_SETTLEMENT;
+        Game_BeginScreenTransition(&endingTransitionGame, SCREEN_TRANSITION_ENTER_ENDING, -1);
+        Require(endingTransitionGame.state == GAME_STATE_PLAYING,
+                "arming the ending fade should not hard-cut into the ending state immediately");
+        Require(endingTransitionGame.screenTransitionActive,
+                "arming the ending fade should mark the screen transition as active");
+        Require(endingTransitionGame.screenTransitionAction == SCREEN_TRANSITION_ENTER_ENDING,
+                "ending entry should use the dedicated end-screen transition action");
+
+        Game_EnterEndingState(&endingTransitionGame);
+        Require(endingTransitionGame.state == GAME_STATE_ENDING,
+                "resolving the ending transition should switch the session into the ending state");
+    }
+
+    {
         Game heroicReturnGame;
 
         PrepareGame(&heroicReturnGame);
@@ -454,10 +553,10 @@ int main(void) {
         heroicReturnGame.tasks.selectedEndingRoute = ENDING_HEROIC;
         heroicReturnGame.tasks.bossDefeated = true;
         CollectAllMainlineLogs(&heroicReturnGame.tasks);
-        snprintf(heroicReturnGame.lastLocationName, sizeof(heroicReturnGame.lastLocationName), "%s", "Guardian Arena");
+        snprintf(heroicReturnGame.lastLocationName, sizeof(heroicReturnGame.lastLocationName), "%s", "Northwest Ruins");
         MovePlayerAndUpdate(&heroicReturnGame, SHIP_CORRIDOR_X + 1, SHIP_CORRIDOR_Y + 1);
         Require(heroicReturnGame.hudMessage.text[0] == '\0',
-                "returning from the guardian arena after locking the heroic route should no longer auto-post a summary");
+                "returning from the northwest-ruins guardian fight after locking the heroic route should no longer auto-post a summary");
     }
 
     PrepareGame(&game);
@@ -530,6 +629,21 @@ int main(void) {
         PrepareGame(&archiveRoomGame);
         archiveRoomGame.tasks.stage = 5;
         archiveRoomGame.tasks.energyRepairLevel = 1;
+        archiveRoomGame.tasks.southS1Started = true;
+        archiveRoomGame.tasks.southS1Completed = false;
+        CollectArchiveEvidence(&archiveRoomGame.tasks, 9);
+        snprintf(archiveRoomGame.lastLocationName, sizeof(archiveRoomGame.lastLocationName), "%s", "South Collapse");
+        MovePlayerAndUpdate(&archiveRoomGame, SHIP_CREW_QUARTERS_X + 1, SHIP_CREW_QUARTERS_Y + 1);
+        Require(archiveRoomGame.tasks.southS1Completed,
+            "returning through Crew Quarters with the record should still count as a valid base archive hand-in");
+    }
+
+    {
+        Game archiveRoomGame;
+
+        PrepareGame(&archiveRoomGame);
+        archiveRoomGame.tasks.stage = 5;
+        archiveRoomGame.tasks.energyRepairLevel = 1;
         archiveRoomGame.tasks.southS1Completed = true;
         archiveRoomGame.tasks.southS2Started = true;
         archiveRoomGame.tasks.southS2Completed = false;
@@ -541,47 +655,47 @@ int main(void) {
                 "returning from Vent Galleries through South Collapse should still archive S2 and unlock Service Shafts");
     }
 
-    MovePlayerAndUpdate(&game, EXTERIOR_X(34), EXTERIOR_Y(68));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(35), EXTERIOR_Y(76));
     Require(game.tasks.westW2Started && !game.tasks.westW2Completed,
             "entering Survey Break after W1 should transition to W2");
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(!game.tasks.westW2Completed,
             "returning to base from Survey Break without the record should keep W2 open");
     CollectArchiveEvidence(&game.tasks, 4);
-    MovePlayerAndUpdate(&game, EXTERIOR_X(34), EXTERIOR_Y(68));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(35), EXTERIOR_Y(76));
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW2Completed,
             "returning to base from Survey Break with the record should archive W2");
-    MovePlayerAndUpdate(&game, EXTERIOR_X(44), EXTERIOR_Y(68));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(41), EXTERIOR_Y(67));
     Require(game.tasks.westW3Started && !game.tasks.westW3Completed,
             "entering Canopy Hollow after W2 should transition to W3");
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(!game.tasks.westW3Completed,
             "returning to base from Canopy Hollow without the record should keep W3 open");
     CollectArchiveEvidence(&game.tasks, 5);
-    MovePlayerAndUpdate(&game, EXTERIOR_X(44), EXTERIOR_Y(68));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(41), EXTERIOR_Y(67));
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW3Completed,
             "returning to base from Canopy Hollow with the record should archive W3");
-    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(78));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(26), EXTERIOR_Y(90));
     Require(game.tasks.westW4Started && !game.tasks.westW4Completed,
             "entering Echo Basin after W3 should transition to W4");
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(!game.tasks.westW4Completed,
             "returning to base from Echo Basin without the record should keep W4 open");
     CollectArchiveEvidence(&game.tasks, 6);
-    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(78));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(26), EXTERIOR_Y(90));
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW4Completed,
             "returning to base from Echo Basin with the record should archive W4");
-    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(88));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(45), EXTERIOR_Y(84));
     Require(game.tasks.westW5Started && !game.tasks.westW5Completed,
             "entering Last Camp after W4 should transition to W5");
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(!game.tasks.westW5Completed,
             "returning to base from Last Camp without the record should keep W5 open");
     CollectArchiveEvidence(&game.tasks, 7);
-    MovePlayerAndUpdate(&game, EXTERIOR_X(48), EXTERIOR_Y(88));
+    MovePlayerAndUpdate(&game, EXTERIOR_X(45), EXTERIOR_Y(84));
     MovePlayerAndUpdate(&game, WORKBENCH_X, WORKBENCH_Y);
     Require(game.tasks.westW5Completed,
             "returning to base from Last Camp with the record should archive W5");

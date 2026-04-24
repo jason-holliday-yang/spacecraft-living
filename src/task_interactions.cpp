@@ -14,6 +14,8 @@ void TasksRuntime_ReducePoisonAtRecovery(Player *player, float amount) {
     if (player->poison > MAX_POISON) {
         player->poison = MAX_POISON;
     }
+
+    Player_SyncPoisonStatus(player);
 }
 
 void TasksRuntime_DowngradeOxygenLeakAtRecovery(Player *player) {

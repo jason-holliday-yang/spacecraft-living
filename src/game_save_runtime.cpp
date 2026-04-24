@@ -1,5 +1,6 @@
 #include "game_session_internal.h"
 #include "task_runtime_internal.h"
+#include "task_content.h"
 
 #include <cmath>
 #include <cstring>
@@ -12,6 +13,22 @@ static float ClampFloat(float value, float minValue, float maxValue) {
         return maxValue;
     }
     return value;
+}
+
+static int CountShownMainStoryScenes(const bool *shownScenes) {
+    int count = 0;
+
+    if (shownScenes == NULL) {
+        return 0;
+    }
+
+    for (int index = 0; index < STORY_MAIN_SCENE_COUNT; index++) {
+        if (shownScenes[index]) {
+            count += 1;
+        }
+    }
+
+    return count;
 }
 
 static bool IsMonsterFootprintValid(const Monster *monster, const GameMap *map, int originX, int originY) {
@@ -240,6 +257,10 @@ void Game_BuildSaveSnapshot(const Game *game, SaveSnapshot *snapshot) {
     for (index = 0; index < game->tasks.logCount; index++) {
         snapshot->logs[index].collected = game->tasks.logs[index].collected;
     }
+    for (index = 0; index < STORY_MAIN_SCENE_COUNT; index++) {
+        snapshot->storyMainSceneShown[index] =
+            game->storySceneShown[STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY + index];
+    }
 
     CaptureClearedDynamicTiles(&game->map, snapshot);
 }
@@ -289,11 +310,25 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     game->tasks.currentEvent = (EventType)snapshot->currentEvent;
     game->tasks.cycleTimer = snapshot->cycleTimer;
     game->tasks.elapsedSeconds = snapshot->elapsedSeconds;
+    {
+        const float minElapsedForSavedDay = (float)game->tasks.dayCount * DAY_COUNT_DURATION_SECONDS;
+        float dayProgress = game->tasks.elapsedSeconds - minElapsedForSavedDay;
+
+        if (!(dayProgress >= 0.0f) || dayProgress >= DAY_COUNT_DURATION_SECONDS) {
+            dayProgress = std::fmod(game->tasks.cycleTimer, DAY_COUNT_DURATION_SECONDS);
+            if (!(dayProgress >= 0.0f)) {
+                dayProgress = 0.0f;
+            }
+        }
+        game->tasks.elapsedSeconds = minElapsedForSavedDay + dayProgress;
+        game->tasks.currentEvent = TasksContent_GetDailyEvent(game->tasks.dayCount);
+    }
     game->tasks.oxygenRepairLevel = snapshot->oxygenRepairLevel;
     game->tasks.commRepairLevel = snapshot->commRepairLevel;
     game->tasks.energyRepairLevel = snapshot->energyRepairLevel;
     game->tasks.crashClueFound = snapshot->crashClueFound;
     game->tasks.amplifierUnlocked = snapshot->amplifierUnlocked;
+    game->tasks.signalAmplifierCrafted = snapshot->hasSignalAmplifier;
     game->tasks.communicatorUnlocked = snapshot->communicatorUnlocked;
     game->tasks.bossDefeated = snapshot->bossDefeated;
     game->tasks.signalTowerActivated = snapshot->signalTowerActivated;
@@ -323,6 +358,7 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     game->tasks.monolithActivated[1] = snapshot->monolithActivated[1];
     game->tasks.monolithActivated[2] = snapshot->monolithActivated[2];
     game->tasks.monolithsLit = snapshot->monolithsLit;
+    game->tasks.shownMainStorySceneCount = CountShownMainStoryScenes(snapshot->storyMainSceneShown);
     game->tasks.ending = (GameEnding)snapshot->ending;
     for (index = 0; index < game->tasks.nodeCount; index++) {
         game->tasks.nodes[index].active = snapshot->nodes[index].active;
@@ -337,6 +373,9 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     }
     for (index = 0; index < game->tasks.logCount; index++) {
         game->tasks.logs[index].collected = snapshot->logs[index].collected;
+    }
+    for (index = 0; index < STORY_MAIN_SCENE_COUNT; index++) {
+        game->storySceneShown[STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY + index] = snapshot->storyMainSceneShown[index];
     }
     SanitizeLoadedTaskRuntimeState(game);
 
@@ -380,6 +419,7 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     game->state = game->tasks.ending == ENDING_NONE ? GAME_STATE_PLAYING : GAME_STATE_ENDING;
     game->openingSlideIndex = 0;
     game->openingCutsceneElapsed = 0.0f;
+    game->openingAwaitingFirstAdvance = false;
     Game_CloseStoryScene(game);
     Game_CloseTransientOverlays(game);
     Game_ResetCameraToPlayer(game);

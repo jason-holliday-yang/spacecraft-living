@@ -171,8 +171,13 @@ static bool IsNearLoxiTerminal(const Game *game) {
 }
 
 static bool ShouldOpenSettlementConfirm(const Game *game) {
+    const int availableEndingCount = game != NULL ? Tasks_GetAvailableEndingCount(&game->tasks) : 0;
+
     return game != NULL
-        && Tasks_CanChooseSettlement(&game->tasks)
+        && availableEndingCount > 0
+        && game->tasks.ending == ENDING_NONE
+        && game->tasks.selectedEndingRoute == ENDING_NONE
+        && game->tasks.endingArchiveReviewed
         && IsNearLoxiTerminal(game);
 }
 
@@ -306,6 +311,8 @@ bool GamePlay_HandleImmediateInput(Game *game, char *actionMessage, size_t messa
         if (Tasks_IsCommunicatorUnlocked(&game->tasks)) {
             game->communicatorOpen = true;
             game->communicatorTab = COMMUNICATOR_TAB_TASKS;
+            game->communicatorLogDetailOpen = false;
+            game->communicatorLogDetailVisibility = 0.0f;
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
         } else {
             Game_PostMessage(game, Loc_PickLiteral("Loxi link is offline. Sync with the terminal bay uplink first, then press N.",
@@ -345,7 +352,7 @@ bool GamePlay_HandleImmediateInput(Game *game, char *actionMessage, size_t messa
         if (preferredTarget == TASK_INTERACTION_LOXI_TERMINAL
             && ShouldOpenSettlementConfirm(game)) {
             game->settlementConfirmOpen = true;
-            game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_PEACEFUL;
+            game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             return true;
         }

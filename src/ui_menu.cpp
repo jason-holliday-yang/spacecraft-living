@@ -86,6 +86,55 @@ static void DrawPixelTitleText(const AssetBundle *assets, const char *text, Vect
     }
 }
 
+static void DrawMainMenuTitle(const AssetBundle *assets, int screenWidth, float scale) {
+    const char *eyebrow;
+    const char *englishTitle;
+    const char *localizedSubtitle;
+    Rectangle titlePanel;
+    Vector2 eyebrowSize;
+    Vector2 subtitleSize;
+    Color subtitleTint;
+
+    eyebrow = Loc_PickLiteral("Loxi archive // survival reconstruction", "洛希档案 // 生存复原");
+    englishTitle = "SpaceCraft Living";
+    localizedSubtitle = Loc_PickLiteral("Survival, investigation, and final choice", "异星求生");
+    subtitleTint = Loc_GetLanguage() == GAME_LANGUAGE_ZH_CN
+        ? Color{188, 233, 255, 255}
+        : Color{176, 221, 246, 255};
+
+    titlePanel = Rectangle{
+        screenWidth * 0.5f - 360.0f * scale,
+        86.0f * scale,
+        720.0f * scale,
+        190.0f * scale
+    };
+
+    DrawRectangleRounded(titlePanel, 0.18f, 10, Color{7, 16, 28, 158});
+    DrawRectangleRoundedLinesEx(titlePanel, 0.18f, 10, 1.4f, Color{130, 192, 235, 65});
+    DrawCircleGradient((int)(screenWidth * 0.5f), (int)(titlePanel.y + 82.0f * scale), 220.0f * scale, Color{98, 184, 235, 30}, Color{98, 184, 235, 0});
+
+    eyebrowSize = UIRuntime_MeasureText(assets, eyebrow, 13.5f * scale);
+    UIRuntime_DrawText(assets,
+                       eyebrow,
+                       Vector2{screenWidth * 0.5f - eyebrowSize.x * 0.5f, titlePanel.y + 26.0f * scale},
+                       13.5f * scale,
+                       Color{144, 206, 238, 255});
+
+    DrawPixelTitleText(assets,
+                       englishTitle,
+                       Vector2{screenWidth * 0.5f, titlePanel.y + 90.0f * scale},
+                       72.0f * scale,
+                       scale,
+                       Color{236, 246, 255, 255});
+
+    subtitleSize = UIRuntime_MeasureText(assets, localizedSubtitle, 28.0f * scale);
+    UIRuntime_DrawText(assets,
+                       localizedSubtitle,
+                       Vector2{screenWidth * 0.5f - subtitleSize.x * 0.5f, titlePanel.y + 130.0f * scale},
+                       28.0f * scale,
+                       subtitleTint);
+}
+
 static void DrawVolumePreviewBars(Rectangle rect, float volume) {
     int barIndex;
 
@@ -255,6 +304,7 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
     Rectangle deleteRect;
     Rectangle submitRect;
     Rectangle switchRect;
+    Rectangle exitRect;
     const char *title;
     const char *body;
     const char *submitLabel;
@@ -271,6 +321,7 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
     deleteRect = UI_GetAuthDeleteAccountRect(screenWidth, screenHeight);
     submitRect = UI_GetAuthSubmitButtonRect(screenWidth, screenHeight);
     switchRect = UI_GetAuthSwitchModeRect(screenWidth, screenHeight);
+    exitRect = UI_GetAuthExitButtonRect(screenWidth, screenHeight);
     title = mode == AUTH_SCREEN_MODE_REGISTER
         ? Loc_PickLiteral("Create Local Account", "创建本地账号")
         : Loc_PickLiteral("Local Sign-In", "账号登录");
@@ -297,6 +348,10 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
 
     UIRuntime_DrawPanel(panel, Color{8, 18, 30, 240}, Color{153, 226, 255, 78});
     UIRuntime_DrawText(assets, title, Vector2{panel.x + 52.0f * scale, panel.y + 34.0f * scale}, 36.0f * scale, WHITE);
+    UIRuntime_DrawButton(assets, exitRect, Loc_PickLiteral("Exit", "退出"), true);
+    if (selectedField == AUTH_FIELD_EXIT_GAME) {
+        DrawRectangleRoundedLinesEx(exitRect, 0.16f, 8, 2.0f, Color{255, 214, 154, 220});
+    }
     UIRuntime_DrawWrappedText(assets, body, Rectangle{panel.x + 52.0f * scale, panel.y + 82.0f * scale, panel.width - 104.0f * scale, 52.0f * scale}, 17.0f * scale, 19.0f * scale, Color{196, 214, 230, 255});
     UIRuntime_DrawText(assets, accountsHint, Vector2{panel.x + 52.0f * scale, panel.y + 136.0f * scale}, 15.0f * scale, Color{166, 255, 226, 255});
 
@@ -332,7 +387,7 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
     }
     UIRuntime_DrawWrappedText(
         assets,
-        Loc_PickLiteral("TAB switches fields. ENTER confirms.", "按 TAB 切换输入项，按 ENTER 确认。"),
+        Loc_PickLiteral("TAB switches fields. ENTER confirms. Exit is available here.", "按 TAB 切换输入项，按 ENTER 确认；此界面可直接退出游戏。"),
         Rectangle{panel.x + 52.0f * scale, panel.y + panel.height - 176.0f * scale, panel.width - 104.0f * scale, 38.0f * scale},
         14.0f * scale,
         16.0f * scale,
@@ -370,7 +425,7 @@ void UI_DrawMainMenu(const AssetBundle *assets,
     UIRuntime_DrawBackdrop(screenWidth, screenHeight, elapsedSeconds);
     DrawCircleGradient((int)(screenWidth * 0.5f - 210.0f * scale), (int)(184.0f * scale), 156.0f * scale, Color{65, 164, 214, 56}, Color{65, 164, 214, 0});
     DrawCircleGradient((int)(screenWidth * 0.5f + 210.0f * scale), (int)(188.0f * scale), 156.0f * scale, Color{110, 227, 196, 44}, Color{110, 227, 196, 0});
-    DrawPixelTitleText(assets, Loc_PickLiteral("SPACECRAFT LIVING", "飞船生存"), Vector2{screenWidth * 0.5f, 214.0f * scale}, 96.0f * scale, scale, Color{232, 248, 255, 255});
+    DrawMainMenuTitle(assets, screenWidth, scale);
 
     std::snprintf(accountBuffer, sizeof(accountBuffer), "%s", (accountName != NULL && accountName[0] != '\0') ? accountName : Loc_PickLiteral("Unknown", "未知"));
     if (hasBestScore) {
@@ -542,7 +597,8 @@ void UI_DrawDeathPopup(const Player *player, bool hasSave, const AssetBundle *as
     char deathBuffer[128];
     const char *buttonLabels[DEATH_POPUP_BUTTON_COUNT] = {
         Loc_PickLiteral("Restart", "重新开始"),
-        Loc_PickLiteral("Load", "读档")
+        Loc_PickLiteral("Load", "读档"),
+        Loc_PickLiteral("Main Menu", "主菜单")
     };
     int buttonIndex;
 
@@ -598,7 +654,9 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
                                    const TaskSystem *tasks,
                                    int screenWidth,
                                    int screenHeight,
+                                   int buttonCount,
                                    int selectedButton) {
+    (void)player;
     float scale;
     Rectangle panel;
     Rectangle bodyRect;
@@ -606,52 +664,52 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
     const char *titleText;
     const char *bodyText;
     const char *noteText;
-    const char *buttonLabels[SETTLEMENT_CONFIRM_BUTTON_COUNT] = {
-        Loc_PickLiteral("Heroic", "强行救援"),
-        Loc_PickLiteral("Peaceful", "和平救援"),
-        Loc_PickLiteral("Settlement", "异星定居"),
-        Loc_PickLiteral("Cancel", "取消")
-    };
+    const char *buttonLabels[SETTLEMENT_CONFIRM_BUTTON_COUNT] = {0};
+    const int availableEndingCount = tasks != NULL ? Tasks_GetAvailableEndingCount(tasks) : 0;
+    char singleEndingBody[320];
+    char singleEndingNote[160];
     int buttonIndex;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetSettlementConfirmPanelRect(screenWidth, screenHeight);
     bodyRect = Rectangle{panel.x + 34.0f * scale, panel.y + 96.0f * scale, panel.width - 68.0f * scale, 62.0f * scale};
     noteRect = Rectangle{panel.x + 34.0f * scale, panel.y + 166.0f * scale, panel.width - 68.0f * scale, 50.0f * scale};
-    titleText = Loc_PickLiteral("Confirm Final Route", "确认最终路线");
-    bodyText = Loc_PickLiteral("Loxi has finished the final archive review. Commit to the route you want here, before the tower or airlock turns that choice into a point of no return.",
-                               "洛希已经完成最终档案复核。请先在这里确认你要走的路线，再去触发塔楼或气闸里的不可回头步骤。");
-    if (tasks != NULL && tasks->bossDefeated) {
-        if (player != NULL && player->hasSignalAmplifier) {
-            noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful can also finish there now with the Signal Amplifier. Settlement still ends the run here at the ship.",
-                                       "强行救援现在可以直接去信号塔完成。和平救援现在也可以带着信号放大器去塔楼完成。异星定居仍会在飞船处结束本轮。");
-        } else if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
-            noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful still needs the Signal Amplifier, but the fragment set is ready for workshop assembly. Settlement still ends the run here at the ship.",
-                                       "强行救援现在可以直接去信号塔完成。和平救援仍需要信号放大器，但碎片已经齐备，可以回工坊组装。异星定居仍会在飞船处结束本轮。");
-        } else {
-            noteText = Loc_PickLiteral("Heroic can finish immediately at the Signal Tower. Peaceful still needs 3 Relic Fragments and the Signal Amplifier. Settlement still ends the run here at the ship.",
-                                       "强行救援现在可以直接去信号塔完成。和平救援仍需要先找回 3 枚遗迹碎片并制作信号放大器。异星定居仍会在飞船处结束本轮。");
-        }
-    } else if (tasks != NULL && tasks->selectedEndingRoute == ENDING_HEROIC) {
-        if (player != NULL && player->hasSignalAmplifier) {
-            noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful can still finish at the tower with the Signal Amplifier. Settlement still closes both rescue routes.",
-                                       "强行救援已经锁定为守卫战场路线。和平救援仍可以带着信号放大器去塔楼完成。异星定居仍会关闭两条救援路线。");
-        } else if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
-            noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful still needs the Signal Amplifier, but the fragment set is ready for workshop assembly. Settlement still closes both rescue routes.",
-                                       "强行救援已经锁定为守卫战场路线。和平救援仍需要信号放大器，但碎片已经齐备，可以回工坊组装。异星定居仍会关闭两条救援路线。");
-        } else {
-            noteText = Loc_PickLiteral("Heroic is already locked toward the guardian arena. Peaceful still needs 3 Relic Fragments and the Signal Amplifier. Settlement still closes both rescue routes.",
-                                       "强行救援已经锁定为守卫战场路线。和平救援仍需要先找回 3 枚遗迹碎片并制作信号放大器。异星定居仍会关闭两条救援路线。");
-        }
-    } else if (player != NULL && player->hasSignalAmplifier) {
-        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful can now finish at the tower with the Signal Amplifier. Settlement still closes both rescue routes.",
-                                   "强行救援需要进入守卫战场。和平救援现在可以带着信号放大器去塔楼完成。异星定居仍会关闭两条救援路线。");
-    } else if (player != NULL && player->resources[RESOURCE_RELIC_FRAGMENT] >= 3) {
-        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful still needs the Signal Amplifier, but the fragment set is ready for workshop assembly. Settlement still closes both rescue routes and ends the run at the ship.",
-                                   "强行救援需要进入守卫战场。和平救援仍需要信号放大器，但碎片已经齐备，可以回工坊组装。异星定居仍会关闭两条救援路线，并在飞船处结束本轮。");
+    if (availableEndingCount <= 1) {
+        GameEnding onlyEnding = tasks != NULL ? Tasks_GetAvailableEndingAt(tasks, 0) : ENDING_NONE;
+        const char *onlyEndingTitle = Tasks_GetEndingTitle(onlyEnding);
+
+        titleText = Loc_PickLiteral("Confirm Ending", "确认结局");
+        std::snprintf(singleEndingBody,
+                      sizeof(singleEndingBody),
+                      Loc_PickLiteral("Loxi's archive review now supports only one final answer: %s. Confirming below will lock that route, but you still need to carry out its final in-world step before the run ends.",
+                                      "洛希完成档案复核后，目前只剩下一个被证据支持的终局回答：%s。若在下方确认，只会锁定这条路线；你仍需完成它在世界里的最后一步，本轮才会结束。"),
+                      onlyEndingTitle);
+        std::snprintf(singleEndingNote,
+                      sizeof(singleEndingNote),
+                      Loc_PickLiteral("Route to confirm: %s", "将要确认的路线：%s"),
+                      onlyEndingTitle);
+        bodyText = singleEndingBody;
+        noteText = singleEndingNote;
+        buttonLabels[0] = onlyEnding != ENDING_NONE ? onlyEndingTitle : Loc_PickLiteral("Confirm", "确认");
+        buttonLabels[1] = Loc_PickLiteral("Cancel", "取消");
     } else {
-        noteText = Loc_PickLiteral("Heroic requires the guardian arena. Peaceful needs 3 Relic Fragments and the Signal Amplifier. Settlement still closes both rescue routes and ends the run at the ship.",
-                                   "强行救援需要进入守卫战场。和平救援需要先找回 3 枚遗迹碎片并制作信号放大器。异星定居仍会关闭两条救援路线，并在飞船处结束本轮。");
+        titleText = Loc_PickLiteral("Choose Final Ending", "选择最终结局");
+        bodyText = Loc_PickLiteral("Loxi has assembled enough route evidence to support multiple endings. Choose the route you want to commit to here, then carry it through in the world before the run actually ends.",
+                                   "洛希已经拼出了足够的路线证据，当前存在多个可成立的结局。请在这里先锁定你要执行的路线，再回到世界里把它真正完成，本轮才会结束。");
+        noteText = Loc_PickLiteral("Only endings supported by the logs, route archive, and any required world-state conditions are shown here.",
+                                   "这里仅显示那些已经被你实际回收的日志、路线档案以及必要世界状态共同支撑起来的结局。");
+        for (buttonIndex = 0; buttonIndex < availableEndingCount && buttonIndex < SETTLEMENT_CONFIRM_BUTTON_COUNT - 1; buttonIndex++) {
+            buttonLabels[buttonIndex] = Tasks_GetEndingTitle(Tasks_GetAvailableEndingAt(tasks, buttonIndex));
+        }
+        buttonLabels[availableEndingCount] = Loc_PickLiteral("Cancel", "取消");
+    }
+
+    for (buttonIndex = 0; buttonIndex < buttonCount && buttonIndex < SETTLEMENT_CONFIRM_BUTTON_COUNT; buttonIndex++) {
+        if (buttonLabels[buttonIndex] == NULL) {
+            buttonLabels[buttonIndex] = buttonIndex == buttonCount - 1
+                ? Loc_PickLiteral("Cancel", "取消")
+                : Loc_PickLiteral("Unavailable", "不可用");
+        }
     }
 
     DrawRectangle(0, 0, screenWidth, screenHeight, Color{6, 10, 18, 200});
@@ -661,10 +719,10 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
     UIRuntime_DrawWrappedText(assets, bodyText, bodyRect, 18.0f * scale, 22.0f * scale, Color{226, 235, 244, 255});
     UIRuntime_DrawWrappedText(assets, noteText, noteRect, 16.0f * scale, 19.0f * scale, Color{255, 214, 154, 255});
 
-    for (buttonIndex = 0; buttonIndex < SETTLEMENT_CONFIRM_BUTTON_COUNT; buttonIndex++) {
+    for (buttonIndex = 0; buttonIndex < buttonCount && buttonIndex < SETTLEMENT_CONFIRM_BUTTON_COUNT; buttonIndex++) {
         Rectangle buttonRect;
 
-        buttonRect = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, buttonIndex);
+        buttonRect = UI_GetSettlementConfirmButtonRect(screenWidth, screenHeight, buttonIndex, buttonCount);
         UIRuntime_DrawButton(assets, buttonRect, buttonLabels[buttonIndex], true);
         if (buttonIndex == selectedButton) {
             DrawRectangleRoundedLinesEx(buttonRect, 0.16f, 8, 2.0f, Color{255, 214, 154, 220});

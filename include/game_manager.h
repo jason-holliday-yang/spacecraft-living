@@ -37,12 +37,14 @@ typedef enum ScreenTransitionAction {
     SCREEN_TRANSITION_TOGGLE_AUTH_MODE,
     SCREEN_TRANSITION_AUTH_SUCCESS,
     SCREEN_TRANSITION_APPLY_LANGUAGE,
-    SCREEN_TRANSITION_SLEEP_REST
+    SCREEN_TRANSITION_SLEEP_REST,
+    SCREEN_TRANSITION_ENTER_ENDING
 } ScreenTransitionAction;
 
 typedef enum CommunicatorTab {
     COMMUNICATOR_TAB_TASKS = 0,
     COMMUNICATOR_TAB_LOGS,
+    COMMUNICATOR_TAB_STORY,
     COMMUNICATOR_TAB_COUNT
 } CommunicatorTab;
 
@@ -101,6 +103,7 @@ typedef struct Game {
     char authPassword[SAVE_ACCOUNT_PASSWORD_MAX];
     char authMessage[SAVE_AUTH_MESSAGE_MAX];
     int openingSlideIndex;
+    bool openingAwaitingFirstAdvance;
     float storySceneElapsed;
     bool narrativeTransitionActive;
     float narrativeTransitionElapsed;
@@ -113,6 +116,10 @@ typedef struct Game {
     GameLanguage pendingLanguage;
     int selectedLogIndex;
     int communicatorFirstVisibleLogIndex;
+    int selectedStorySceneIndex;
+    int communicatorFirstVisibleStorySceneIndex;
+    bool communicatorLogDetailOpen;
+    float communicatorLogDetailVisibility;
     bool showDeathPopup;
     int deathPopupSelection;
     bool settlementConfirmOpen;

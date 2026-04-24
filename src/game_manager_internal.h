@@ -9,6 +9,8 @@ SCL_EXTERN_C_BEGIN
 
 void Game_PostMessage(Game *game, const char *text, float duration);
 void Game_ClearMessage(Game *game);
+void Game_AdvanceWorldClock(Game *game, float deltaTime);
+void Game_MaybePostDayAdvanceMessage(Game *game, int previousDayCount);
 void Game_TrySaveSettings(Game *game);
 void Game_BeginScreenTransition(Game *game, ScreenTransitionAction action, int slotIndex);
 void Game_BeginLanguageTransition(Game *game, GameLanguage language);
@@ -16,6 +18,7 @@ void Game_ApplyLanguage(Game *game, GameLanguage language);
 void Game_ToggleAuthMode(Game *game);
 void Game_LogoutToAuthScreen(Game *game);
 void Game_CompleteAuthSuccess(Game *game);
+void Game_EnterEndingState(Game *game);
 bool Game_OpenStoryScene(Game *game, StoryScene scene);
 void Game_CloseStoryScene(Game *game);
 AudioScene Game_SelectAudioScene(const Game *game);

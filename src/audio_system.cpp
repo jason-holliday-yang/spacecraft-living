@@ -184,6 +184,26 @@ static OptionalMusic *GetSceneMusic(AudioManager *audio, AudioScene scene, int v
     return primary;
 }
 
+static int GetDefaultSceneVariant(AudioScene scene) {
+    switch (scene) {
+        case AUDIO_SCENE_FOREST_ROUTE:
+        case AUDIO_SCENE_SWAMP_DEEP:
+        case AUDIO_SCENE_RUINS_FACILITY:
+        case AUDIO_SCENE_BOSS_ARENA:
+            return 1;
+        case AUDIO_SCENE_NONE:
+        case AUDIO_SCENE_MENU:
+        case AUDIO_SCENE_BASE:
+        case AUDIO_SCENE_FOREST:
+        case AUDIO_SCENE_SWAMP:
+        case AUDIO_SCENE_RUINS:
+        case AUDIO_SCENE_BOSS:
+        case AUDIO_SCENE_ENDING:
+        default:
+            return 0;
+    }
+}
+
 static void StopSceneMusic(AudioManager *audio, AudioScene scene) {
     OptionalMusic *primary;
     OptionalMusic *secondary;
@@ -271,39 +291,39 @@ void Audio_Init(AudioManager *audio) {
         return;
     }
 
-    audio->confirm = LoadOptionalSoundAsset("resources/audio/ui_confirm.wav");
-    audio->open = LoadOptionalSoundAsset("resources/audio/ui_open.wav");
-    audio->close = LoadOptionalSoundAsset("resources/audio/ui_close.wav");
-    audio->warning = LoadOptionalSoundAsset("resources/audio/ui_warning.wav");
-    audio->craft = LoadOptionalSoundAsset("resources/audio/ui_craft.wav");
-    audio->collect = LoadOptionalSoundAsset("resources/audio/ui_collect.wav");
-    audio->log = LoadOptionalSoundAsset("resources/audio/ui_log.wav");
-    audio->repair = LoadOptionalSoundAsset("resources/audio/ui_repair.wav");
-    audio->hurt = LoadOptionalSoundAsset("resources/audio/combat_hurt.wav");
-    audio->melee = LoadOptionalSoundAsset("resources/audio/combat_melee.wav");
-    audio->monster = LoadOptionalSoundAsset("resources/audio/monster_roar.wav");
-    audio->monolith = LoadOptionalSoundAsset("resources/audio/ambient_monolith.wav");
-    audio->stepForest = LoadOptionalSoundAsset("resources/audio/step_forest.wav");
-    audio->stepMetal = LoadOptionalSoundAsset("resources/audio/step_metal.wav");
-    audio->stepSwamp = LoadOptionalSoundAsset("resources/audio/step_swamp.wav");
-    audio->laser = LoadOptionalSoundAsset("resources/audio/combat_laser.wav");
-    audio->ending = LoadOptionalSoundAsset("resources/audio/ending_heroic.wav");
-    audio->endingPeaceful = LoadOptionalSoundAsset("resources/audio/ending_peaceful.wav");
-    audio->endingSettlement = LoadOptionalSoundAsset("resources/audio/ending_settlement.wav");
-    audio->menuLoop = LoadOptionalMusicAsset("resources/audio/bgm_menu_1.ogg");
-    audio->menuLoopAlt = LoadOptionalMusicAsset("resources/audio/bgm_menu_2.ogg");
-    audio->baseLoop = LoadOptionalMusicAsset("resources/audio/bgm_base_1.ogg");
-    audio->baseLoopAlt = LoadOptionalMusicAsset("resources/audio/bgm_base_2.ogg");
-    audio->forestLoop = LoadOptionalMusicAsset("resources/audio/bgm_forest_1.ogg");
-    audio->forestRouteLoop = LoadOptionalMusicAsset("resources/audio/bgm_forest_2.ogg");
-    audio->swampLoop = LoadOptionalMusicAsset("resources/audio/bgm_swamp_1.ogg");
-    audio->swampDeepLoop = LoadOptionalMusicAsset("resources/audio/bgm_swamp_2.ogg");
-    audio->ruinsLoop = LoadOptionalMusicAsset("resources/audio/bgm_ruins_1.ogg");
-    audio->ruinsFacilityLoop = LoadOptionalMusicAsset("resources/audio/bgm_ruins_2.ogg");
-    audio->bossLoop = LoadOptionalMusicAsset("resources/audio/bgm_boss_1.ogg");
-    audio->bossArenaLoop = LoadOptionalMusicAsset("resources/audio/bgm_boss_2.ogg");
-    audio->endingLoop = LoadOptionalMusicAsset("resources/audio/bgm_endings_1.ogg");
-    audio->endingLoopAlt = LoadOptionalMusicAsset("resources/audio/bgm_endings_2.ogg");
+    audio->confirm = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_confirm.wav");
+    audio->open = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_open.wav");
+    audio->close = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_close.wav");
+    audio->warning = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_warning.wav");
+    audio->craft = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_craft.wav");
+    audio->collect = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_collect.wav");
+    audio->log = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_log.wav");
+    audio->repair = LoadOptionalSoundAsset("resources/audio/sfx/ui/ui_repair.wav");
+    audio->hurt = LoadOptionalSoundAsset("resources/audio/sfx/combat/combat_hurt.wav");
+    audio->melee = LoadOptionalSoundAsset("resources/audio/sfx/combat/combat_melee.wav");
+    audio->monster = LoadOptionalSoundAsset("resources/audio/sfx/combat/monster_roar.wav");
+    audio->monolith = LoadOptionalSoundAsset("resources/audio/sfx/ambient/ambient_monolith.wav");
+    audio->stepForest = LoadOptionalSoundAsset("resources/audio/sfx/footsteps/step_forest.wav");
+    audio->stepMetal = LoadOptionalSoundAsset("resources/audio/sfx/footsteps/step_metal.wav");
+    audio->stepSwamp = LoadOptionalSoundAsset("resources/audio/sfx/footsteps/step_swamp.wav");
+    audio->laser = LoadOptionalSoundAsset("resources/audio/sfx/combat/combat_laser.wav");
+    audio->ending = LoadOptionalSoundAsset("resources/audio/sfx/endings/ending_heroic.wav");
+    audio->endingPeaceful = LoadOptionalSoundAsset("resources/audio/sfx/endings/ending_peaceful.wav");
+    audio->endingSettlement = LoadOptionalSoundAsset("resources/audio/sfx/endings/ending_settlement.wav");
+    audio->menuLoop = LoadOptionalMusicAsset("resources/audio/music/menu/bgm_menu_1.ogg");
+    audio->menuLoopAlt = LoadOptionalMusicAsset("resources/audio/music/menu/bgm_menu_2.ogg");
+    audio->baseLoop = LoadOptionalMusicAsset("resources/audio/music/base/bgm_base_1.ogg");
+    audio->baseLoopAlt = LoadOptionalMusicAsset("resources/audio/music/base/bgm_base_2.ogg");
+    audio->forestLoop = LoadOptionalMusicAsset("resources/audio/music/forest/bgm_forest_1.ogg");
+    audio->forestRouteLoop = LoadOptionalMusicAsset("resources/audio/music/forest/bgm_forest_2.ogg");
+    audio->swampLoop = LoadOptionalMusicAsset("resources/audio/music/swamp/bgm_swamp_1.ogg");
+    audio->swampDeepLoop = LoadOptionalMusicAsset("resources/audio/music/swamp/bgm_swamp_2.ogg");
+    audio->ruinsLoop = LoadOptionalMusicAsset("resources/audio/music/ruins/bgm_ruins_1.ogg");
+    audio->ruinsFacilityLoop = LoadOptionalMusicAsset("resources/audio/music/ruins/bgm_ruins_2.ogg");
+    audio->bossLoop = LoadOptionalMusicAsset("resources/audio/music/boss/bgm_boss_1.ogg");
+    audio->bossArenaLoop = LoadOptionalMusicAsset("resources/audio/music/boss/bgm_boss_2.ogg");
+    audio->endingLoop = LoadOptionalMusicAsset("resources/audio/music/endings/bgm_endings_1.ogg");
+    audio->endingLoopAlt = LoadOptionalMusicAsset("resources/audio/music/endings/bgm_endings_2.ogg");
     audio->masterVolume = 1.0f;
     audio->musicVolume = 1.0f;
     audio->sfxVolume = 1.0f;
@@ -387,7 +407,7 @@ void Audio_Update(AudioManager *audio) {
             audio->activeScene = audio->requestedScene;
             audio->pendingScene = AUDIO_SCENE_NONE;
             audio->activeSceneStopped = false;
-            audio->activeSceneVariant = 0;
+            audio->activeSceneVariant = GetDefaultSceneVariant(audio->activeScene);
             audio->pendingSceneVariant = 0;
             audio->sceneTransitionTimer = 0.0f;
             if (audio->activeScene != AUDIO_SCENE_NONE) {
@@ -432,6 +452,7 @@ void Audio_Update(AudioManager *audio) {
             audio->pendingScene = AUDIO_SCENE_NONE;
             audio->pendingSceneVariant = 0;
             if (audio->requestedScene != AUDIO_SCENE_NONE) {
+                audio->pendingSceneVariant = GetDefaultSceneVariant(audio->requestedScene);
                 PlaySceneMusic(audio, audio->requestedScene, audio->pendingSceneVariant, 0.0f);
                 audio->pendingScene = audio->requestedScene;
             }

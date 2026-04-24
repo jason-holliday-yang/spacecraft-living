@@ -17,6 +17,9 @@
 | Portable Communicator | 便携终端 | 玩家打开任务与引导信息的界面 |
 | Main Archive | 主线档案 | 推进终局选择所需的主线记录 |
 | Supplemental Archive | 补充档案 | 补充人物、设施与背景细节的记录 |
+| Archive Review | 归档复核 | `Stage 7` 在洛希终端先执行的档案复核动作 |
+| Route Confirmation | 路线确认 | 归档复核后的正式终局路线选择 |
+| Loxi Synthesis | 洛希综合摘要 | 仅写作层 / 表现层预留，不是当前运行时 UI 的第三种正式档案分类 |
 | Signal Tower | 信号塔 | 终局执行区域的关键设施 |
 | guardian | 守卫 | 英雄路线需要面对的最终守卫 |
 | monolith | 石碑 | 北线遗迹中的共鸣节点 |
@@ -139,3 +142,4 @@
 - 文档里第一次出现核心术语时，推荐写成 `中文（English）` 或 `English（中文）`
 - 运行时按钮、背包、状态名、地点名等短文本，以中文定名或英文本体直接显示，不再混写旧译名
 - 如果某处必须保留英文开发代号，也应确保附近能看到对应中文名
+- 当前运行时正式档案分类只有 `Main Archive / Supplemental Archive`；`Loxi Synthesis` 仅用于写作层或表现层提案。

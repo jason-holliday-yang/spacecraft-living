@@ -18,6 +18,7 @@ int main(void) {
     Player player;
     PlayerStatusType statuses[PLAYER_STATUS_COUNT];
     char tooltip[512];
+    char message[256];
     int count;
 
     Player_Init(&player);
@@ -69,6 +70,29 @@ int main(void) {
     count = Player_CollectActiveStatuses(&player, statuses, PLAYER_STATUS_COUNT);
     Require(count == 0,
             "clearing statuses should leave the active-status list empty");
+
+    player.poison = 38.0f;
+    Player_SetStatus(&player, PLAYER_STATUS_POISONED, 2, 12.0f, 38.0f);
+    player.resources[RESOURCE_SPECIAL_FUNGUS] = 1;
+    memset(message, 0, sizeof(message));
+    Require(Player_UseSelectedConsumable(&player, RESOURCE_SPECIAL_FUNGUS, message, (int)sizeof(message)),
+            "special fungus should be usable as a selected consumable");
+    Require(player.poison == 20.0f,
+            "special fungus should reduce poison immediately");
+    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
+                && Player_GetStatusEffect(&player, PLAYER_STATUS_POISONED)->level == 1,
+            "poison status should downgrade immediately when poison drops into a lower tier");
+
+    player.poison = 52.0f;
+    Player_SetStatus(&player, PLAYER_STATUS_POISONED, 3, 12.0f, 52.0f);
+    player.resources[RESOURCE_CALM_MUSHROOM] = 1;
+    memset(message, 0, sizeof(message));
+    Require(Player_UseSelectedConsumable(&player, RESOURCE_CALM_MUSHROOM, message, (int)sizeof(message)),
+            "calming mushroom should be usable as a selected consumable");
+    Require(player.poison == 0.0f,
+            "calming mushroom should fully clear poison once it pushes the value into the clear range");
+    Require(!Player_HasStatus(&player, PLAYER_STATUS_POISONED),
+            "poison status should clear immediately when poison is purged");
 
     puts("status_system smoke ok");
     return 0;

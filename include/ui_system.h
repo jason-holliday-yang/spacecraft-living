@@ -48,7 +48,8 @@ typedef enum AuthField {
     AUTH_FIELD_TOGGLE_PASSWORD,
     AUTH_FIELD_DELETE_ACCOUNT,
     AUTH_FIELD_SUBMIT,
-    AUTH_FIELD_SWITCH_MODE
+    AUTH_FIELD_SWITCH_MODE,
+    AUTH_FIELD_EXIT_GAME
 } AuthField;
 
 typedef enum PauseMenuButton {
@@ -63,6 +64,7 @@ typedef enum PauseMenuButton {
 typedef enum DeathPopupButton {
     DEATH_POPUP_BUTTON_RESTART = 0,
     DEATH_POPUP_BUTTON_LOAD,
+    DEATH_POPUP_BUTTON_MENU,
     DEATH_POPUP_BUTTON_COUNT
 } DeathPopupButton;
 
@@ -81,28 +83,36 @@ typedef enum SettlementConfirmButton {
 
 typedef enum StoryScene {
     STORY_SCENE_NONE = 0,
-    STORY_SCENE_MAIN_OXYGEN_PATCH,
-    STORY_SCENE_MAIN_OXYGEN_RESTORED,
-    STORY_SCENE_MAIN_LOXI_SYNC,
-    STORY_SCENE_MAIN_AIRLOCK_OPEN,
-    STORY_SCENE_MAIN_COMM_RELAY,
-    STORY_SCENE_MAIN_CRASH_CLUE,
-    STORY_SCENE_MAIN_ENERGY_RESTORED,
-    STORY_SCENE_MAIN_LOXI_ANALYSIS,
-    STORY_SCENE_MAIN_MONOLITH_AWAKEN,
-    STORY_SCENE_MAIN_MONOLITH_SOLVED,
-    STORY_SCENE_MAIN_BOSS_FALL,
-    STORY_SCENE_MAIN_SIGNAL_TOWER_HEROIC,
-    STORY_SCENE_MAIN_SIGNAL_TOWER_PEACEFUL,
-    STORY_SCENE_MAIN_ECHO_BASIN_LOCK,
-    STORY_SCENE_MAIN_LOXI_ROUTE_REWRITE,
-    STORY_SCENE_MAIN_LAST_CAMP_ARCHIVE,
-    STORY_SCENE_MAIN_PURIFIER_RING_BOOT,
-    STORY_SCENE_MAIN_GLOBAL_RISK_DROP,
-    STORY_SCENE_MAIN_ROOT_VAULT_CORE,
-    STORY_SCENE_MAIN_TRACE_CORRELATION,
-    STORY_SCENE_MAIN_LOXI_SYNC_REWRITE,
-    STORY_SCENE_MAIN_FINAL_STANCE,
+    STORY_SCENE_MAIN_AIR_FOR_ONE_MORE_DAY,
+    STORY_SCENE_MAIN_OXYGEN_CYCLE_RESTORED,
+    STORY_SCENE_MAIN_LOXI_FULL_SYNC,
+    STORY_SCENE_MAIN_AIRLOCK_OPENING,
+    STORY_SCENE_MAIN_SIGNAL_ANSWERS_BACK,
+    STORY_SCENE_MAIN_CRASH_NOT_ACCIDENT,
+    STORY_SCENE_MAIN_DEEP_SCAN_ONLINE,
+    STORY_SCENE_MAIN_RELIC_PATTERN_DECODE,
+    STORY_SCENE_MAIN_EAST_WRECK_CONFIRMATION,
+    STORY_SCENE_MAIN_BASIN_ACCESS_QUALIFICATION,
+    STORY_SCENE_MAIN_WEST_ROUTE_CONFIRMED,
+    STORY_SCENE_MAIN_SURVEY_BREAK_RELAY,
+    STORY_SCENE_MAIN_CANOPY_HANDOFF,
+    STORY_SCENE_MAIN_ECHO_BASIN_RECONSTRUCTION,
+    STORY_SCENE_MAIN_LAST_CAMP_POSITIONS,
+    STORY_SCENE_MAIN_SOUTH_FACILITY_WAKES,
+    STORY_SCENE_MAIN_VENT_NETWORK_CALIBRATED,
+    STORY_SCENE_MAIN_SERVICE_SHAFT_BACKBONE,
+    STORY_SCENE_MAIN_PURIFIER_RING_SEQUENCE,
+    STORY_SCENE_MAIN_ROOT_VAULT_TRUTH,
+    STORY_SCENE_MAIN_WEST_SOUTH_CORRELATION,
+    STORY_SCENE_MAIN_LOXI_CONCLUSION_REWRITE,
+    STORY_SCENE_MAIN_MONOLITH_TRUE_ROLE,
+    STORY_SCENE_MAIN_NORTH_ROUTE_COMMITMENT,
+    STORY_SCENE_MAIN_TOWER_NOT_BUTTON,
+    STORY_SCENE_MAIN_THREE_COSTS_REVEALED,
+    STORY_SCENE_MAIN_ACTION_DECLARATION,
+    STORY_SCENE_MAIN_HEROIC_ROUTE_COMMITMENT,
+    STORY_SCENE_MAIN_PEACEFUL_ROUTE_COMMITMENT,
+    STORY_SCENE_MAIN_SETTLEMENT_ROUTE_COMMITMENT,
     STORY_SCENE_LOG_THE_CRASH,
     STORY_SCENE_LOG_MISSING_CREW,
     STORY_SCENE_LOG_ALIEN_ECOLOGY,
@@ -128,6 +138,7 @@ Rectangle UI_GetAuthPasswordToggleRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthDeleteAccountRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthSubmitButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthSwitchModeRect(int screenWidth, int screenHeight);
+Rectangle UI_GetAuthExitButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetPauseMenuPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetPauseMenuButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 Rectangle UI_GetDeathPopupButtonRect(int screenWidth, int screenHeight, int buttonIndex);
@@ -142,6 +153,9 @@ Rectangle UI_GetCommunicatorOverlayRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorTabRect(int screenWidth, int screenHeight, int tabIndex);
 Rectangle UI_GetCommunicatorLogListRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorLogContentRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorLogImagePanelRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorLogImageRect(int screenWidth, int screenHeight);
+Rectangle UI_GetCommunicatorLogDetailOverlayRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorVisibleLogEntryRect(int screenWidth, int screenHeight, int visibleIndex);
 int UI_GetCommunicatorVisibleLogCount(int screenWidth, int screenHeight);
 int UI_ClampCommunicatorFirstVisibleLogIndex(int screenWidth, int screenHeight, int firstVisibleLogIndex, int totalLogCount);
@@ -156,7 +170,7 @@ Rectangle UI_GetSettingsLanguageButtonRect(int screenWidth, int screenHeight, in
 Rectangle UI_GetSettingsAccountButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex);
 Rectangle UI_GetSettlementConfirmPanelRect(int screenWidth, int screenHeight);
-Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex);
+Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex, int buttonCount);
 Rectangle UI_GetAccountDeleteConfirmPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAccountDeleteConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage *message, const AssetBundle *assets, int screenWidth, int screenHeight);
@@ -180,6 +194,7 @@ void UI_DrawMainMenu(const AssetBundle *assets,
                      int screenWidth,
                      int screenHeight,
                      float elapsedSeconds);
+void UI_DrawOpeningStandby(const AssetBundle *assets, bool showContinueHint, int screenWidth, int screenHeight, float elapsedSeconds);
 void UI_DrawOpeningCutscene(const AssetBundle *assets, int slideIndex, float slideElapsed, int screenWidth, int screenHeight);
 void UI_DrawStoryScene(const AssetBundle *assets, StoryScene scene, float sceneElapsed, int screenWidth, int screenHeight);
 void UI_DrawPauseMenu(const AssetBundle *assets, int screenWidth, int screenHeight);
@@ -194,9 +209,13 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
 void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, const Player *player, int selectedRecipe, int screenWidth, int screenHeight);
 void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
                                 const TaskSystem *tasks,
+                                const bool *storySceneShown,
                                 int selectedTab,
                                 int selectedLog,
                                 int firstVisibleLog,
+                                int selectedStoryScene,
+                                int firstVisibleStoryScene,
+                                float detailVisibility,
                                 int screenWidth,
                                 int screenHeight);
 void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHeight);
@@ -207,6 +226,7 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
                                    const TaskSystem *tasks,
                                    int screenWidth,
                                    int screenHeight,
+                                   int buttonCount,
                                    int selectedButton);
 void UI_DrawAccountDeleteConfirmPopup(const AssetBundle *assets,
                                       const char *accountName,
