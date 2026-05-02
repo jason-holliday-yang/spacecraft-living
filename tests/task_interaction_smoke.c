@@ -4,6 +4,7 @@
 #include "task_system.h"
 #include "../src/task_runtime_internal.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -372,13 +373,15 @@ static bool IsReasonableNodeArea(const ResourceNode *node) {
         case RESOURCE_PROTECTIVE_FIBER:
             return node->area == MAP_AREA_SWAMP_DEEP
                 || node->area == MAP_AREA_SWAMP_OUTER
-                || node->area == MAP_AREA_FOREST;
+                || node->area == MAP_AREA_FOREST
+                || node->area == MAP_AREA_RUINS;
         case RESOURCE_ALIEN_VINE:
         case RESOURCE_SHELL_FRUIT:
         case RESOURCE_JUNK_METAL:
             return node->area == MAP_AREA_SWAMP_OUTER
                 || node->area == MAP_AREA_SWAMP_DEEP
-                || node->area == MAP_AREA_FOREST;
+                || node->area == MAP_AREA_FOREST
+                || node->area == MAP_AREA_RUINS;
         case RESOURCE_WOOD:
         case RESOURCE_METAL_SCRAP:
         case RESOURCE_ORE:
@@ -387,6 +390,7 @@ static bool IsReasonableNodeArea(const ResourceNode *node) {
         case RESOURCE_SPECIAL_FUNGUS:
             return node->area == MAP_AREA_BASE
                 || node->area == MAP_AREA_FOREST
+                || node->area == MAP_AREA_RUINS
                 || node->area == MAP_AREA_SWAMP_OUTER
                 || node->area == MAP_AREA_SWAMP_DEEP;
         case RESOURCE_ENERGY_CORE:
@@ -412,7 +416,8 @@ static bool IsReasonableMonsterArea(const Monster *monster) {
         case MONSTER_FOG_WORM:
             return monster->area == MAP_AREA_SWAMP_DEEP
                 || monster->area == MAP_AREA_SWAMP_OUTER
-                || monster->area == MAP_AREA_FOREST;
+                || monster->area == MAP_AREA_FOREST
+                || monster->area == MAP_AREA_RUINS;
         case MONSTER_THORN_LARVA:
         case MONSTER_WING_BUG:
         case MONSTER_RAPTOR:
@@ -687,20 +692,36 @@ int main(void) {
     Player_ClearAllStatuses(&player);
 
     tasks.stage = 7;
-    for (int index = 0; index < tasks.monsterCount; index++) {
-        if (tasks.monsters[index].type == MONSTER_FINAL_BOSS) {
-            tasks.monsters[index].health = tasks.monsters[index].maxHealth * 0.69f;
-            tasks.monsters[index].phaseTriggered = false;
-            break;
+    {
+        int relicGuardsBefore;
+        int northwestMonstersBefore;
+        Monster *boss;
+
+        relicGuardsBefore = CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD);
+        northwestMonstersBefore = CountActiveMonstersInLocation(&tasks, "Northwest Ruins");
+        boss = NULL;
+        for (int index = 0; index < tasks.monsterCount; index++) {
+            if (tasks.monsters[index].type == MONSTER_FINAL_BOSS) {
+                boss = &tasks.monsters[index];
+                break;
+            }
         }
+        Require(boss != NULL,
+                "final boss should exist for northwest ruins combat verification");
+        boss->health = boss->maxHealth * 0.69f;
+        boss->attackTimer = 0.0f;
+        boss->currentAttack = BOSS_ATTACK_NONE;
+        boss->phaseTriggered = false;
+        player.gridX = boss->gridX + MONSTER_FOOTPRINT_SIZE + 3;
+        player.gridY = boss->gridY;
+        Tasks_Update(&tasks, &map, &player, 0.0f);
+        Require(boss->currentAttack == BOSS_ATTACK_CHARGE && boss->attackTelegraph > 0.0f,
+                "boss phase two should now create a readable line-lock attack at range");
+        Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) == relicGuardsBefore,
+                "boss phase changes should no longer summon additional relic guards into the northwest ruins fight");
+        Require(CountActiveMonstersInLocation(&tasks, "Northwest Ruins") == northwestMonstersBefore,
+                "northwest ruins fight should stay focused on the boss instead of gaining reinforcements");
     }
-    player.gridX = EXTERIOR_X(84);
-    player.gridY = EXTERIOR_Y(20);
-    Tasks_Update(&tasks, &map, &player, 0.0f);
-    Require(CountMonstersOfType(&tasks, MONSTER_RELIC_GUARD) >= 2,
-            "boss phase changes should now be able to summon additional relic guards into the northwest ruins fight");
-    Require(CountActiveMonstersInLocation(&tasks, "Northwest Ruins") >= 2,
-            "northwest ruins fight should gain at least one reinforcement once the boss enters its later phase");
     RequireValidSpawnPlacements(&map, &tasks);
     tasks.stage = 1;
 
@@ -973,8 +994,9 @@ int main(void) {
             "final monolith interaction should complete the sequence");
     Require(tasks.monolithsLit == 3,
             "solving the monolith sequence should light all monoliths");
-    Require((strstr(message, "hit harder") != NULL || strstr(message, "30% more damage") != NULL)
-                && strstr(message, "heroic path") != NULL,
+    Require(strstr(message, "more manageable") != NULL
+                && strstr(message, "bleeds less oxygen") != NULL
+                && strstr(message, "plan instead of a gamble") != NULL,
             "solving the monolith sequence should explain the real combat bonus");
 
     player.gridX = SIGNAL_TOWER_X - 1;
@@ -1067,20 +1089,14 @@ int main(void) {
     player.gridY = SHIP_CREW_QUARTERS_Y + 2;
     player.health = 27.0f;
     player.oxygen = 22.0f;
-    player.stamina = 11.0f;
-    player.pressure = 58.0f;
     player.poison = 18.0f;
     memset(message, 0, sizeof(message));
     Require(TasksRuntime_HandleShipInteraction(&tasks, &map, &player, TASK_INTERACTION_NONE, message, sizeof(message)),
             "crew quarters interaction should still provide the ship rest action");
     Require(player.health == Player_GetMaxHealth(&player),
             "crew quarters rest should now fully restore health");
-    Require(player.oxygen > 22.0f && player.oxygen < MAX_OXYGEN,
-            "crew quarters rest should still stop short of a full oxygen refill");
-    Require(player.stamina > 11.0f,
-            "crew quarters rest should still restore stamina");
-    Require(player.pressure == INITIAL_PRESSURE,
-            "crew quarters rest should still clear pressure");
+    Require(fabsf(player.oxygen - 22.0f) < 0.001f,
+            "crew quarters rest should no longer refill oxygen");
     Require(strstr(message, "fully recover your health") != NULL || strstr(message, "生命值完全恢复") != NULL,
             "crew quarters rest text should now explain the full-health recovery role");
 
@@ -1092,8 +1108,6 @@ int main(void) {
     player.health = 52.0f;
     player.oxygen = 14.0f;
     player.poison = 36.0f;
-    player.pressure = 72.0f;
-    player.stamina = 24.0f;
     Player_SetStatus(&player, PLAYER_STATUS_OXYGEN_LEAK, 2, 30.0f, 1.4f);
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
@@ -1106,12 +1120,8 @@ int main(void) {
             "field camp interaction should remain a partial recovery point instead of a full reset");
     Require(player.oxygen > 14.0f && player.oxygen < MAX_OXYGEN,
             "field camp interaction should restore oxygen without fully refilling it");
-    Require(player.poison < 36.0f,
-            "field camp interaction should relieve some poison without acting like full base treatment");
-    Require(player.pressure <= 40.0f,
-            "field camp interaction should reduce pressure to the intended cap");
-    Require(player.stamina > 24.0f,
-            "field camp interaction should restore stamina");
+    Require(player.poison == 36.0f,
+            "field camp interaction should no longer detox poison directly");
     Require(Player_HasStatus(&player, PLAYER_STATUS_CAMP_RECOVERY),
             "field camp interaction should grant the camp recovery status");
     Require(!Player_HasStatus(&player, PLAYER_STATUS_OXYGEN_LEAK)
@@ -1123,8 +1133,6 @@ int main(void) {
     player.gridY = OXYGEN_CONSOLE_Y;
     player.health = 31.0f;
     player.oxygen = 8.0f;
-    player.stamina = 12.0f;
-    player.pressure = 67.0f;
     player.poison = 42.0f;
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 2, 16.0f, 42.0f);
     Player_SetStatus(&player, PLAYER_STATUS_OXYGEN_LEAK, 2, 12.0f, 1.3f);
@@ -1135,9 +1143,7 @@ int main(void) {
             "oxygen console should provide base recovery feedback after core repairs are complete");
     Require(player.oxygen == MAX_OXYGEN,
             "base oxygen console should fully restore oxygen");
-    Require(player.pressure == 0.0f,
-            "base oxygen console should stabilize hidden pressure");
-    Require(player.health == 31.0f && player.stamina == 12.0f && player.poison == 42.0f,
+    Require(player.health == 31.0f && player.poison == 42.0f,
             "base oxygen console should no longer act like a full-body recovery station");
     Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
                 && !Player_HasStatus(&player, PLAYER_STATUS_OXYGEN_LEAK)
@@ -1180,7 +1186,6 @@ int main(void) {
     player.gridY = PLAYER_START_Y;
     player.facingX = 1;
     player.facingY = 0;
-    player.stamina = 100.0f;
     player.resources[RESOURCE_WOOD] = 0;
     player.resources[RESOURCE_FRUIT] = 0;
     memset(message, 0, sizeof(message));
@@ -1299,16 +1304,22 @@ int main(void) {
     player.facingY = 0;
     player.hasLaserGun = false;
     player.attackBonus = 0.0f;
-    player.pressure = 0.0f;
     player.oxygen = 100.0f;
-    player.stamina = 100.0f;
+    memset(message, 0, sizeof(message));
+    Require(!Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "attack should fail without the Laser Gun even when monsters are adjacent");
+    Require(strstr(message, "Laser Gun") != NULL,
+            "attack failures without the Laser Gun should explain that combat now requires ranged gear");
+    player.hasLaserGun = true;
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
-            "attack should succeed when adjacent monsters are present");
+            "laser attack should still succeed when a valid target is directly ahead");
     Require(tasks.monsters[0].health == 40.0f,
             "attack targeting should not hit a different adjacent monster to the side or rear");
     Require(tasks.monsters[1].health < 40.0f,
             "attack targeting should prioritize the adjacent monster in the facing direction");
+    Require(tasks.monsters[1].attackTimer > 0.0f && tasks.monsters[1].recoverTimer > 0.0f,
+            "landing a hit should buy a short recovery window instead of allowing immediate monster retaliation");
     memset(message, 0, sizeof(message));
     Require(!Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
             "attack should now respect a short recovery window after striking");
@@ -1322,6 +1333,90 @@ int main(void) {
             "attack should fail when oxygen is too low for another committed fight");
     Require(strstr(message, "oxygen margin") != NULL,
             "failed attack should explain the new oxygen-based exertion gate");
+
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_WING_BUG;
+    tasks.monsters[0].gridX = PLAYER_START_X + 4;
+    tasks.monsters[0].gridY = PLAYER_START_Y - 1;
+    tasks.monsters[0].area = Map_GetAreaAt(tasks.monsters[0].gridX, tasks.monsters[0].gridY);
+    tasks.monsters[0].unlockStage = 1;
+    tasks.monsters[0].health = 44.0f;
+    tasks.monsters[0].maxHealth = 44.0f;
+    player.gridX = PLAYER_START_X;
+    player.gridY = PLAYER_START_Y;
+    player.facingX = 1;
+    player.facingY = 0;
+    player.attackCooldown = 0.0f;
+    player.oxygen = INITIAL_OXYGEN;
+    player.health = INITIAL_HEALTH;
+    player.hasLaserGun = true;
+    memset(message, 0, sizeof(message));
+    Require(!Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "laser attack should no longer reach monsters too far down the lane");
+    Require(strstr(message, "No target") != NULL,
+            "out-of-range laser attacks should fail through the normal no-target path");
+    tasks.monsters[0].gridX = PLAYER_START_X + 3;
+    tasks.monsters[0].gridY = PLAYER_START_Y - 1;
+    tasks.monsters[0].area = Map_GetAreaAt(tasks.monsters[0].gridX, tasks.monsters[0].gridY);
+    tasks.monsters[0].health = 44.0f;
+    tasks.monsters[0].maxHealth = 44.0f;
+    memset(message, 0, sizeof(message));
+    Require(Tasks_HandleAttack(&tasks, &map, &player, message, sizeof(message)),
+            "laser attack should still reach threats kept inside the shorter combat lane");
+    Require(tasks.monsters[0].health < 44.0f,
+            "shortened laser range should still permit meaningful ranged combat");
+
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_WING_BUG;
+    tasks.monsters[0].gridX = EXTERIOR_X(110);
+    tasks.monsters[0].gridY = EXTERIOR_Y(49);
+    tasks.monsters[0].area = Map_GetAreaAt(tasks.monsters[0].gridX, tasks.monsters[0].gridY);
+    tasks.monsters[0].unlockStage = 1;
+    tasks.monsters[0].moveTimer = 0.0f;
+    tasks.monsters[0].attackTimer = 0.0f;
+    tasks.monsters[0].recoverTimer = 0.0f;
+    tasks.monsters[0].health = 44.0f;
+    tasks.monsters[0].maxHealth = 44.0f;
+    tasks.phase = DAY_PHASE_DAY;
+    tasks.currentEvent = EVENT_CLEAR_SKY;
+    player.hasLaserGun = false;
+    player.gridX = EXTERIOR_X(107);
+    player.gridY = EXTERIOR_Y(49);
+    Player_UpdateWorldPosition(&player);
+    Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(tasks.monsters[0].moveTimer > 0.0f,
+            "ordinary monsters should now start closing in before the player can safely chip them from outside their awareness");
+
+    tasks.monsterCount = 1;
+    tasks.monsters[0].active = true;
+    tasks.monsters[0].type = MONSTER_WING_BUG;
+    tasks.monsters[0].gridX = PLAYER_START_X + 1;
+    tasks.monsters[0].gridY = PLAYER_START_Y - 1;
+    tasks.monsters[0].area = Map_GetAreaAt(tasks.monsters[0].gridX, tasks.monsters[0].gridY);
+    tasks.monsters[0].unlockStage = 1;
+    tasks.monsters[0].health = 12.0f;
+    tasks.monsters[0].maxHealth = 40.0f;
+    tasks.monsters[0].disengageTimer = 0.0f;
+    player.gridX = EXTERIOR_X(120);
+    player.gridY = EXTERIOR_Y(100);
+    Player_UpdateWorldPosition(&player);
+    Tasks_Update(&tasks, &map, &player, 3.0f);
+    Require(tasks.monsters[0].health == 12.0f,
+            "damaged monsters should not instantly recover when the player first leaves");
+    player.gridX = PLAYER_START_X;
+    player.gridY = PLAYER_START_Y;
+    Player_UpdateWorldPosition(&player);
+    Tasks_Update(&tasks, &map, &player, 0.1f);
+    Require(tasks.monsters[0].health == 12.0f && tasks.monsters[0].disengageTimer == 0.0f,
+            "returning to monster aggro range should interrupt disengage recovery");
+    player.gridX = EXTERIOR_X(120);
+    player.gridY = EXTERIOR_Y(100);
+    Player_UpdateWorldPosition(&player);
+    Tasks_Update(&tasks, &map, &player, 6.1f);
+    Require(tasks.monsters[0].health == tasks.monsters[0].maxHealth,
+            "damaged monsters should fully recover after the player stays away long enough");
 
     player.gridX = EXTERIOR_X(109);
     player.gridY = EXTERIOR_Y(49);

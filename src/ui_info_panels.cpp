@@ -5,6 +5,7 @@
 #include "ui_story_internal.h"
 #include "ui_runtime_internal.h"
 
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 
@@ -166,6 +167,147 @@ int TrimTrailingWhitespaceLength(const char *text, int length) {
     return length;
 }
 
+int CountWrappedTextLinesExact(const AssetBundle *assets, const char *text, float fontSize, float maxWidth) {
+    const char *cursor;
+    int lineCount;
+
+    if (text == nullptr || text[0] == '\0') {
+        return 0;
+    }
+
+    cursor = text;
+    lineCount = 0;
+    while (*cursor != '\0') {
+        int lineLength;
+
+        while (*cursor == ' ') {
+            cursor++;
+        }
+
+        if (*cursor == '\n') {
+            cursor++;
+            lineCount++;
+            continue;
+        }
+
+        lineLength = GetWrappedLineLength(assets, cursor, fontSize, maxWidth);
+        if (lineLength <= 0) {
+            break;
+        }
+
+        cursor += lineLength;
+        if (*cursor == '\n') {
+            cursor++;
+        }
+        lineCount++;
+    }
+
+    return lineCount;
+}
+
+float GetWrappedTextHeight(const AssetBundle *assets, const char *text, float fontSize, float lineSpacing, float maxWidth) {
+    const int lineCount = CountWrappedTextLinesExact(assets, text, fontSize, maxWidth);
+
+    if (lineCount <= 0) {
+        return 0.0f;
+    }
+
+    return fontSize + (float)(lineCount - 1) * lineSpacing;
+}
+
+float ClampScrollOffset(float offset, float maxOffset) {
+    if (offset < 0.0f) {
+        return 0.0f;
+    }
+    if (offset > maxOffset) {
+        return maxOffset;
+    }
+    return offset;
+}
+
+Rectangle GetCommunicatorPreviewImageRect(Rectangle contentPanel, float scale) {
+    return Rectangle{
+        contentPanel.x + 6.0f * scale,
+        contentPanel.y + 6.0f * scale,
+        contentPanel.width - 12.0f * scale,
+        contentPanel.height - 12.0f * scale
+    };
+}
+
+void DrawScrolledWrappedText(const AssetBundle *assets,
+                             const char *text,
+                             Rectangle rect,
+                             float fontSize,
+                             float lineSpacing,
+                             float scrollOffset,
+                             Color tint) {
+    char lineBuffer[512];
+    const char *cursor;
+    const float maxScroll = std::fmax(0.0f, GetWrappedTextHeight(assets, text, fontSize, lineSpacing, rect.width) - rect.height);
+    float y;
+
+    if (text == nullptr || text[0] == '\0') {
+        return;
+    }
+
+    cursor = text;
+    y = rect.y - ClampScrollOffset(scrollOffset, maxScroll);
+
+    BeginScissorMode((int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
+    while (*cursor != '\0') {
+        int lineLength;
+        int drawLength;
+
+        while (*cursor == ' ') {
+            cursor++;
+        }
+
+        if (*cursor == '\n') {
+            cursor++;
+            y += lineSpacing;
+            continue;
+        }
+
+        lineLength = GetWrappedLineLength(assets, cursor, fontSize, rect.width);
+        if (lineLength <= 0) {
+            break;
+        }
+
+        drawLength = TrimTrailingWhitespaceLength(cursor, lineLength);
+        if (drawLength >= (int)sizeof(lineBuffer)) {
+            drawLength = (int)sizeof(lineBuffer) - 1;
+        }
+
+        if (y + fontSize >= rect.y && y <= rect.y + rect.height) {
+            memcpy(lineBuffer, cursor, (size_t)drawLength);
+            lineBuffer[drawLength] = '\0';
+            UIRuntime_DrawText(assets, lineBuffer, Vector2{rect.x, y}, fontSize, tint);
+        }
+
+        cursor += lineLength;
+        if (*cursor == '\n') {
+            cursor++;
+        }
+        y += lineSpacing;
+    }
+    EndScissorMode();
+}
+
+void DrawCommunicatorDetailHint(const AssetBundle *assets,
+                                Rectangle rect,
+                                float scale,
+                                float detailProgress) {
+    const char *hint = Loc_PickLiteral("Wheel / W S scroll   Enter or ESC close", "滚轮 / W S 滚动   Enter 或 ESC 关闭");
+    const float fontSize = 15.0f * scale;
+    const Vector2 hintSize = UIRuntime_MeasureText(assets, hint, fontSize);
+
+    UIRuntime_DrawText(assets,
+                       hint,
+                       Vector2{rect.x + rect.width - hintSize.x, rect.y + rect.height + 10.0f * scale},
+                       fontSize,
+                       Fade(Color{170, 188, 206, 255}, detailProgress));
+}
+
 void DrawCenteredWrappedText(const AssetBundle *assets,
                              const char *text,
                              Rectangle rect,
@@ -250,7 +392,7 @@ void DrawCommunicatorTabs(const AssetBundle *assets,
         Rectangle tabRect = UI_GetCommunicatorTabRect(screenWidth, screenHeight, tabIndex);
         bool active = tabIndex == (int)selectedTab;
         const char *label = Loc_PickLiteral(kTabLabels[tabIndex][0], kTabLabels[tabIndex][1]);
-        Vector2 labelSize = UIRuntime_MeasureText(assets, label, 21.0f * scale);
+        Vector2 labelSize = UIRuntime_MeasureText(assets, label, 22.5f * scale);
 
         UIRuntime_DrawPanel(tabRect,
                             active ? Color{20, 46, 56, 245} : Color{11, 20, 32, 228},
@@ -258,7 +400,7 @@ void DrawCommunicatorTabs(const AssetBundle *assets,
         UIRuntime_DrawText(assets,
                            label,
                            Vector2{tabRect.x + (tabRect.width - labelSize.x) * 0.5f, tabRect.y + (tabRect.height - labelSize.y) * 0.5f - 1.0f * scale},
-                           21.0f * scale,
+                           22.5f * scale,
                            active ? WHITE : Color{192, 208, 222, 255});
     }
 }
@@ -267,24 +409,59 @@ void DrawCommunicatorTaskTab(const AssetBundle *assets,
                              const TaskSystem *tasks,
                              Rectangle contentPanel,
                              float scale) {
+    Rectangle stageRect;
+    Rectangle objectivePanel;
     Rectangle objectiveRect;
+    char stageBuffer[128];
     char sanitizedObjective[256];
-    objectiveRect = Rectangle{
+    const char *objectiveTitle = Loc_PickLiteral("Tracked Objective", "当前追踪");
+
+    stageRect = Rectangle{
         contentPanel.x + 34.0f * scale,
-        contentPanel.y + 82.0f * scale,
+        contentPanel.y + 32.0f * scale,
         contentPanel.width - 68.0f * scale,
-        contentPanel.height - 126.0f * scale
+        70.0f * scale
+    };
+    objectivePanel = Rectangle{
+        contentPanel.x + 34.0f * scale,
+        stageRect.y + stageRect.height + 18.0f * scale,
+        contentPanel.width - 68.0f * scale,
+        contentPanel.height - 138.0f * scale
+    };
+    objectiveRect = Rectangle{
+        objectivePanel.x + 24.0f * scale,
+        objectivePanel.y + 62.0f * scale,
+        objectivePanel.width - 48.0f * scale,
+        objectivePanel.height - 86.0f * scale
     };
 
+    std::snprintf(stageBuffer,
+                  sizeof(stageBuffer),
+                  "%s %d  /  %s",
+                  Loc_PickLiteral("Stage", "阶段"),
+                  tasks != nullptr ? tasks->stage : 0,
+                  tasks != nullptr ? Tasks_GetStageName(tasks->stage) : "");
     TasksRuntime_SanitizeDisplayText(tasks != nullptr ? tasks->objective : "", sanitizedObjective, sizeof(sanitizedObjective));
     UIRuntime_DrawPanel(contentPanel, Color{11, 20, 32, 230}, Color{104, 196, 222, 50});
+    UIRuntime_DrawPanel(stageRect, Color{17, 34, 49, 232}, Color{99, 233, 195, 72});
     UIRuntime_DrawText(assets,
-                       Loc_PickLiteral("Current Objective", "当前目标"),
-                       Vector2{contentPanel.x + contentPanel.width * 0.5f - UIRuntime_MeasureText(assets, Loc_PickLiteral("Current Objective", "当前目标"), 28.0f * scale).x * 0.5f,
-                               contentPanel.y + 22.0f * scale},
-                       28.0f * scale,
+                       Loc_PickLiteral("Current Stage", "当前阶段"),
+                       Vector2{stageRect.x + 20.0f * scale, stageRect.y + 12.0f * scale},
+                       18.0f * scale,
                        Color{255, 214, 154, 255});
-    DrawCenteredWrappedText(assets, sanitizedObjective, objectiveRect, 29.0f * scale, 35.0f * scale, Color{227, 237, 245, 255});
+    UIRuntime_DrawText(assets,
+                       stageBuffer,
+                       Vector2{stageRect.x + 20.0f * scale, stageRect.y + 38.0f * scale},
+                       22.0f * scale,
+                       Color{227, 237, 245, 255});
+    UIRuntime_DrawPanel(objectivePanel, Color{12, 24, 38, 232}, Color{255, 214, 154, 76});
+    UIRuntime_DrawText(assets,
+                       objectiveTitle,
+                       Vector2{objectivePanel.x + objectivePanel.width * 0.5f - UIRuntime_MeasureText(assets, objectiveTitle, 26.0f * scale).x * 0.5f,
+                               objectivePanel.y + 22.0f * scale},
+                       26.0f * scale,
+                       Color{255, 214, 154, 255});
+    DrawCenteredWrappedText(assets, sanitizedObjective, objectiveRect, 29.0f * scale, 36.0f * scale, Color{227, 237, 245, 255});
 }
 
 void DrawCommunicatorLogTab(const AssetBundle *assets,
@@ -292,6 +469,7 @@ void DrawCommunicatorLogTab(const AssetBundle *assets,
                             int selectedLog,
                             int firstVisibleLog,
                             float detailVisibility,
+                            float detailScroll,
                             Rectangle listPanel,
                             Rectangle contentPanel,
                             float scale,
@@ -319,8 +497,8 @@ void DrawCommunicatorLogTab(const AssetBundle *assets,
                                   Loc_PickLiteral("No logs recovered yet. Keep exploring, retrieve ship records, then return here to review them with Loxi.",
                                                   "还没有回收到任何日志。继续探索，找回飞船记录，然后回到这里与洛希一起复核。"),
                                   Rectangle{contentPanel.x + 20.0f * scale, contentPanel.y + 20.0f * scale, contentPanel.width - 40.0f * scale, contentPanel.height - 40.0f * scale},
-                                  18.0f * scale,
-                                  22.0f * scale,
+                                  21.0f * scale,
+                                  27.0f * scale,
                                   Color{227, 237, 245, 255});
         return;
     }
@@ -338,7 +516,7 @@ void DrawCommunicatorLogTab(const AssetBundle *assets,
     if (drawCount > visibleCount) {
         drawCount = visibleCount;
     }
-    imageRect = UI_GetCommunicatorLogImageRect(screenWidth, screenHeight);
+    imageRect = GetCommunicatorPreviewImageRect(contentPanel, scale);
     detailMaskRect = Rectangle{
         listPanel.x,
         listPanel.y,
@@ -370,8 +548,8 @@ void DrawCommunicatorLogTab(const AssetBundle *assets,
         UIRuntime_DrawWrappedText(assets,
                                   entry != nullptr ? Tasks_GetLogTitle(entry) : "",
                                   Rectangle{entryRect.x + 16.0f * scale, entryRect.y + 11.0f * scale, entryRect.width - 32.0f * scale, entryRect.height - 22.0f * scale},
-                                  14.8f * scale,
-                                  16.8f * scale,
+                                  15.8f * scale,
+                                  18.4f * scale,
                                   active ? WHITE : Color{217, 228, 237, 255});
     }
 
@@ -403,6 +581,10 @@ void DrawCommunicatorLogTab(const AssetBundle *assets,
                                       32.0f * scale,
                                       WHITE);
         }
+        if (!showSelectedLogDetail) {
+            return;
+        }
+
         if (showSelectedLogDetail) {
             DrawRectangleGradientV((int)detailMaskRect.x,
                                    (int)detailMaskRect.y,
@@ -420,12 +602,14 @@ void DrawCommunicatorLogTab(const AssetBundle *assets,
                                 Fade(Color{10, 18, 30, 248}, detailProgress),
                                 Fade(Color{255, 255, 255, 24}, detailProgress * 0.92f));
             if (detailText[0] != '\0') {
-                UIRuntime_DrawWrappedText(assets,
-                                          detailText,
-                                          detailBodyRect,
-                                          20.8f * scale,
-                                          31.0f * scale,
-                                          Fade(Color{227, 237, 245, 255}, detailProgress));
+                DrawScrolledWrappedText(assets,
+                                        detailText,
+                                        detailBodyRect,
+                                        25.4f * scale,
+                                        37.0f * scale,
+                                        detailScroll,
+                                        Fade(Color{227, 237, 245, 255}, detailProgress));
+                DrawCommunicatorDetailHint(assets, detailBodyRect, scale, detailProgress);
             } else {
                 for (float y = detailBodyRect.y + 10.0f * scale; y < detailBodyRect.y + detailBodyRect.height - 6.0f * scale; y += 30.0f * scale) {
                     DrawRectangle((int)detailBodyRect.x,
@@ -444,6 +628,7 @@ void DrawCommunicatorStoryTab(const AssetBundle *assets,
                               int selectedStoryScene,
                               int firstVisibleStoryScene,
                               float detailVisibility,
+                              float detailScroll,
                               Rectangle listPanel,
                               Rectangle contentPanel,
                               float scale,
@@ -470,8 +655,8 @@ void DrawCommunicatorStoryTab(const AssetBundle *assets,
                                   Loc_PickLiteral("Main story cards will be archived here after you unlock them. Push the investigation forward, then come back to review how Loxi has pieced the whole story together.",
                                                   "解锁过的主线剧情卡会收录在这里。继续推进调查，之后再回来查看洛希是怎样把整件事一步步拼起来的。"),
                                   Rectangle{contentPanel.x + 20.0f * scale, contentPanel.y + 20.0f * scale, contentPanel.width - 40.0f * scale, contentPanel.height - 40.0f * scale},
-                                  18.0f * scale,
-                                  22.0f * scale,
+                                  21.0f * scale,
+                                  27.0f * scale,
                                   Color{227, 237, 245, 255});
         return;
     }
@@ -494,7 +679,7 @@ void DrawCommunicatorStoryTab(const AssetBundle *assets,
     sceneDef = UIStory_GetStorySceneDef(scene);
     sceneTexture = UIStory_GetStorySceneTexture(assets, scene);
     detailText = UIStory_GetStorySceneDetailText(scene);
-    imageRect = UI_GetCommunicatorLogImageRect(screenWidth, screenHeight);
+    imageRect = GetCommunicatorPreviewImageRect(contentPanel, scale);
     detailMaskRect = Rectangle{
         listPanel.x,
         listPanel.y,
@@ -527,8 +712,8 @@ void DrawCommunicatorStoryTab(const AssetBundle *assets,
         UIRuntime_DrawWrappedText(assets,
                                   entryDef != nullptr ? Loc_PickText(entryDef->title) : "",
                                   Rectangle{entryRect.x + 16.0f * scale, entryRect.y + 11.0f * scale, entryRect.width - 32.0f * scale, entryRect.height - 22.0f * scale},
-                                  14.8f * scale,
-                                  16.8f * scale,
+                                  15.8f * scale,
+                                  18.4f * scale,
                                   active ? WHITE : Color{217, 228, 237, 255});
     }
 
@@ -550,19 +735,6 @@ void DrawCommunicatorStoryTab(const AssetBundle *assets,
     }
 
     if (!showSelectedStoryDetail) {
-        if (sceneDef != nullptr) {
-            UIRuntime_DrawText(assets,
-                               Loc_PickText(sceneDef->eyebrow),
-                               Vector2{contentPanel.x + 24.0f * scale, contentPanel.y + 24.0f * scale},
-                               15.0f * scale,
-                               Color{166, 255, 226, 255});
-            UIRuntime_DrawWrappedText(assets,
-                                      UIStory_GetStorySceneDetailText(scene),
-                                      Rectangle{contentPanel.x + 24.0f * scale, imageRect.y + imageRect.height + 18.0f * scale, contentPanel.width - 48.0f * scale, contentPanel.height - imageRect.height - 46.0f * scale},
-                                      15.6f * scale,
-                                      20.8f * scale,
-                                      Color{220, 232, 241, 255});
-        }
         return;
     }
 
@@ -582,12 +754,14 @@ void DrawCommunicatorStoryTab(const AssetBundle *assets,
                         Fade(Color{10, 18, 30, 248}, detailProgress),
                         Fade(Color{255, 255, 255, 24}, detailProgress * 0.92f));
     if (detailText[0] != '\0') {
-        UIRuntime_DrawWrappedText(assets,
-                                  detailText,
-                                  detailBodyRect,
-                                  20.8f * scale,
-                                  31.0f * scale,
-                                  Fade(Color{227, 237, 245, 255}, detailProgress));
+        DrawScrolledWrappedText(assets,
+                                detailText,
+                                detailBodyRect,
+                                25.4f * scale,
+                                37.0f * scale,
+                                detailScroll,
+                                Fade(Color{227, 237, 245, 255}, detailProgress));
+        DrawCommunicatorDetailHint(assets, detailBodyRect, scale, detailProgress);
     } else {
         for (float y = detailBodyRect.y + 10.0f * scale; y < detailBodyRect.y + detailBodyRect.height - 6.0f * scale; y += 30.0f * scale) {
             DrawRectangle((int)detailBodyRect.x,
@@ -610,6 +784,7 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
                                 int selectedStoryScene,
                                 int firstVisibleStoryScene,
                                 float detailVisibility,
+                                float detailScroll,
                                 int screenWidth,
                                 int screenHeight) {
     float scale;
@@ -631,7 +806,17 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
     DrawCommunicatorTabs(assets, selectedTab, screenWidth, screenHeight, scale);
 
     if (selectedTab == kCommunicatorTabLogs) {
-        DrawCommunicatorLogTab(assets, tasks, selectedLog, firstVisibleLog, detailVisibility, listPanel, contentPanel, scale, screenWidth, screenHeight);
+        DrawCommunicatorLogTab(assets,
+                               tasks,
+                               selectedLog,
+                               firstVisibleLog,
+                               detailVisibility,
+                               detailScroll,
+                               listPanel,
+                               contentPanel,
+                               scale,
+                               screenWidth,
+                               screenHeight);
         return;
     }
 
@@ -641,6 +826,7 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
                                  selectedStoryScene,
                                  firstVisibleStoryScene,
                                  detailVisibility,
+                                 detailScroll,
                                  listPanel,
                                  contentPanel,
                                  scale,
@@ -667,15 +853,13 @@ void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHe
         {"WASD / Arrow Keys: original grid movement", "WASD / 方向键：原始网格移动"},
         {"F: interact, gather, repair, read logs, craft at workbench", "F：交互、采集、修理、读取日志，或在工作台制作"},
         {"Space: attack, uses laser line if available", "Space：攻击，拥有激光枪时会发射激光"},
-        {"B: open the backpack and inspect supplies", "B：打开背包并查看补给"},
-        {"N: open the Loxi terminal for current task and archive logs", "N：打开洛希终端，查看当前任务与档案日志"},
-        {"M: open the area map overlay", "M：打开区域地图"},
-        {"H: open this help panel", "H：打开本帮助面板"},
-        {"Z: use food for quick health and oxygen recovery", "Z：使用食物快速恢复生命与氧气"},
-        {"X: use antidote and filter items for poison or leak relief", "X：使用解毒或过滤类物品缓解中毒与漏氧"},
-        {"C: toggle crouch stealth", "C：切换蹲伏潜行"},
+        {"B: open the unified info page directly on Backpack", "B：直接以背包页打开统一信息界面"},
+        {"N: open the unified info page directly on Loxi", "N：直接以洛希页打开统一信息界面"},
+        {"M: open the unified info page directly on Map", "M：直接以地图页打开统一信息界面"},
+        {"H: open help, O: open the unified info page directly on Settings", "H：打开帮助，O：直接以设置页打开统一信息界面"},
+        {"X: use a crafted Recovery Ration for health, poison relief, and oxygen recovery", "X：使用加工后的复苏口粮，同时恢复生命、解除中毒并补回氧气"},
         {"ESC: pause", "ESC：暂停"},
-        {"Sleep in Crew Quarters to recover. Use the oxygen console to refill oxygen, and camps only provide partial field recovery", "在船员舱睡觉可恢复状态；氧气控制台负责补氧；野外营地只提供有限恢复"}
+        {"Sleep in Crew Quarters to recover. Raw forage must be processed at the workbench, and camps only provide partial field recovery", "在船员舱睡觉可恢复状态；野外食材必须先在工作台加工；野外营地只提供有限恢复"}
     };
     int lineIndex;
 
@@ -715,11 +899,21 @@ void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHe
             shortcutIconKind = 1;
             shortcutPrimary = Color{232, 180, 113, 255};
             shortcutSecondary = Color{127, 84, 44, 255};
+        } else if (lineIndex == 4) {
+            shortcutIcon = nullptr;
+            shortcutIconKind = 2;
+            shortcutPrimary = Color{118, 226, 255, 255};
+            shortcutSecondary = Color{60, 120, 188, 255};
         } else if (lineIndex == 5) {
             shortcutIcon = &assets->iconMapButton;
             shortcutIconKind = 0;
             shortcutPrimary = Color{110, 201, 255, 255};
             shortcutSecondary = Color{62, 118, 192, 255};
+        } else if (lineIndex == 6) {
+            shortcutIcon = &assets->iconRecoveryRation;
+            shortcutIconKind = 16;
+            shortcutPrimary = Color{126, 212, 255, 255};
+            shortcutSecondary = Color{57, 112, 172, 255};
         }
 
         UIRuntime_DrawPanel(rowRect, Color{11, 20, 32, 228}, Color{255, 255, 255, 20});

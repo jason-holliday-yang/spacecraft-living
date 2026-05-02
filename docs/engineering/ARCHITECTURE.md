@@ -99,7 +99,7 @@ The current text/localization iteration also needs to protect one more constrain
 ### `src/game_play_input.c`
 
 - active gameplay input loop during the in-world state
-- movement, attack, interaction, crouch-toggle, consumables, and overlay-open routing
+- movement, attack, interaction, consumables, and overlay-open routing
 
 ### `src/game_play_story.c`
 
@@ -157,8 +157,8 @@ The current text/localization iteration also needs to protect one more constrain
 ### `src/player.c`
 
 - player initialization, movement, animation timing, and base stat math
-- current runtime owns health and oxygen while still carrying legacy stamina / pressure / poison compatibility state used by older rules and save migration
-- combat, stealth, and gather-facing runtime modifiers
+- current runtime owns health, oxygen, poison, and status-driven survival effects
+- combat, movement-speed, and gather-facing runtime modifiers
 
 ### `src/player_status_runtime.c`
 
@@ -176,7 +176,8 @@ The current text/localization iteration also needs to protect one more constrain
 
 - quick-consumable logic
 - direct backpack item use
-- repeat-food diminishing returns and temporary consumable buff application
+- crafted consumable effects such as `Recovery Ration -> health recovery + poison relief + oxygen refill + Oxygen Reserve`
+- raw food/material rejection and the single crafted quick-consumable path
 
 ### `src/player_resources.c`
 
@@ -326,7 +327,7 @@ The current text/localization iteration also needs to protect one more constrain
 ### `src/recipe_catalog.cpp`
 
 - shared recipe catalog data
-- recipe ordering, visibility, and ingredient spending helpers
+- recipe ordering, visibility, repeatable consumable recipes, and ingredient spending helpers
 
 ### `src/puzzle.cpp`
 
@@ -341,6 +342,7 @@ The current text/localization iteration also needs to protect one more constrain
 
 - backpack entry metadata
 - ownership/count helpers
+- resource-consumable entries such as `Recovery Ration`
 - recipe visual color definitions
 
 ### `src/ui_inventory_icons.cpp`
@@ -466,8 +468,8 @@ The current text/localization iteration also needs to protect one more constrain
 ## Current Architectural Risks
 
 - some design truth still lives in historical docs instead of current docs
-- the runtime is still hybrid: player-facing `health / oxygen / status` is live, but several systems still carry legacy `stamina / pressure / poison` compatibility state underneath
-- crafting/economy rules and a few content strings still retain pressure-era assumptions that should be cleaned up gradually
+- legacy `stamina / pressure / maxStaminaBonus` names still exist in the save schema for binary compatibility, but they no longer live on the runtime `Player`
+- a few content strings still use "pressure" in the ordinary route-tension sense, so future edits should avoid reintroducing it as a hidden stat
 - several progression and interaction rules are still implied by code, not documented clearly
 - log visibility and progression rules need tighter ownership
 - rope traversal behavior is implemented, but its design contract is still vague
@@ -544,5 +546,5 @@ The next iteration should improve consistency before expanding feature count:
 2. preserve the fixed world-layout and ship-layout boundaries
 3. improve balance, clarity, and release-quality closure without reopening frozen content scope
 4. clarify progression-critical interaction rules
-5. continue cleaning the hybrid survival/runtime state until legacy pressure-era assumptions are gone
+5. keep legacy survival fields confined to save compatibility instead of letting them back into runtime rules
 6. keep any future account/auth reserve isolated from the core local gameplay loop

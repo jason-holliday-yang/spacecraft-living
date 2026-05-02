@@ -151,9 +151,9 @@ int main(void) {
             "stage text lookup should return the cleaner player-facing chapter title");
     Require(strcmp(Tasks_GetEndingTitle(ENDING_PEACEFUL), "Peaceful Rescue") == 0,
             "ending title lookup should still return the expected label");
-    Require(strstr(Tasks_GetEndingBody(ENDING_SETTLEMENT), "deliberate home") != NULL,
+    Require(strstr(Tasks_GetEndingBody(ENDING_SETTLEMENT), "wreck became a home") != NULL,
             "ending body lookup should still expose the expected settlement text");
-    Require(strstr(Tasks_GetEndingBody(ENDING_FAILURE), "collapses came faster than repair") != NULL,
+    Require(strstr(Tasks_GetEndingBody(ENDING_FAILURE), "Collapse outran repair") != NULL,
             "failure ending text should match the broader death tolerance rules");
 
     tasks.stage = 3;
@@ -210,27 +210,18 @@ int main(void) {
     tasks.stage = 2;
     player.gridX = EXTERIOR_X(70);
     player.gridY = EXTERIOR_Y(74);
-    player.crouching = false;
+    player.health = INITIAL_HEALTH;
     player.oxygen = INITIAL_OXYGEN;
     player.poison = 0.0f;
-    player.pressure = 0.0f;
+    Player_ClearAllStatuses(&player);
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "Crouch") != NULL
-                || strstr(tasks.communicator, "crouch") != NULL
-                || strstr(tasks.communicator, "hidden") != NULL,
-            "forest field note should teach crouch stealth rule");
-
-    player.crouching = true;
-    Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.communicator, "reduces detection") != NULL
-                || strstr(tasks.communicator, "Crouching") != NULL
-                || strstr(tasks.communicator, "harder to detect") != NULL,
-            "forest field note should react once crouch stealth is active");
+    Require(strstr(tasks.communicator, "Forest cover") != NULL
+                || strstr(tasks.communicator, "route choice") != NULL,
+            "forest field note should teach cover and route choice without a crouch command");
 
     tasks.stage = 6;
     player.gridX = EXTERIOR_X(111);
     player.gridY = EXTERIOR_Y(48);
-    player.crouching = false;
     player.hasProtectionSuit = false;
     Tasks_UpdateObjective(&tasks, &player);
     Require(strstr(tasks.communicator, "Protection Suit") != NULL
@@ -287,7 +278,7 @@ int main(void) {
     tasks.logs[12].collected = false;
     tasks.bossDefeated = false;
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strcmp(tasks.objective, "先补回林冠交接记录，再回洛希处确认强行救援。") == 0,
+    Require(strcmp(tasks.objective, "先补回林冠交接记录，再回洛希处。强行救援这条路，至少该在看清西线接力之后再被正式选下。") == 0,
             "stage 7 ending-choice objective should point to the next missing route unlock in chinese when no ending is unlocked yet");
 
     PrepareEndingBranch(&tasks);

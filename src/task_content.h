@@ -27,28 +27,17 @@ typedef struct TaskLogSeed {
     int gridX;
     int gridY;
     ShipLogCategory category;
-    int rewardKind;
     LocalizedText title;
     LocalizedText storyText;
-    LocalizedText rewardDescription;
     LocalizedText detailText;
 } TaskLogSeed;
 
 typedef struct TaskMonsterSpec {
     float maxHealth;
     float attackDamage;
-    float attackPressure;
     int rewardCounts[RESOURCE_COUNT];
     bool defeatsBossOnKill;
 } TaskMonsterSpec;
-
-typedef struct TaskLogRewardSpec {
-    float maxHealthBonus;
-    float attackBonus;
-    float oxygen;
-    float pressureRelief;
-    int resourceCounts[RESOURCE_COUNT];
-} TaskLogRewardSpec;
 
 int TasksContent_GetNodeSeedCount(void);
 bool TasksContent_GetNodeSeed(int index, TaskNodeSeed *seed);
@@ -60,7 +49,6 @@ int TasksContent_GetLogSeedCount(void);
 bool TasksContent_GetLogSeed(int index, TaskLogSeed *seed);
 
 bool TasksContent_GetMonsterSpec(MonsterType type, TaskMonsterSpec *spec);
-bool TasksContent_GetLogRewardSpec(int rewardKind, TaskLogRewardSpec *spec);
 EventType TasksContent_GetDailyEvent(int dayCount);
 
 const char *TasksContent_GetStageObjective(const TaskSystem *tasks, const Player *player);

@@ -12,101 +12,8 @@ static float ClampUnit(float value) {
     return value;
 }
 
-static float GetScreenTransitionDuration(const Game *game) {
-    if (game != nullptr && game->screenTransitionAction == SCREEN_TRANSITION_SLEEP_REST) {
-        return 0.56f;
-    }
-
-    return 0.34f;
-}
-
-static float GetNarrativeOverlayAlpha(const Game *game) {
-    static constexpr float kNarrativeFadeDuration = 0.22f;
-    float fadeInAlpha;
-    float fadeOutAlpha;
-    float elapsed;
-
-    if (game == nullptr) {
-        return 0.0f;
-    }
-
-    if (game->state == GAME_STATE_OPENING) {
-        elapsed = game->openingCutsceneElapsed;
-    } else if (game->storySceneOpen) {
-        elapsed = game->storySceneElapsed;
-    } else {
-        return 0.0f;
-    }
-
-    fadeInAlpha = 1.0f - ClampUnit(elapsed / kNarrativeFadeDuration);
-    fadeOutAlpha = game->narrativeTransitionActive
-        ? ClampUnit(game->narrativeTransitionElapsed / kNarrativeFadeDuration)
-        : 0.0f;
-    return fadeInAlpha > fadeOutAlpha ? fadeInAlpha : fadeOutAlpha;
-}
-
-static float GetScreenTransitionAlpha(const Game *game) {
-    const float totalDuration = GetScreenTransitionDuration(game);
-    const float halfDuration = totalDuration * 0.5f;
-    float elapsed;
-
-    if (game == nullptr || !game->screenTransitionActive) {
-        return 0.0f;
-    }
-
-    elapsed = game->screenTransitionElapsed;
-    if (elapsed <= halfDuration) {
-        return ClampUnit(elapsed / halfDuration);
-    }
-
-    return 1.0f - ClampUnit((elapsed - halfDuration) / halfDuration);
-}
-
 static float TileScale(float value) {
     return value * (static_cast<float>(TILE_SIZE) / 64.0f);
-}
-
-static bool IsFiniteVector(Vector2 value) {
-    return std::isfinite(value.x) && std::isfinite(value.y);
-}
-
-static void SanitizeGameplayFrameState(Game *game, int screenWidth, int screenHeight) {
-    bool playerTileInvalid;
-
-    playerTileInvalid = !Map_IsWithinBounds(game->player.gridX, game->player.gridY)
-        || !Map_IsWalkable(&game->map, game->player.gridX, game->player.gridY);
-    if (playerTileInvalid) {
-        game->player.gridX = PLAYER_RESPAWN_X;
-        game->player.gridY = PLAYER_RESPAWN_Y;
-        game->player.facingX = 0;
-        game->player.facingY = 1;
-        Player_UpdateWorldPosition(&game->player);
-        MiniMap_Update(&game->miniMap, &game->player, &game->map);
-    } else if (!IsFiniteVector(game->player.worldPos)
-               || !IsFiniteVector(game->player.renderPos)
-               || std::fabs(game->player.worldPos.x - Map_GridToWorld(game->player.gridX, game->player.gridY).x) > 0.5f
-               || std::fabs(game->player.worldPos.y - Map_GridToWorld(game->player.gridX, game->player.gridY).y) > 0.5f) {
-        Player_UpdateWorldPosition(&game->player);
-    }
-
-    if (game->tasks.objective[0] == '\0') {
-        Tasks_UpdateObjective(&game->tasks, &game->player);
-    }
-
-    if (!std::isfinite(game->camera.zoom) || game->camera.zoom <= 0.0f) {
-        game->camera.zoom = CAMERA_ZOOM;
-    }
-    if (!std::isfinite(game->camera.rotation)) {
-        game->camera.rotation = 0.0f;
-    }
-    if (!IsFiniteVector(game->camera.target)) {
-        game->camera.target = game->player.renderPos;
-    }
-    if (!IsFiniteVector(game->camera.offset)
-        || std::fabs(game->camera.offset.x) < 0.5f
-        || std::fabs(game->camera.offset.y) < 0.5f) {
-        game->camera.offset = Vector2{screenWidth * 0.5f, screenHeight * 0.5f};
-    }
 }
 
 static void DrawObjectiveMarker(const TaskSystem *tasks, const Player *player, float elapsedSeconds) {
@@ -182,9 +89,45 @@ static void DrawPlayer(const Player *player, const AssetBundle *assets, float el
         return;
     }
 
-    DrawCircleV(Vector2{player->renderPos.x, player->renderPos.y - TileScale(10.0f)}, TileScale(13.0f), player->crouching ? Color{155, 209, 236, 255} : Color{185, 225, 255, 255});
+    DrawCircleV(Vector2{player->renderPos.x, player->renderPos.y - TileScale(10.0f)}, TileScale(13.0f), Color{185, 225, 255, 255});
     DrawCircleV(Vector2{player->renderPos.x, player->renderPos.y - TileScale(24.0f)}, TileScale(8.0f), Color{185, 225, 255, 255});
     DrawEllipse((int)player->renderPos.x, (int)(player->renderPos.y - TileScale(24.0f)), TileScale(6.0f) + std::sin(elapsedSeconds * 4.0f) * TileScale(0.5f), TileScale(3.5f), Color{98, 201, 255, 255});
+}
+
+static void DrawLaserEffect(const Game *game) {
+    static constexpr float kLaserEffectDuration = 0.18f;
+    float progress;
+    float alpha;
+    float beamWidth;
+    Vector2 impact;
+
+    if (game == nullptr || game->laserEffectTimer <= 0.0f) {
+        return;
+    }
+
+    progress = ClampUnit(game->laserEffectTimer / kLaserEffectDuration);
+    alpha = 255.0f * progress;
+    beamWidth = TileScale(7.0f + 5.0f * progress);
+    DrawLineEx(game->laserEffectStart,
+               game->laserEffectEnd,
+               beamWidth,
+               Color{93, 222, 255, static_cast<unsigned char>(alpha)});
+    DrawLineEx(game->laserEffectStart,
+               game->laserEffectEnd,
+               TileScale(2.2f),
+               Color{246, 255, 255, static_cast<unsigned char>(210.0f * progress)});
+
+    impact = game->laserEffectEnd;
+    if (game->laserEffectHit) {
+        DrawRing(impact,
+                 TileScale(5.0f + 8.0f * (1.0f - progress)),
+                 TileScale(15.0f + 12.0f * (1.0f - progress)),
+                 0.0f,
+                 360.0f,
+                 28,
+                 Color{255, 238, 162, static_cast<unsigned char>(170.0f * progress)});
+        DrawCircleV(impact, TileScale(4.0f + 5.0f * progress), Color{255, 255, 255, static_cast<unsigned char>(180.0f * progress)});
+    }
 }
 
 void Game_Draw(Game *game) {
@@ -255,7 +198,7 @@ void Game_Draw(Game *game) {
             }
         }
         {
-            const float overlayAlpha = GetScreenTransitionAlpha(game);
+            const float overlayAlpha = Game_GetScreenTransitionAlpha(game);
             if (overlayAlpha > 0.0f) {
                 DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
             }
@@ -277,7 +220,7 @@ void Game_Draw(Game *game) {
             UI_DrawOpeningCutscene(&game->assets, game->openingSlideIndex, game->openingCutsceneElapsed, screenWidth, screenHeight);
         }
         {
-            const float overlayAlpha = GetNarrativeOverlayAlpha(game);
+            const float overlayAlpha = Game_GetNarrativeOverlayAlpha(game);
             if (overlayAlpha > 0.0f) {
                 DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
             }
@@ -289,7 +232,7 @@ void Game_Draw(Game *game) {
     if (game->storySceneOpen) {
         UI_DrawStoryScene(&game->assets, game->storyScene, game->storySceneElapsed, screenWidth, screenHeight);
         {
-            const float overlayAlpha = GetNarrativeOverlayAlpha(game);
+            const float overlayAlpha = Game_GetNarrativeOverlayAlpha(game);
             if (overlayAlpha > 0.0f) {
                 DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
             }
@@ -298,13 +241,12 @@ void Game_Draw(Game *game) {
         return;
     }
 
-    SanitizeGameplayFrameState(game, screenWidth, screenHeight);
-
     BeginMode2D(game->camera);
     Map_Draw(&game->map, &game->assets, game->camera, screenWidth, screenHeight, game->elapsedSeconds);
     DrawObjectiveMarker(&game->tasks, &game->player, game->elapsedSeconds);
     Tasks_DrawWorld(&game->tasks, &game->assets, game->elapsedSeconds);
     DrawPlayer(&game->player, &game->assets, game->elapsedSeconds);
+    DrawLaserEffect(game);
     EndMode2D();
 
     if (game->state == GAME_STATE_ENDING) {
@@ -322,14 +264,6 @@ void Game_Draw(Game *game) {
                                       game->settlementConfirmSelection);
     } else if (game->showDeathPopup) {
         UI_DrawDeathPopup(&game->player, game->hasSaveFile, &game->assets, screenWidth, screenHeight, game->deathPopupSelection);
-    } else if (game->settingsOpen) {
-        UI_DrawSettingsOverlay(&game->assets,
-                               &game->settings,
-                               SaveSystem_GetActiveAccountName(),
-                               game->saveSlotCount,
-                               false,
-                               screenWidth,
-                               screenHeight);
     } else if (game->savePanelOpen) {
         UI_DrawSaveSlotsOverlay(&game->assets,
                                 game->saveSlots,
@@ -346,24 +280,26 @@ void Game_Draw(Game *game) {
         if (game->craftOpen) {
             UI_DrawCraftOverlay(&game->assets, &game->tasks, &game->player, game->selectedCraftIndex, screenWidth, screenHeight);
         }
-        if (game->mapOpen) {
-            UI_DrawMapOverlay(&game->assets, &game->miniMap, &game->player, &game->tasks, &game->map, screenWidth, screenHeight);
-        }
-        if (game->backpackOpen) {
-            UI_DrawBackpackOverlay(&game->assets, &game->player, game->selectedBackpackItem, screenWidth, screenHeight);
-        }
-        if (game->communicatorOpen) {
-            UI_DrawCommunicatorOverlay(&game->assets,
-                                       &game->tasks,
-                                       game->storySceneShown,
-                                       game->communicatorTab,
-                                       game->selectedLogIndex,
-                                       game->communicatorFirstVisibleLogIndex,
-                                       game->selectedStorySceneIndex,
-                                       game->communicatorFirstVisibleStorySceneIndex,
-                                       game->communicatorLogDetailVisibility,
-                                       screenWidth,
-                                       screenHeight);
+        if (game->infoOverlayOpen) {
+            UI_DrawInfoOverlay(&game->assets,
+                               game->infoOverlayTab,
+                               &game->settings,
+                               &game->miniMap,
+                               &game->player,
+                               &game->tasks,
+                               &game->map,
+                               game->storySceneShown,
+                               game->saveSlotCount,
+                               game->selectedBackpackItem,
+                               game->communicatorTab,
+                               game->selectedLogIndex,
+                               game->communicatorFirstVisibleLogIndex,
+                               game->selectedStorySceneIndex,
+                               game->communicatorFirstVisibleStorySceneIndex,
+                               game->communicatorLogDetailVisibility,
+                               game->communicatorLogDetailScroll,
+                               screenWidth,
+                               screenHeight);
         }
         if (game->helpOpen) {
             UI_DrawHelpOverlay(&game->assets, screenWidth, screenHeight);
@@ -371,7 +307,7 @@ void Game_Draw(Game *game) {
     }
 
     {
-        const float overlayAlpha = GetScreenTransitionAlpha(game);
+        const float overlayAlpha = Game_GetScreenTransitionAlpha(game);
         if (overlayAlpha > 0.0f) {
             DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, overlayAlpha));
         }

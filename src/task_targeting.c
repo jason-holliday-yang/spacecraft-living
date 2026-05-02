@@ -56,28 +56,6 @@ static int ScorePickupTarget(const Player *player, int gridX, int gridY) {
     return 2 + distance;
 }
 
-static int ScoreAdjacentAttackTarget(const Player *player, int gridX, int gridY) {
-    const int width = MONSTER_FOOTPRINT_SIZE;
-    const int height = MONSTER_FOOTPRINT_SIZE;
-
-    if (player == NULL) {
-        return 999;
-    }
-
-    if (player->gridX + player->facingX >= gridX
-        && player->gridX + player->facingX < gridX + width
-        && player->gridY + player->facingY >= gridY
-        && player->gridY + player->facingY < gridY + height) {
-        return 0;
-    }
-
-    if (DistancePointToRectManhattan(player->gridX, player->gridY, gridX, gridY, width, height) == 1) {
-        return 1;
-    }
-
-    return 999;
-}
-
 static ResourceNode *FindNearbyNode(TaskSystem *tasks, const Player *player, bool includeInactive) {
     int index;
     ResourceNode *bestNode;
@@ -220,43 +198,24 @@ Monster *TasksRuntime_FindMonsterAt(TaskSystem *tasks, int gridX, int gridY) {
 Monster *TasksRuntime_FindAttackTarget(TaskSystem *tasks, const Player *player) {
     int range;
     int step;
-    int index;
-    Monster *bestMonster;
-    int bestScore;
 
-    if (player->hasLaserGun) {
-        range = 5;
-        for (step = 1; step <= range; step++) {
-            int targetX;
-            int targetY;
-            Monster *monster;
-
-            targetX = player->gridX + player->facingX * step;
-            targetY = player->gridY + player->facingY * step;
-            monster = TasksRuntime_FindMonsterAt(tasks, targetX, targetY);
-            if (monster != NULL) {
-                return monster;
-            }
-        }
+    if (player == NULL || !player->hasLaserGun) {
+        return NULL;
     }
 
-    bestMonster = NULL;
-    bestScore = 999;
-    for (index = 0; index < tasks->monsterCount; index++) {
+    range = 3;
+    for (step = 1; step <= range; step++) {
+        int targetX;
+        int targetY;
         Monster *monster;
-        int score;
 
-        monster = &tasks->monsters[index];
-        if (!monster->active) {
-            continue;
-        }
-
-        score = ScoreAdjacentAttackTarget(player, monster->gridX, monster->gridY);
-        if (score < bestScore) {
-            bestScore = score;
-            bestMonster = monster;
+        targetX = player->gridX + player->facingX * step;
+        targetY = player->gridY + player->facingY * step;
+        monster = TasksRuntime_FindMonsterAt(tasks, targetX, targetY);
+        if (monster != NULL) {
+            return monster;
         }
     }
 
-    return bestMonster;
+    return NULL;
 }

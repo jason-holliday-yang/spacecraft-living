@@ -31,7 +31,7 @@ static bool DecodeSnapshotV5Buffer(SaveSnapshot *snapshot, const uint8_t *buffer
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -120,7 +120,7 @@ static bool DecodeSnapshotV6Buffer(SaveSnapshot *snapshot, const uint8_t *buffer
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -215,7 +215,7 @@ static bool DecodeSnapshotV7Buffer(SaveSnapshot *snapshot, const uint8_t *buffer
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -314,7 +314,7 @@ static bool DecodeSnapshotV8Buffer(SaveSnapshot *snapshot, const uint8_t *buffer
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -417,7 +417,7 @@ static bool DecodeSnapshotV9Buffer(SaveSnapshot *snapshot, const uint8_t *buffer
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -524,7 +524,7 @@ static bool DecodeSnapshotV10Buffer(SaveSnapshot *snapshot, const uint8_t *buffe
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -639,7 +639,7 @@ static bool DecodeSnapshotV11Buffer(SaveSnapshot *snapshot, const uint8_t *buffe
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -754,7 +754,7 @@ static bool DecodeSnapshotV12Buffer(SaveSnapshot *snapshot, const uint8_t *buffe
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -870,7 +870,7 @@ static bool DecodeSnapshotV13Buffer(SaveSnapshot *snapshot, const uint8_t *buffe
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -987,7 +987,7 @@ static bool DecodeSnapshotV14Buffer(SaveSnapshot *snapshot, const uint8_t *buffe
     snapshot->maxStaminaBonus = SaveReader_ReadFloat(&reader);
     snapshot->attackBonus = SaveReader_ReadFloat(&reader);
     snapshot->deathCount = SaveReader_ReadInt32(&reader);
-    snapshot->crouching = SaveReader_ReadUInt8(&reader) != 0;
+    (void)SaveReader_ReadUInt8(&reader);
     snapshot->hasGlowStick = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasRope = SaveReader_ReadUInt8(&reader) != 0;
     snapshot->hasLaserGun = SaveReader_ReadUInt8(&reader) != 0;
@@ -1115,7 +1115,7 @@ bool SaveInternal_EncodeSnapshotBuffer(const SaveSnapshot *snapshot, uint8_t *bu
     SaveWriter_WriteFloat(&writer, snapshot->maxStaminaBonus);
     SaveWriter_WriteFloat(&writer, snapshot->attackBonus);
     SaveWriter_WriteInt32(&writer, snapshot->deathCount);
-    SaveWriter_WriteUInt8(&writer, snapshot->crouching ? 1u : 0u);
+    SaveWriter_WriteUInt8(&writer, 0u);
     SaveWriter_WriteUInt8(&writer, snapshot->hasGlowStick ? 1u : 0u);
     SaveWriter_WriteUInt8(&writer, snapshot->hasRope ? 1u : 0u);
     SaveWriter_WriteUInt8(&writer, snapshot->hasLaserGun ? 1u : 0u);

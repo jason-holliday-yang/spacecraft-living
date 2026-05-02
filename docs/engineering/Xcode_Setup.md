@@ -13,6 +13,11 @@ open build/xcode/SpaceCraftLiving.xcodeproj
 2. Build with `Product -> Build`.
 3. Run with `Product -> Run`.
 
+If Xcode shows `Process completed` immediately and no game window appears, the usual cause is that
+the active scheme is one of the generated `SpaceCraft*Smoke`, `RUN_TESTS`, `ALL_BUILD`, or
+`ZERO_CHECK` targets instead of `SpaceCraftLiving`. Those helper targets are expected to exit
+quickly. Switch the scheme back to `SpaceCraftLiving` and run again.
+
 ## Important
 
 - Open `build/xcode/SpaceCraftLiving.xcodeproj`.

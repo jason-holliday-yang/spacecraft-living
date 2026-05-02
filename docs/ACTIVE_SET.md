@@ -20,6 +20,7 @@
 7. [`plans/BALANCE_TUNING_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/BALANCE_TUNING_PLAN.md)
 8. [`engineering/ARCHITECTURE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/engineering/ARCHITECTURE.md)
 9. [`design/PLAY_GUIDE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/PLAY_GUIDE.md)
+10. [`plans/STAGE_MUSIC_PLAYBACK_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/STAGE_MUSIC_PLAYBACK_PLAN.md)
 
 ## 任务扩展阅读（按需）
 
@@ -41,6 +42,8 @@
   [`design/WEST_SOUTH_RESOURCE_GAP.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/WEST_SOUTH_RESOURCE_GAP.md)
 - 状态系统与生存规则映射：
   [`design/STATUS_SYSTEM_MAPPING.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/STATUS_SYSTEM_MAPPING.md)
+- 阶段化 BGM 播放改造：
+  [`plans/STAGE_MUSIC_PLAYBACK_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/STAGE_MUSIC_PLAYBACK_PLAN.md)
 - 对外试玩与流程核对：
   [`design/PLAY_GUIDE.md`](/Users/jason/Documents/SpaceCraftLivng/docs/design/PLAY_GUIDE.md)
 

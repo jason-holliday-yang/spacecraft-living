@@ -81,6 +81,7 @@ typedef struct AssetBundle {
     TextureAsset iconProtectionSuit;
     TextureAsset iconSignalAmplifier;
     TextureAsset iconFieldCamp;
+    TextureAsset iconRecoveryRation;
     TextureAsset iconMapButton;
     TextureAsset iconInventoryButton;
     TextureAsset statusPoisoned;

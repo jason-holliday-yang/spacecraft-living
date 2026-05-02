@@ -171,8 +171,8 @@ Rectangle UI_GetStandardOverlayRect(int screenWidth, int screenHeight) {
     float height;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    width = 1040.0f * scale;
-    height = 620.0f * scale;
+    width = screenWidth - 72.0f * scale;
+    height = screenHeight - 156.0f * scale;
 
     return Rectangle{
         screenWidth * 0.5f - width * 0.5f,
@@ -205,26 +205,33 @@ Rectangle UI_GetDeathPopupButtonRect(int screenWidth, int screenHeight, int butt
 
 Rectangle UI_GetSaveSlotRect(int screenWidth, int screenHeight, int slotIndex) {
     float scale;
-    float panelX;
-    float panelY;
+    Rectangle panel;
     float slotWidth;
     float slotHeight;
     float gap;
+    float leftInset;
+    float topInset;
     int column;
     int row;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    panelX = screenWidth * 0.5f - 520.0f * scale;
-    panelY = screenHeight * 0.5f - 290.0f * scale;
+    panel = Rectangle{
+        screenWidth * 0.5f - 520.0f * scale,
+        screenHeight * 0.5f - 290.0f * scale,
+        1040.0f * scale,
+        580.0f * scale,
+    };
     slotWidth = 162.0f * scale;
     slotHeight = 88.0f * scale;
     gap = 16.0f * scale;
+    leftInset = 28.0f * scale;
+    topInset = 108.0f * scale;
     column = slotIndex % 4;
     row = slotIndex / 4;
 
     return Rectangle{
-        panelX + 28.0f * scale + column * (slotWidth + gap),
-        panelY + 108.0f * scale + row * (slotHeight + gap),
+        panel.x + leftInset + column * (slotWidth + gap),
+        panel.y + topInset + row * (slotHeight + gap),
         slotWidth,
         slotHeight
     };
@@ -232,24 +239,44 @@ Rectangle UI_GetSaveSlotRect(int screenWidth, int screenHeight, int slotIndex) {
 
 Rectangle UI_GetSavePrimaryButtonRect(int screenWidth, int screenHeight) {
     float scale;
+    Rectangle panel;
+    float detailInset;
+    float detailWidth;
+    float buttonWidth;
+    float buttonGap;
+    float buttonsLeft;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = Rectangle{
+        screenWidth * 0.5f - 520.0f * scale,
+        screenHeight * 0.5f - 290.0f * scale,
+        1040.0f * scale,
+        580.0f * scale,
+    };
+    detailInset = 24.0f * scale;
+    detailWidth = 314.0f * scale;
+    buttonWidth = 104.0f * scale;
+    buttonGap = 12.0f * scale;
+    buttonsLeft = panel.x + panel.width - detailInset - detailWidth + (detailWidth - (buttonWidth * 2.0f + buttonGap)) * 0.5f;
+
     return Rectangle{
-        screenWidth * 0.5f + 248.0f * scale,
-        screenHeight * 0.5f + 206.0f * scale,
-        104.0f * scale,
+        buttonsLeft,
+        panel.y + panel.height - 74.0f * scale,
+        buttonWidth,
         50.0f * scale
     };
 }
 
 Rectangle UI_GetSaveDeleteButtonRect(int screenWidth, int screenHeight) {
     float scale;
+    Rectangle primaryButton;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    primaryButton = UI_GetSavePrimaryButtonRect(screenWidth, screenHeight);
     return Rectangle{
-        screenWidth * 0.5f + 364.0f * scale,
-        screenHeight * 0.5f + 206.0f * scale,
-        104.0f * scale,
+        primaryButton.x + primaryButton.width + 12.0f * scale,
+        primaryButton.y,
+        primaryButton.width,
         50.0f * scale
     };
 }
@@ -282,22 +309,30 @@ Rectangle UI_GetBackpackSlotRect(int screenWidth, int screenHeight, int itemInde
 Rectangle UI_GetCraftSlotRect(int screenWidth, int screenHeight, int itemIndex) {
     float scale;
     Rectangle panel;
+    float listWidth;
     float slotWidth;
     float slotHeight;
     float gap;
+    float outerGap;
+    float leftInset;
+    float rightInset;
     int column;
     int row;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
-    slotWidth = 290.0f * scale;
+    outerGap = 24.0f * scale;
+    leftInset = 32.0f * scale;
+    rightInset = 20.0f * scale;
+    listWidth = (panel.width - 40.0f * scale - outerGap) * (2.0f / 3.0f);
     slotHeight = 96.0f * scale;
     gap = 14.0f * scale;
+    slotWidth = (listWidth - leftInset - rightInset - gap) / (float)UI_CRAFT_SLOT_COLUMNS;
     column = itemIndex % UI_CRAFT_SLOT_COLUMNS;
     row = itemIndex / UI_CRAFT_SLOT_COLUMNS;
 
     return Rectangle{
-        panel.x + 32.0f * scale + column * (slotWidth + gap),
+        panel.x + leftInset + column * (slotWidth + gap),
         panel.y + 118.0f * scale + row * (slotHeight + 12.0f * scale),
         slotWidth,
         slotHeight
@@ -307,13 +342,32 @@ Rectangle UI_GetCraftSlotRect(int screenWidth, int screenHeight, int itemIndex) 
 Rectangle UI_GetCraftActionButtonRect(int screenWidth, int screenHeight) {
     float scale;
     Rectangle panel;
+    Rectangle detailPanel;
+    float listWidth;
+    float detailWidth;
+    float outerGap;
+    float buttonWidth;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
+    outerGap = 24.0f * scale;
+    listWidth = (panel.width - 40.0f * scale - outerGap) * (2.0f / 3.0f);
+    detailWidth = panel.width - 40.0f * scale - outerGap - listWidth;
+    detailPanel = Rectangle{
+        panel.x + 20.0f * scale + listWidth + outerGap,
+        panel.y + 102.0f * scale,
+        detailWidth,
+        panel.height - 134.0f * scale
+    };
+    buttonWidth = detailPanel.width - 52.0f * scale;
+    if (buttonWidth > 292.0f * scale) {
+        buttonWidth = 292.0f * scale;
+    }
+
     return Rectangle{
-        panel.x + panel.width - 322.0f * scale,
-        panel.y + panel.height - 82.0f * scale,
-        290.0f * scale,
+        detailPanel.x + detailPanel.width * 0.5f - buttonWidth * 0.5f,
+        detailPanel.y + detailPanel.height - 64.0f * scale,
+        buttonWidth,
         50.0f * scale
     };
 }
@@ -339,6 +393,31 @@ Rectangle UI_GetCommunicatorTabRect(int screenWidth, int screenHeight, int tabIn
     return Rectangle{
         panel.x + 20.0f * scale + tabIndex * (tabWidth + gap),
         panel.y + 78.0f * scale,
+        tabWidth,
+        tabHeight
+    };
+}
+
+Rectangle UI_GetInfoOverlayTabRect(int screenWidth, int screenHeight, int tabIndex) {
+    float scale;
+    Rectangle panel;
+    float tabWidth;
+    float tabHeight;
+    float gap;
+    float totalWidth;
+    float startX;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
+    tabWidth = 150.0f * scale;
+    tabHeight = 36.0f * scale;
+    gap = 12.0f * scale;
+    totalWidth = tabWidth * INFO_OVERLAY_TAB_COUNT + gap * (INFO_OVERLAY_TAB_COUNT - 1);
+    startX = panel.x + panel.width * 0.5f - totalWidth * 0.5f;
+
+    return Rectangle{
+        startX + tabIndex * (tabWidth + gap),
+        panel.y + 16.0f * scale,
         tabWidth,
         tabHeight
     };
@@ -523,17 +602,21 @@ Rectangle UI_GetSettingsRowRect(int screenWidth, int screenHeight, int rowIndex)
     float rowHeight;
     float rowGap;
     float startY;
+    float contentWidth;
+    float startX;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
     rowHeight = 76.0f * scale;
     rowGap = 14.0f * scale;
     startY = panel.y + 108.0f * scale;
+    contentWidth = panel.width * 0.74f;
+    startX = panel.x + (panel.width - contentWidth) * 0.5f;
 
     return Rectangle{
-        panel.x + 34.0f * scale,
+        startX,
         startY + rowIndex * (rowHeight + rowGap),
-        panel.width - 68.0f * scale,
+        contentWidth,
         rowHeight
     };
 }
@@ -636,31 +719,26 @@ Rectangle UI_GetSettingsAccountButtonRect(int screenWidth, int screenHeight, int
 
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex) {
     float scale;
-    float bottomLift;
-    Rectangle shortcutsPanel;
-    float width;
+    float edgeInset;
+    float bottomInset;
+    float size;
     float gap;
     float totalWidth;
     float startX;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
-    bottomLift = 22.0f * scale;
-    shortcutsPanel = Rectangle{
-        screenWidth - 334.0f * scale,
-        screenHeight - 130.0f * scale - bottomLift,
-        316.0f * scale,
-        106.0f * scale
-    };
-    width = 128.0f * scale;
+    edgeInset = 22.0f * scale;
+    bottomInset = 44.0f * scale;
+    size = 68.0f * scale;
     gap = 16.0f * scale;
-    totalWidth = width * HUD_SHORTCUT_COUNT + gap * (HUD_SHORTCUT_COUNT - 1);
-    startX = shortcutsPanel.x + (shortcutsPanel.width - totalWidth) * 0.5f;
+    totalWidth = size * HUD_SHORTCUT_COUNT + gap * (HUD_SHORTCUT_COUNT - 1);
+    startX = screenWidth - edgeInset - totalWidth;
 
     return Rectangle{
-        startX + shortcutIndex * (width + gap),
-        shortcutsPanel.y + 12.0f * scale,
-        width,
-        shortcutsPanel.height - 24.0f * scale
+        startX + shortcutIndex * (size + gap),
+        screenHeight - bottomInset - size,
+        size,
+        size
     };
 }
 

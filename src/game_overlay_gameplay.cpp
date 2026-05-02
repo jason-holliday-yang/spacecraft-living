@@ -1,9 +1,11 @@
 #include "game_overlay_internal.h"
 
 #include "localization.h"
+#include "ui_inventory_internal.h"
 #include "ui_story_internal.h"
 #include "ui_runtime_internal.h"
 
+#include <cmath>
 #include <cstdio>
 
 static float ClampUnit(float value) {
@@ -14,6 +16,27 @@ static float ClampUnit(float value) {
         return 1.0f;
     }
     return value;
+}
+
+static void ResetCommunicatorDetailState(Game *game) {
+    if (game == NULL) {
+        return;
+    }
+
+    game->communicatorLogDetailOpen = false;
+    game->communicatorLogDetailVisibility = 0.0f;
+    game->communicatorLogDetailScroll = 0.0f;
+}
+
+static void ScrollCommunicatorDetail(Game *game, float delta) {
+    if (game == NULL) {
+        return;
+    }
+
+    game->communicatorLogDetailScroll += delta;
+    if (game->communicatorLogDetailScroll < 0.0f) {
+        game->communicatorLogDetailScroll = 0.0f;
+    }
 }
 
 static void EnsureCommunicatorSelectionVisible(Game *game, int collectedCount) {
@@ -103,6 +126,64 @@ static void TryCraftSelectedRecipe(Game *game) {
     }
 }
 
+static float ClampSettingsValue(float value, float minValue, float maxValue) {
+    if (value < minValue) {
+        return minValue;
+    }
+    if (value > maxValue) {
+        return maxValue;
+    }
+    return value;
+}
+
+static void ApplySettingsInfoSliderValue(Game *game, int sliderIndex, float value) {
+    float clampedValue;
+
+    if (game == NULL) {
+        return;
+    }
+
+    clampedValue = ClampSettingsValue(value, 0.0f, 1.0f);
+    switch (sliderIndex) {
+        case 0:
+            game->settings.masterVolume = clampedValue;
+            game->settingsDirty = true;
+            Audio_SetMasterVolumeSetting(&game->audio, clampedValue);
+            return;
+        case 1:
+            game->settings.musicVolume = clampedValue;
+            game->settingsDirty = true;
+            Audio_SetMusicVolumeSetting(&game->audio, clampedValue);
+            return;
+        case 2:
+            game->settings.sfxVolume = clampedValue;
+            game->settings.sfxEnabled = clampedValue > 0.001f;
+            game->settingsDirty = true;
+            Audio_SetSfxVolumeSetting(&game->audio, clampedValue);
+            Audio_SetSfxEnabled(&game->audio, game->settings.sfxEnabled);
+            return;
+        default:
+            return;
+    }
+}
+
+static float GetSettingsInfoSliderValue(const Game *game, int sliderIndex) {
+    if (game == NULL) {
+        return 0.0f;
+    }
+
+    switch (sliderIndex) {
+        case 0:
+            return game->settings.masterVolume;
+        case 1:
+            return game->settings.musicVolume;
+        case 2:
+            return game->settings.sfxVolume;
+        default:
+            return 0.0f;
+    }
+}
+
 static void UpdateCraftOverlay(Game *game) {
     Vector2 mouse;
     int recipeCount;
@@ -183,27 +264,98 @@ static void UpdateCraftOverlay(Game *game) {
 }
 
 static bool TryUseSelectedBackpackItem(Game *game, char *message, size_t messageSize) {
+    const BackpackEntryDef *entry;
     ResourceType resource;
 
-    switch (game->selectedBackpackItem) {
-        case 3:
-            resource = RESOURCE_FRUIT;
-            break;
-        case 4:
-            resource = RESOURCE_SPECIAL_FUNGUS;
-            break;
-        case 6:
-            resource = RESOURCE_GLOW_MOSS;
-            break;
-        case 8:
-            resource = RESOURCE_SHELL_FRUIT;
-            break;
-        case 11:
-            resource = RESOURCE_CALM_MUSHROOM;
+    entry = UIInventory_GetBackpackEntry(game->selectedBackpackItem);
+    if (entry == NULL) {
+        if (message != NULL && messageSize > 0) {
+            message[0] = '\0';
+        }
+        return false;
+    }
+
+    if (entry->kind == BACKPACK_ENTRY_GEAR) {
+        const BackpackGearId gearId = (BackpackGearId)entry->itemId;
+
+        if (!UIInventory_BackpackEntryIsOwned(&game->player, game->selectedBackpackItem)) {
+            std::snprintf(message, messageSize, "%s", Loc_PickLiteral("That gear is not built yet.", "这件装备还没有制作出来。"));
+            return false;
+        }
+
+        switch (gearId) {
+            case BACKPACK_GEAR_ROPE: {
+                const int targetX = game->player.gridX + game->player.facingX;
+                const int targetY = game->player.gridY + game->player.facingY;
+
+                if (Map_CanCrossWithRope(&game->map, game->player.gridX, game->player.gridY, targetX, targetY)) {
+                    Map_CreateRopeBridge(&game->map, targetX, targetY);
+                    std::snprintf(message,
+                                  messageSize,
+                                  "%s",
+                                  Loc_PickLiteral("Rope deployed. The hazard is now tied into a usable shortcut.",
+                                                  "绳索已部署。眼前的险地已经被固定成可用捷径。"));
+                    return true;
+                }
+
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("Rope readied. Face a marked swamp or deep barrier, then press F or use it here.",
+                                              "绳索已准备好。面对标记出的沼泽或深水阻隔后，按 F 或在背包中使用它。"));
+                return true;
+            }
+            case BACKPACK_GEAR_LASER_GUN:
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("Laser Gun is already equipped. Face a threat and press Space to fire.",
+                                              "激光枪已经装备。面向威胁后按空格键发射。"));
+                return false;
+            case BACKPACK_GEAR_PROTECTION_SUIT:
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("Protection Suit works passively while carried. There is no manual backpack action for it.",
+                                              "防护服在携带时被动生效，不需要在背包里手动使用。"));
+                return false;
+            case BACKPACK_GEAR_FIELD_CAMP:
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("Field Camp is ready. Stand beside the placed camp and press F to rest there.",
+                                              "野外营地已就绪。站在已部署营地旁按 F 即可休整。"));
+                return false;
+            case BACKPACK_GEAR_SIGNAL_AMPLIFIER:
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("Signal Amplifier packed. Carry it to the tower route when you commit to the calmer ending.",
+                                              "信号放大器已携带。选择更平稳的终局路线时，把它带到塔楼。"));
+                return false;
+            case BACKPACK_GEAR_GLOW_STICK:
+            default:
+                game->player.glowStickTimer = fmaxf(game->player.glowStickTimer, 60.0f);
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("Glow Stick readied. Its light will cover the next dark stretch.",
+                                              "荧光棒已准备好。它的光会撑过接下来那段黑暗路程。"));
+                return true;
+        }
+    }
+
+    switch (entry->itemId) {
+        case RESOURCE_RECOVERY_RATION:
+            resource = (ResourceType)entry->itemId;
             break;
         default:
             if (message != NULL && messageSize > 0) {
-                message[0] = '\0';
+                std::snprintf(message,
+                              messageSize,
+                              "%s",
+                              Loc_PickLiteral("That raw material has to be processed at the workbench before it becomes usable.",
+                                              "这种原始素材必须先在工作台加工，之后才能使用。"));
             }
             return false;
     }
@@ -211,7 +363,74 @@ static bool TryUseSelectedBackpackItem(Game *game, char *message, size_t message
     return Player_UseSelectedConsumable(&game->player, resource, message, (int)messageSize);
 }
 
-static void UpdateBackpackOverlay(Game *game) {
+static InfoOverlayTab GetResolvedInfoOverlayTab(const Game *game) {
+    if (game == NULL) {
+        return INFO_OVERLAY_TAB_MAP;
+    }
+
+    if (game->infoOverlayTab == INFO_OVERLAY_TAB_LOXI && !Tasks_IsCommunicatorUnlocked(&game->tasks)) {
+        return INFO_OVERLAY_TAB_MAP;
+    }
+    if (game->infoOverlayTab < INFO_OVERLAY_TAB_MAP || game->infoOverlayTab >= INFO_OVERLAY_TAB_COUNT) {
+        return INFO_OVERLAY_TAB_MAP;
+    }
+    return game->infoOverlayTab;
+}
+
+static void CloseInfoOverlay(Game *game) {
+    if (game == NULL) {
+        return;
+    }
+
+    if (game->settingsDirty) {
+        Game_TrySaveSettings(game);
+    }
+    game->infoOverlayOpen = false;
+    game->settingsOpen = false;
+    game->settingsSliderDragging = false;
+    game->settingsSliderDragIndex = -1;
+    ResetCommunicatorDetailState(game);
+    Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+}
+
+static bool TrySwitchInfoOverlayTab(Game *game, InfoOverlayTab tab, bool closeIfSelected) {
+    const InfoOverlayTab currentTab = GetResolvedInfoOverlayTab(game);
+
+    if (game == NULL) {
+        return false;
+    }
+
+    if (tab == INFO_OVERLAY_TAB_LOXI && !Tasks_IsCommunicatorUnlocked(&game->tasks)) {
+        Game_PostMessage(game,
+                         Loc_PickLiteral("Loxi link is offline. Sync with the terminal bay uplink first, then press N.",
+                                         "洛希链路尚未上线。请先在终端舱完成同步，再按 N。"),
+                         2.8f);
+        Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
+        return true;
+    }
+
+    if (currentTab == tab) {
+        if (closeIfSelected) {
+            CloseInfoOverlay(game);
+            return true;
+        }
+        return false;
+    }
+
+    if (currentTab == INFO_OVERLAY_TAB_SETTINGS && game->settingsDirty) {
+        Game_TrySaveSettings(game);
+    }
+    game->infoOverlayOpen = true;
+    game->infoOverlayTab = tab;
+    game->settingsOpen = false;
+    game->settingsSliderDragging = false;
+    game->settingsSliderDragIndex = -1;
+    ResetCommunicatorDetailState(game);
+    Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
+    return true;
+}
+
+static void UpdateBackpackOverlay(Game *game, bool *open, KeyboardKey alternateKey) {
     Vector2 mouse;
     int itemIndex;
 
@@ -219,7 +438,7 @@ static void UpdateBackpackOverlay(Game *game) {
         game->selectedBackpackItem = 0;
     }
 
-    if (GameOverlay_TryCloseOverlay(game, &game->backpackOpen, KEY_B)) {
+    if (GameOverlay_TryCloseOverlay(game, open, alternateKey)) {
         return;
     }
 
@@ -250,9 +469,10 @@ static void UpdateBackpackOverlay(Game *game) {
     }
 }
 
-static void UpdateCommunicatorOverlay(Game *game) {
+static void UpdateCommunicatorOverlay(Game *game, bool *open, KeyboardKey alternateKey) {
     static constexpr float kCommunicatorDetailFadeDuration = 0.16f;
     Vector2 mouse;
+    Rectangle contentPanel;
     int collectedCount;
     int shownStoryCount;
     int tabIndex;
@@ -262,22 +482,24 @@ static void UpdateCommunicatorOverlay(Game *game) {
     int visibleIndex;
     float wheelMove;
     float detailFadeStep;
+    float detailScrollStep;
     bool detailVisible;
 
     detailFadeStep = GetFrameTime() / kCommunicatorDetailFadeDuration;
+    detailScrollStep = 80.0f * UIRuntime_GetScale(GetScreenWidth(), GetScreenHeight());
+    contentPanel = UI_GetCommunicatorLogContentRect(GetScreenWidth(), GetScreenHeight());
     game->communicatorLogDetailVisibility = ClampUnit(
         game->communicatorLogDetailVisibility + (game->communicatorLogDetailOpen ? detailFadeStep : -detailFadeStep));
     detailVisible = game->communicatorLogDetailOpen || game->communicatorLogDetailVisibility > 0.001f;
 
-    if (detailVisible && IsKeyPressed(KEY_ESCAPE)) {
-        game->communicatorLogDetailOpen = false;
+    if (detailVisible && (IsKeyPressed(KEY_ESCAPE) || GameOverlay_IsConfirmPressed())) {
+        ResetCommunicatorDetailState(game);
         Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
         return;
     }
 
-    if (GameOverlay_TryCloseOverlay(game, &game->communicatorOpen, KEY_N)) {
-        game->communicatorLogDetailOpen = false;
-        game->communicatorLogDetailVisibility = 0.0f;
+    if (GameOverlay_TryCloseOverlay(game, open, alternateKey)) {
+        ResetCommunicatorDetailState(game);
         return;
     }
 
@@ -308,23 +530,20 @@ static void UpdateCommunicatorOverlay(Game *game) {
                                                                                              shownStoryCount);
 
     if (IsKeyPressed(KEY_TAB)
-        || IsKeyPressed(KEY_Q)
-        || IsKeyPressed(KEY_E)
         || IsKeyPressed(KEY_LEFT)
         || IsKeyPressed(KEY_A)
         || IsKeyPressed(KEY_RIGHT)
         || IsKeyPressed(KEY_D)) {
         int nextTab = (int)game->communicatorTab;
 
-        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A) || IsKeyPressed(KEY_Q)) {
+        if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
             nextTab = (nextTab + COMMUNICATOR_TAB_COUNT - 1) % COMMUNICATOR_TAB_COUNT;
         } else {
             nextTab = (nextTab + 1) % COMMUNICATOR_TAB_COUNT;
         }
 
         game->communicatorTab = (CommunicatorTab)nextTab;
-        game->communicatorLogDetailOpen = false;
-        game->communicatorLogDetailVisibility = 0.0f;
+        ResetCommunicatorDetailState(game);
         Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         return;
     }
@@ -334,23 +553,33 @@ static void UpdateCommunicatorOverlay(Game *game) {
             tabIndex = GameOverlay_FindClickedIndexedRect(mouse, COMMUNICATOR_TAB_COUNT, UI_GetCommunicatorTabRect);
             if (tabIndex >= 0) {
                 game->communicatorTab = (CommunicatorTab)tabIndex;
-                game->communicatorLogDetailOpen = false;
-                game->communicatorLogDetailVisibility = 0.0f;
+                ResetCommunicatorDetailState(game);
                 Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
             }
         }
         return;
     }
 
+    if (detailVisible) {
+        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
+            ScrollCommunicatorDetail(game, -detailScrollStep);
+            return;
+        }
+        if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_SPACE)) {
+            ScrollCommunicatorDetail(game, detailScrollStep);
+            return;
+        }
+    }
+
     if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
         if (game->communicatorTab == COMMUNICATOR_TAB_LOGS && game->selectedLogIndex > 0) {
             game->selectedLogIndex--;
-            game->communicatorLogDetailOpen = false;
+            ResetCommunicatorDetailState(game);
             EnsureCommunicatorSelectionVisible(game, collectedCount);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         } else if (game->communicatorTab == COMMUNICATOR_TAB_STORY && game->selectedStorySceneIndex > 0) {
             game->selectedStorySceneIndex--;
-            game->communicatorLogDetailOpen = false;
+            ResetCommunicatorDetailState(game);
             EnsureCommunicatorStorySelectionVisible(game, shownStoryCount);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         }
@@ -360,12 +589,12 @@ static void UpdateCommunicatorOverlay(Game *game) {
     if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
         if (game->communicatorTab == COMMUNICATOR_TAB_LOGS && game->selectedLogIndex + 1 < collectedCount) {
             game->selectedLogIndex++;
-            game->communicatorLogDetailOpen = false;
+            ResetCommunicatorDetailState(game);
             EnsureCommunicatorSelectionVisible(game, collectedCount);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         } else if (game->communicatorTab == COMMUNICATOR_TAB_STORY && game->selectedStorySceneIndex + 1 < shownStoryCount) {
             game->selectedStorySceneIndex++;
-            game->communicatorLogDetailOpen = false;
+            ResetCommunicatorDetailState(game);
             EnsureCommunicatorStorySelectionVisible(game, shownStoryCount);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         }
@@ -375,6 +604,11 @@ static void UpdateCommunicatorOverlay(Game *game) {
     wheelMove = GetMouseWheelMove();
     if (wheelMove != 0.0f) {
         Vector2 mousePosition = GetMousePosition();
+
+        if (detailVisible && CheckCollisionPointRec(mousePosition, contentPanel)) {
+            ScrollCommunicatorDetail(game, wheelMove > 0.0f ? -detailScrollStep : detailScrollStep);
+            return;
+        }
 
         if (CheckCollisionPointRec(mousePosition, UI_GetCommunicatorLogListRect(GetScreenWidth(), GetScreenHeight()))) {
             if (game->communicatorTab == COMMUNICATOR_TAB_LOGS) {
@@ -417,6 +651,13 @@ static void UpdateCommunicatorOverlay(Game *game) {
         }
     }
 
+    if ((GameOverlay_IsConfirmPressed() || IsKeyPressed(KEY_SPACE)) && !detailVisible) {
+        game->communicatorLogDetailOpen = true;
+        game->communicatorLogDetailScroll = 0.0f;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+        return;
+    }
+
     if (!GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
         return;
     }
@@ -424,8 +665,7 @@ static void UpdateCommunicatorOverlay(Game *game) {
     tabIndex = GameOverlay_FindClickedIndexedRect(mouse, COMMUNICATOR_TAB_COUNT, UI_GetCommunicatorTabRect);
     if (tabIndex >= 0) {
         game->communicatorTab = (CommunicatorTab)tabIndex;
-        game->communicatorLogDetailOpen = false;
-        game->communicatorLogDetailVisibility = 0.0f;
+        ResetCommunicatorDetailState(game);
         Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
         return;
     }
@@ -438,13 +678,14 @@ static void UpdateCommunicatorOverlay(Game *game) {
     }
 
     if (detailVisible) {
-        game->communicatorLogDetailOpen = false;
+        ResetCommunicatorDetailState(game);
         Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
         return;
     }
 
-    if (CheckCollisionPointRec(mouse, UI_GetCommunicatorLogImageRect(GetScreenWidth(), GetScreenHeight()))) {
+    if (CheckCollisionPointRec(mouse, contentPanel)) {
         game->communicatorLogDetailOpen = true;
+        game->communicatorLogDetailScroll = 0.0f;
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
         return;
     }
@@ -465,7 +706,7 @@ static void UpdateCommunicatorOverlay(Game *game) {
             } else {
                 game->selectedLogIndex = firstVisibleLog + visibleIndex;
             }
-            game->communicatorLogDetailOpen = false;
+            ResetCommunicatorDetailState(game);
             Audio_PlayCue(&game->audio, AUDIO_CUE_CONFIRM);
             return;
         }
@@ -476,8 +717,164 @@ static void UpdateHelpOverlay(Game *game) {
     GameOverlay_TryCloseOverlay(game, &game->helpOpen, KEY_H);
 }
 
-static void UpdateMapOverlay(Game *game) {
-    GameOverlay_TryCloseOverlay(game, &game->mapOpen, KEY_M);
+static void UpdateMapOverlay(Game *game, bool *open, KeyboardKey alternateKey) {
+    GameOverlay_TryCloseOverlay(game, open, alternateKey);
+}
+
+static void UpdateSettingsInfoTab(Game *game) {
+    Rectangle closeRect;
+    Rectangle languageEnglishRect;
+    Rectangle languageChineseRect;
+    Vector2 mouse;
+    float scale;
+    float nextVolume;
+    int sliderIndex;
+
+    if (game == NULL) {
+        return;
+    }
+
+    scale = UIRuntime_GetScale(GetScreenWidth(), GetScreenHeight());
+    closeRect = UI_GetSettingsCloseButtonRect(GetScreenWidth(), GetScreenHeight());
+    languageEnglishRect = UI_GetSettingsLanguageButtonRect(GetScreenWidth(), GetScreenHeight(), 0);
+    languageChineseRect = UI_GetSettingsLanguageButtonRect(GetScreenWidth(), GetScreenHeight(), 1);
+
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+        ApplySettingsInfoSliderValue(game, 0, game->settings.masterVolume - 0.05f);
+    }
+    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+        ApplySettingsInfoSliderValue(game, 0, game->settings.masterVolume + 0.05f);
+    }
+    mouse = GetMousePosition();
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (CheckCollisionPointRec(mouse, closeRect)) {
+            CloseInfoOverlay(game);
+            return;
+        }
+        if (CheckCollisionPointRec(mouse, languageEnglishRect)) {
+            Game_BeginLanguageTransition(game, GAME_LANGUAGE_EN);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+            return;
+        }
+        if (CheckCollisionPointRec(mouse, languageChineseRect)) {
+            Game_BeginLanguageTransition(game, GAME_LANGUAGE_ZH_CN);
+            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+            return;
+        }
+        for (sliderIndex = 0; sliderIndex < 3; ++sliderIndex) {
+            Rectangle sliderRect;
+            Rectangle decreaseRect;
+            Rectangle increaseRect;
+            Rectangle handleRect;
+            float handleCenterX;
+
+            sliderRect = UI_GetSettingsSliderRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+            decreaseRect = UI_GetSettingsDecreaseButtonRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+            increaseRect = UI_GetSettingsIncreaseButtonRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+            handleCenterX = sliderRect.x + sliderRect.width * GetSettingsInfoSliderValue(game, sliderIndex);
+            if (handleCenterX < sliderRect.x + 14.0f * scale) {
+                handleCenterX = sliderRect.x + 14.0f * scale;
+            }
+            if (handleCenterX > sliderRect.x + sliderRect.width - 14.0f * scale) {
+                handleCenterX = sliderRect.x + sliderRect.width - 14.0f * scale;
+            }
+            handleRect = Rectangle{
+                handleCenterX - 14.0f * scale,
+                sliderRect.y - 8.0f * scale,
+                28.0f * scale,
+                sliderRect.height + 16.0f * scale
+            };
+
+            if (CheckCollisionPointRec(mouse, decreaseRect)) {
+                ApplySettingsInfoSliderValue(game, sliderIndex, GetSettingsInfoSliderValue(game, sliderIndex) - 0.05f);
+                return;
+            }
+            if (CheckCollisionPointRec(mouse, increaseRect)) {
+                ApplySettingsInfoSliderValue(game, sliderIndex, GetSettingsInfoSliderValue(game, sliderIndex) + 0.05f);
+                return;
+            }
+            if (CheckCollisionPointRec(mouse, sliderRect) || CheckCollisionPointRec(mouse, handleRect)) {
+                game->settingsSliderDragging = true;
+                game->settingsSliderDragIndex = sliderIndex;
+                break;
+            }
+        }
+    }
+
+    if (!IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        game->settingsSliderDragging = false;
+        game->settingsSliderDragIndex = -1;
+    }
+
+    if (!game->settingsSliderDragging || game->settingsSliderDragIndex < 0 || game->settingsSliderDragIndex > 2) {
+        return;
+    }
+
+    sliderIndex = game->settingsSliderDragIndex;
+    {
+        Rectangle sliderRect;
+
+        sliderRect = UI_GetSettingsSliderRect(GetScreenWidth(), GetScreenHeight(), sliderIndex);
+        nextVolume = (mouse.x - sliderRect.x) / sliderRect.width;
+    }
+    ApplySettingsInfoSliderValue(game, sliderIndex, nextVolume);
+}
+
+static void UpdateInfoOverlay(Game *game) {
+    Vector2 mouse;
+    int tabIndex;
+    bool communicatorDetailVisible;
+
+    if (game == NULL) {
+        return;
+    }
+
+    game->infoOverlayOpen = true;
+    game->settingsOpen = false;
+    game->infoOverlayTab = GetResolvedInfoOverlayTab(game);
+    communicatorDetailVisible = game->infoOverlayTab == INFO_OVERLAY_TAB_LOXI
+        && (game->communicatorLogDetailOpen || game->communicatorLogDetailVisibility > 0.001f);
+
+    if (IsKeyPressed(KEY_ESCAPE) && !communicatorDetailVisible) {
+        CloseInfoOverlay(game);
+        return;
+    }
+    if (IsKeyPressed(KEY_M) && TrySwitchInfoOverlayTab(game, INFO_OVERLAY_TAB_MAP, true)) {
+        return;
+    }
+    if (IsKeyPressed(KEY_B) && TrySwitchInfoOverlayTab(game, INFO_OVERLAY_TAB_BACKPACK, true)) {
+        return;
+    }
+    if (IsKeyPressed(KEY_N) && TrySwitchInfoOverlayTab(game, INFO_OVERLAY_TAB_LOXI, true)) {
+        return;
+    }
+    if (IsKeyPressed(KEY_O) && TrySwitchInfoOverlayTab(game, INFO_OVERLAY_TAB_SETTINGS, true)) {
+        return;
+    }
+
+    if (GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
+        tabIndex = GameOverlay_FindClickedIndexedRect(mouse, INFO_OVERLAY_TAB_COUNT, UI_GetInfoOverlayTabRect);
+        if (tabIndex >= 0) {
+            TrySwitchInfoOverlayTab(game, (InfoOverlayTab)tabIndex, false);
+            return;
+        }
+    }
+
+    switch (game->infoOverlayTab) {
+        case INFO_OVERLAY_TAB_BACKPACK:
+            UpdateBackpackOverlay(game, &game->infoOverlayOpen, KEY_NULL);
+            break;
+        case INFO_OVERLAY_TAB_LOXI:
+            UpdateCommunicatorOverlay(game, &game->infoOverlayOpen, KEY_NULL);
+            break;
+        case INFO_OVERLAY_TAB_SETTINGS:
+            UpdateSettingsInfoTab(game);
+            break;
+        case INFO_OVERLAY_TAB_MAP:
+        default:
+            UpdateMapOverlay(game, &game->infoOverlayOpen, KEY_NULL);
+            break;
+    }
 }
 
 static void UpdateDeathPopup(Game *game) {
@@ -550,18 +947,8 @@ bool Game_UpdateGameplayOverlayState(Game *game) {
         return true;
     }
 
-    if (game->mapOpen) {
-        UpdateMapOverlay(game);
-        return true;
-    }
-
-    if (game->backpackOpen) {
-        UpdateBackpackOverlay(game);
-        return true;
-    }
-
-    if (game->communicatorOpen) {
-        UpdateCommunicatorOverlay(game);
+    if (game->infoOverlayOpen) {
+        UpdateInfoOverlay(game);
         return true;
     }
 

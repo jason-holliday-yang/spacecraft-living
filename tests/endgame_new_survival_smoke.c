@@ -16,22 +16,6 @@ static void Require(bool condition, const char *message) {
     exit(1);
 }
 
-static int CountNorthwestRuinsRelicGuards(const TaskSystem *tasks) {
-    int count;
-    int index;
-
-    count = 0;
-    for (index = 0; index < tasks->monsterCount; index++) {
-        if (tasks->monsters[index].active
-            && tasks->monsters[index].type == MONSTER_RELIC_GUARD
-            && tasks->monsters[index].area == MAP_AREA_BOSS_ARENA) {
-            count += 1;
-        }
-    }
-
-    return count;
-}
-
 static Monster *FindMonsterByEncounter(TaskSystem *tasks, CombatEncounterId encounterId) {
     int index;
 
@@ -186,8 +170,8 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 480.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_MELEE;
     player.gridX = BOSS_ARENA_BOSS_X - 1;
@@ -211,8 +195,8 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 480.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_MELEE;
     preparedPlayer.hasProtectionSuit = true;
@@ -239,8 +223,8 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 480.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_MELEE;
     player.gridX = BOSS_ARENA_BOSS_X - 1;
@@ -258,17 +242,19 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 300.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
-    tasks.monsters[0].currentAttack = BOSS_ATTACK_AOE;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_CHARGE;
     tasks.monsters[0].attackTelegraph = 0.1f;
-    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
-    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
+    tasks.monsters[0].targetX = BOSS_ARENA_BOSS_X + 5;
+    tasks.monsters[0].targetY = BOSS_ARENA_BOSS_Y;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE + 3;
+    player.gridY = BOSS_ARENA_BOSS_Y + 2;
     Tasks_Update(&tasks, &map, &player, 0.2f);
     unlitWeakPointTimer = tasks.monsters[0].weakPointTimer;
     Require(unlitWeakPointTimer > 0.0f,
-            "dodging the guardian's area attack should now expose a real weak-point window");
+            "dodging the guardian's line lock should expose a real core window");
 
     ResetEndgameState(&map, &player, &tasks);
     tasks.monolithsLit = 3;
@@ -283,17 +269,19 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 300.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
-    tasks.monsters[0].currentAttack = BOSS_ATTACK_AOE;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_CHARGE;
     tasks.monsters[0].attackTelegraph = 0.1f;
-    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
-    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
+    tasks.monsters[0].targetX = BOSS_ARENA_BOSS_X + 5;
+    tasks.monsters[0].targetY = BOSS_ARENA_BOSS_Y;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE + 3;
+    player.gridY = BOSS_ARENA_BOSS_Y + 2;
     Tasks_Update(&tasks, &map, &player, 0.2f);
     litWeakPointTimer = tasks.monsters[0].weakPointTimer;
     Require(litWeakPointTimer > unlitWeakPointTimer,
-            "full monolith prep should extend the guardian weak-point window after a dodged heavy attack");
+            "full monolith prep should extend the guardian core window after a dodged line lock");
 
     ResetEndgameState(&map, &player, &tasks);
     tasks.monsterCount = 1;
@@ -303,16 +291,18 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 60.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 120.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
-    tasks.monsters[0].currentAttack = BOSS_ATTACK_AOE;
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_CHARGE;
     tasks.monsters[0].attackTelegraph = 0.1f;
-    player.gridX = BOSS_ARENA_BOSS_X + 4;
+    tasks.monsters[0].targetX = BOSS_ARENA_BOSS_X + 5;
+    tasks.monsters[0].targetY = BOSS_ARENA_BOSS_Y;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE + 3;
     player.gridY = BOSS_ARENA_BOSS_Y;
     Tasks_Update(&tasks, &map, &player, 0.2f);
     Require(player.health < INITIAL_HEALTH,
-            "the guardian final phase should widen its shockwave pressure beyond the early-phase radius");
+            "the guardian final phase line lock should punish players who stay on the locked lane");
 
     ResetEndgameState(&map, &player, &tasks);
     tasks.monsterCount = 1;
@@ -322,8 +312,8 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 480.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     player.hasLaserGun = true;
     player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE;
     player.gridY = BOSS_ARENA_BOSS_Y;
@@ -342,8 +332,8 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 220.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 480.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].weakPointTimer = 1.4f;
     player.hasLaserGun = true;
     player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE;
@@ -358,8 +348,8 @@ int main(void) {
             "weak-point punishment should deal meaningfully more damage than a normal guardian hit");
     Require(tasks.monsters[0].weakPointTimer <= 0.0f,
             "landing the weak-point punish should consume the current guardian opening");
-    Require(strstr(message, "Weak point") != NULL || strstr(message, "guardian staggers") != NULL,
-            "weak-point punishment should tell the player they exploited the opening");
+    Require(strstr(message, "Core hit") != NULL || strstr(message, "guardian staggers") != NULL,
+            "core punishment should tell the player they exploited the opening");
 
     ResetEndgameState(&map, &player, &tasks);
     tasks.monsterCount = 1;
@@ -369,17 +359,18 @@ int main(void) {
     tasks.monsters[0].gridY = BOSS_ARENA_BOSS_Y;
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
-    tasks.monsters[0].health = 140.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].health = 300.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
-    tasks.monsters[0].currentAttack = BOSS_ATTACK_SPAWN;
-    tasks.monsters[0].attackTelegraph = 0.1f;
-    tasks.monsters[0].phaseTriggered = true;
-    player.gridX = BOSS_ARENA_PLAYER_ENTRY_X;
-    player.gridY = BOSS_ARENA_PLAYER_ENTRY_Y;
-    Tasks_Update(&tasks, &map, &player, 0.2f);
-    Require(CountNorthwestRuinsRelicGuards(&tasks) >= 1,
-            "boss spawn attack should now summon relic-guard reinforcements into the northwest-ruins fight");
+    tasks.monsters[0].currentAttack = BOSS_ATTACK_NONE;
+    player.gridX = BOSS_ARENA_BOSS_X + MONSTER_FOOTPRINT_SIZE + 3;
+    player.gridY = BOSS_ARENA_BOSS_Y;
+    Tasks_Update(&tasks, &map, &player, 0.0f);
+    Require(tasks.monsters[0].currentAttack == BOSS_ATTACK_CHARGE
+                && tasks.monsters[0].attackTelegraph > 0.0f,
+            "phase two guardian pressure should start a readable line-lock attack at range");
+    Require(tasks.monsterCount == 1,
+            "the redesigned guardian fight should stay focused on the boss instead of summoning reinforcements");
 
     ResetEndgameState(&map, &player, &tasks);
     PrepareEndingBranch(&tasks);
@@ -394,7 +385,7 @@ int main(void) {
     tasks.monsters[0].area = MAP_AREA_BOSS_ARENA;
     tasks.monsters[0].unlockStage = 7;
     tasks.monsters[0].health = 20.0f;
-    tasks.monsters[0].maxHealth = 220.0f;
+    tasks.monsters[0].maxHealth = 480.0f;
     tasks.monsters[0].attackTimer = 0.0f;
     tasks.monsters[0].currentAttack = BOSS_ATTACK_NONE;
     player.hasLaserGun = true;

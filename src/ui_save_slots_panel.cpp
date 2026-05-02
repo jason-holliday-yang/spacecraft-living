@@ -14,6 +14,10 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
                              int screenWidth,
                              int screenHeight) {
     float scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    const float slotGap = 16.0f * scale;
+    const float detailsGap = 24.0f * scale;
+    const float detailsRightInset = 24.0f * scale;
+    Rectangle lastSlotRect = UI_GetSaveSlotRect(screenWidth, screenHeight, 3);
     Rectangle panel{
         screenWidth * 0.5f - 520.0f * scale,
         screenHeight * 0.5f - 290.0f * scale,
@@ -21,9 +25,9 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
         580.0f * scale,
     };
     Rectangle detailsPanel{
-        panel.x + 724.0f * scale,
+        lastSlotRect.x + lastSlotRect.width + detailsGap,
         panel.y + 108.0f * scale,
-        286.0f * scale,
+        panel.x + panel.width - detailsRightInset - (lastSlotRect.x + lastSlotRect.width + detailsGap),
         386.0f * scale,
     };
     Rectangle primaryButton = UI_GetSavePrimaryButtonRect(screenWidth, screenHeight);
@@ -81,7 +85,15 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
         if (occupied) {
             std::snprintf(buffer, sizeof(buffer), "%s %d", Loc_PickLiteral("Stage", "阶段"), slots[slotIndex].stage);
             UIRuntime_DrawText(assets, buffer, Vector2{slotRect.x + 12.0f * scale, slotRect.y + 34.0f * scale}, 15.0f * scale, Color{174, 240, 213, 255});
-            std::snprintf(buffer, sizeof(buffer), "HP %.0f  O2 %.0f  %s %d", slots[slotIndex].health, slots[slotIndex].oxygen, Loc_PickLiteral("Deaths", "死亡"), slots[slotIndex].deathCount);
+            std::snprintf(buffer,
+                          sizeof(buffer),
+                          "%s %.0f  %s %.0f  %s %d",
+                          Loc_PickLiteral("HP", "生命"),
+                          slots[slotIndex].health,
+                          Loc_PickLiteral("O2", "氧气"),
+                          slots[slotIndex].oxygen,
+                          Loc_PickLiteral("Deaths", "死亡"),
+                          slots[slotIndex].deathCount);
             UIRuntime_DrawText(assets, buffer, Vector2{slotRect.x + 12.0f * scale, slotRect.y + 55.0f * scale}, 13.0f * scale, Color{204, 219, 231, 255});
         } else {
             UIRuntime_DrawText(assets, Loc_PickLiteral("Empty", "空"), Vector2{slotRect.x + 12.0f * scale, slotRect.y + 39.0f * scale}, 18.0f * scale, Color{162, 174, 191, 255});
@@ -93,6 +105,11 @@ void UI_DrawSaveSlotsOverlay(const AssetBundle *assets,
                 Color{137, 152, 171, 255}
             );
         }
+    }
+
+    if (detailsPanel.width < 250.0f * scale) {
+        detailsPanel.x = lastSlotRect.x + lastSlotRect.width + slotGap;
+        detailsPanel.width = panel.x + panel.width - detailsRightInset - detailsPanel.x;
     }
 
     UIRuntime_DrawPanel(detailsPanel, Color{14, 26, 42, 220}, Color{255, 255, 255, 22});

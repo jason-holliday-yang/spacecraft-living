@@ -119,12 +119,12 @@ void Game_CloseTransientOverlays(Game *game) {
     game->settingsOpen = false;
     game->settingsSliderDragging = false;
     game->settingsSliderDragIndex = -1;
-    game->backpackOpen = false;
+    game->infoOverlayOpen = false;
+    game->infoOverlayTab = INFO_OVERLAY_TAB_MAP;
     game->craftOpen = false;
-    game->mapOpen = false;
-    game->communicatorOpen = false;
     game->communicatorLogDetailOpen = false;
     game->communicatorLogDetailVisibility = 0.0f;
+    game->communicatorLogDetailScroll = 0.0f;
     game->helpOpen = false;
     game->logReaderOpen = false;
     game->savePanelOpen = false;
@@ -152,6 +152,10 @@ void Game_ResetTransientGameplayState(Game *game) {
     game->heldMoveX = 0;
     game->heldMoveY = 0;
     game->holdRepeatTimer = 0.0f;
+    game->laserEffectTimer = 0.0f;
+    game->laserEffectHit = false;
+    game->laserEffectStart = Vector2{0.0f, 0.0f};
+    game->laserEffectEnd = Vector2{0.0f, 0.0f};
     game->player.moveTimer = 0.0f;
     game->player.moveAnimElapsed = 0.0f;
     game->player.moveAnimDuration = 0.0f;
@@ -167,7 +171,8 @@ static void EnterGameplayFromOpening(Game *game) {
     game->narrativeTransitionElapsed = 0.0f;
     game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
     Game_CloseStoryScene(game);
-    Audio_SetScene(&game->audio, AUDIO_SCENE_BASE);
+    Audio_SetScene(&game->audio, Game_SelectAudioScene(game));
+    Audio_SetMusicStage(&game->audio, Game_SelectMusicStage(game));
     Game_PostMessage(game, Loc_PickLiteral("Wake in Loxi's cabin. Sync the uplink, then restore the lower oxygen console.", "先在洛希舱室醒来并完成同步，再去修复下层氧气控制台。"), 4.2f);
 }
 
@@ -198,6 +203,10 @@ void Game_ResetGameplayWorld(Game *game) {
     game->screenTransitionSlotIndex = -1;
     game->hurtSoundCooldown = 0.0f;
     game->monsterCueCooldown = 0.0f;
+    game->laserEffectTimer = 0.0f;
+    game->laserEffectHit = false;
+    game->laserEffectStart = Vector2{0.0f, 0.0f};
+    game->laserEffectEnd = Vector2{0.0f, 0.0f};
     game->bufferedMoveX = 0;
     game->bufferedMoveY = 0;
     game->inputBufferTimer = 0.0f;
@@ -205,6 +214,7 @@ void Game_ResetGameplayWorld(Game *game) {
     game->heldMoveY = 0;
     game->holdRepeatTimer = 0.0f;
     Game_CloseTransientOverlays(game);
+    game->infoOverlayTab = INFO_OVERLAY_TAB_MAP;
     game->communicatorTab = COMMUNICATOR_TAB_TASKS;
     game->selectedBackpackItem = 0;
     game->selectedCraftIndex = 0;
@@ -220,12 +230,14 @@ void Game_ResetGameplayWorld(Game *game) {
     game->communicatorFirstVisibleStorySceneIndex = 0;
     game->communicatorLogDetailOpen = false;
     game->communicatorLogDetailVisibility = 0.0f;
+    game->communicatorLogDetailScroll = 0.0f;
     game->pendingLanguage = game->settings.language;
     game->requestClose = false;
     game->lastLocationName[0] = '\0';
     Game_SyncTrackedLocation(game);
     Game_ResetCameraToPlayer(game);
     Game_ClearMessage(game);
+    Game_ClearMessageHistory(game);
 }
 
 void Game_StartNewGame(Game *game) {
@@ -244,6 +256,7 @@ void Game_StartNewGame(Game *game) {
     game->narrativeTransitionElapsed = 0.0f;
     game->narrativeTransitionAction = NARRATIVE_TRANSITION_NONE;
     Audio_SetScene(&game->audio, AUDIO_SCENE_MENU);
+    Audio_SetMusicStage(&game->audio, Game_SelectMusicStage(game));
 }
 
 void Game_CompleteOpeningCutscene(Game *game) {
@@ -286,6 +299,8 @@ void Game_ReturnToMenu(Game *game) {
     Game_CloseStoryScene(game);
     Game_CloseTransientOverlays(game);
     Game_ClearMessage(game);
+    Game_ClearMessageHistory(game);
     Game_RefreshSaveSlots(game);
     Audio_SetScene(&game->audio, AUDIO_SCENE_MENU);
+    Audio_SetMusicStage(&game->audio, AUDIO_MUSIC_MENU);
 }

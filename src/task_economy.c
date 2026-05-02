@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 
+static const float kMaxWeaponCalibrationBonus = 8.0f;
+
 typedef struct DisplayTextReplacement {
     const char *from;
     const char *to;
@@ -154,7 +156,7 @@ void TasksRuntime_DescribeNodeStatus(const ResourceNode *node, char *message, si
     const char *resourceLabel;
 
     if (node == NULL) {
-        TasksRuntime_WriteMessage(message, messageSize, "Resource status unavailable.");
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Resource status unavailable.", "当前无法读取资源状态。"));
         return;
     }
 
@@ -194,6 +196,37 @@ bool Tasks_IsRecipeVisible(const TaskSystem *tasks, RecipeType recipe) {
     return RecipeCatalog_IsVisible(entry, tasks->amplifierUnlocked, tasks->stage);
 }
 
+bool TasksRuntime_IsRecipeCompleted(const TaskSystem *tasks,
+                                    const GameMap *map,
+                                    const Player *player,
+                                    RecipeType recipe) {
+    (void)tasks;
+
+    if (player == NULL) {
+        return false;
+    }
+
+    switch (recipe) {
+        case RECIPE_GLOW_STICK:
+            return player->hasGlowStick;
+        case RECIPE_ROPE:
+            return player->hasRope;
+        case RECIPE_LASER_GUN:
+            return player->hasLaserGun;
+        case RECIPE_PROTECTION_SUIT:
+            return player->hasProtectionSuit;
+        case RECIPE_SIGNAL_AMPLIFIER:
+            return player->hasSignalAmplifier;
+        case RECIPE_FIELD_CAMP:
+            return player->hasFieldCamp || (map != NULL && map->campPlaced);
+        case RECIPE_RECOVERY_RATION:
+        case RECIPE_REINFORCED_METAL:
+        case RECIPE_COUNT:
+        default:
+            return false;
+    }
+}
+
 bool Tasks_CanCraftRecipe(const TaskSystem *tasks, const Player *player, RecipeType recipe) {
     const RecipeCatalogEntry *entry;
 
@@ -206,6 +239,12 @@ bool Tasks_CanCraftRecipe(const TaskSystem *tasks, const Player *player, RecipeT
         return false;
     }
 
+    if (TasksRuntime_IsRecipeCompleted(tasks, NULL, player, recipe)) {
+        return false;
+    }
+    if (recipe == RECIPE_REINFORCED_METAL && player->attackBonus >= kMaxWeaponCalibrationBonus) {
+        return false;
+    }
     if (entry->requiresWorkbench && !Tasks_IsNearWorkbench(player)) {
         return false;
     }
@@ -227,27 +266,45 @@ bool TasksRuntime_SpendRecipeResources(TaskSystem *tasks,
 
     entry = RecipeCatalog_Get(recipe);
     if (tasks == NULL || player == NULL || entry == NULL) {
-        TasksRuntime_WriteMessage(message, messageSize, "Crafting data is unavailable.");
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Crafting data is unavailable.", "当前无法读取制作数据。"));
         return false;
     }
     if (!Tasks_IsRecipeVisible(tasks, recipe)) {
         TasksRuntime_WriteMessage(message, messageSize, LOC_UI_RECIPE_LOCKED);
         return false;
     }
+    if (TasksRuntime_IsRecipeCompleted(tasks, NULL, player, recipe)) {
+        TasksRuntime_WriteMessage(message,
+                                  messageSize,
+                                  Loc_PickLiteral("That build is already complete and ready in your pack.",
+                                                  "这项制作已经完成，并且已经在背包中就绪。"));
+        return false;
+    }
+    if (recipe == RECIPE_REINFORCED_METAL && player->attackBonus >= kMaxWeaponCalibrationBonus) {
+        TasksRuntime_WriteMessage(message,
+                                  messageSize,
+                                  Loc_PickLiteral("The weapon frame is already fully serviced with this material set.",
+                                                  "这套材料能做的武器框架维护已经完成。"));
+        return false;
+    }
     if (entry->requiresWorkbench && !Tasks_IsNearWorkbench(player)) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : "Move in beside the workbench first.");
+                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : Loc_PickLiteral("Move in beside the workbench first.", "请先靠近工作台。"));
         return false;
     }
     if (entry->requiresLowStress && !Player_CanCraftAdvanced(player)) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : "Steady your health, oxygen, and anomalies first.");
+                                  advancedRequirementMessage != NULL ? advancedRequirementMessage : Loc_PickLiteral("Steady your health, oxygen, and anomalies first.", "请先稳定生命、氧气与异常状态。"));
         return false;
     }
     if (!RecipeCatalog_SpendResources(player, recipe)) {
-        snprintf(missingMessage, sizeof(missingMessage), "Missing materials for this build: %s.", Loc_PickText(entry->ingredientText));
+        snprintf(missingMessage,
+                 sizeof(missingMessage),
+                 Loc_PickLiteral("Missing materials for this build: %s.",
+                                 "这项制作缺少材料：%s。"),
+                 Loc_PickText(entry->ingredientText));
         TasksRuntime_WriteMessage(message, messageSize, missingMessage);
         return false;
     }
@@ -267,11 +324,11 @@ bool TasksRuntime_CollectNode(TaskSystem *tasks, Player *player, ResourceNode *n
     shipInteriorNode = TasksRuntime_IsShipInteriorNode(node);
     nodeInfoState = TasksRuntime_GetNodeInfoState(node);
     if (player->health <= 12.0f || Player_HasStatus(player, PLAYER_STATUS_CRITICAL_CONDITION)) {
-        TasksRuntime_WriteMessage(message, messageSize, "You are in no condition to gather safely right now.");
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("You are in no condition to gather safely right now.", "你当前状态太差，无法安全采集。"));
         return false;
     }
     if (player->oxygen <= oxygenCost + 4.0f || Player_HasStatus(player, PLAYER_STATUS_SUFFOCATING)) {
-        TasksRuntime_WriteMessage(message, messageSize, "Your oxygen margin is too thin for a safe harvest.");
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Your oxygen margin is too thin for a safe harvest.", "你的氧气余量太低，无法安全采集。"));
         return false;
     }
 

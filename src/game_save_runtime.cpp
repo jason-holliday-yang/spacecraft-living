@@ -31,6 +31,40 @@ static int CountShownMainStoryScenes(const bool *shownScenes) {
     return count;
 }
 
+static float GetLegacyMonsterMaxHealth(MonsterType type) {
+    switch (type) {
+        case MONSTER_THORN_LARVA:
+            return 28.0f;
+        case MONSTER_WING_BUG:
+            return 18.0f;
+        case MONSTER_RAPTOR:
+            return 52.0f;
+        case MONSTER_SWAMP_STALKER:
+            return 48.0f;
+        case MONSTER_SENTINEL_JELLY:
+            return 72.0f;
+        case MONSTER_FOG_WORM:
+            return 64.0f;
+        case MONSTER_RELIC_GUARD:
+            return 92.0f;
+        case MONSTER_FINAL_BOSS:
+            return 220.0f;
+        default:
+            return 0.0f;
+    }
+}
+
+static float MigrateFullHealthMonsterValue(MonsterType type, float savedHealth, float currentMaxHealth) {
+    const float legacyMaxHealth = GetLegacyMonsterMaxHealth(type);
+
+    if (legacyMaxHealth > 0.0f
+        && currentMaxHealth > legacyMaxHealth
+        && std::fabs(savedHealth - legacyMaxHealth) <= 0.01f) {
+        return currentMaxHealth;
+    }
+    return savedHealth;
+}
+
 static bool IsMonsterFootprintValid(const Monster *monster, const GameMap *map, int originX, int originY) {
     int offsetY;
     int offsetX;
@@ -172,15 +206,14 @@ void Game_BuildSaveSnapshot(const Game *game, SaveSnapshot *snapshot) {
     snapshot->facingX = game->player.facingX;
     snapshot->facingY = game->player.facingY;
     snapshot->health = game->player.health;
-    snapshot->stamina = game->player.stamina;
+    snapshot->stamina = game->player.health;
     snapshot->pressure = INITIAL_PRESSURE;
     snapshot->oxygen = game->player.oxygen;
     snapshot->poison = game->player.poison;
     snapshot->maxHealthBonus = game->player.maxHealthBonus;
-    snapshot->maxStaminaBonus = game->player.maxStaminaBonus;
-    snapshot->attackBonus = game->player.attackBonus;
+    snapshot->maxStaminaBonus = game->player.maxHealthBonus;
+    snapshot->attackBonus = 0.0f;
     snapshot->deathCount = game->player.deathCount;
-    snapshot->crouching = game->player.crouching;
     snapshot->hasGlowStick = game->player.hasGlowStick;
     snapshot->hasRope = game->player.hasRope;
     snapshot->hasLaserGun = game->player.hasLaserGun;
@@ -279,15 +312,11 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     game->player.facingY = snapshot->facingY;
     Player_UpdateWorldPosition(&game->player);
     game->player.health = snapshot->health;
-    game->player.stamina = snapshot->stamina;
-    game->player.pressure = INITIAL_PRESSURE;
     game->player.oxygen = snapshot->oxygen;
     game->player.poison = snapshot->poison;
     game->player.maxHealthBonus = snapshot->maxHealthBonus;
-    game->player.maxStaminaBonus = snapshot->maxStaminaBonus;
-    game->player.attackBonus = snapshot->attackBonus;
+    game->player.attackBonus = 0.0f;
     game->player.deathCount = snapshot->deathCount;
-    game->player.crouching = snapshot->crouching;
     game->player.hasGlowStick = snapshot->hasGlowStick;
     game->player.hasRope = snapshot->hasRope;
     game->player.hasLaserGun = snapshot->hasLaserGun;
@@ -368,7 +397,9 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
         game->tasks.monsters[index].active = snapshot->monsters[index].active;
         game->tasks.monsters[index].gridX = snapshot->monsters[index].gridX;
         game->tasks.monsters[index].gridY = snapshot->monsters[index].gridY;
-        game->tasks.monsters[index].health = snapshot->monsters[index].health;
+        game->tasks.monsters[index].health = MigrateFullHealthMonsterValue(game->tasks.monsters[index].type,
+                                                                            snapshot->monsters[index].health,
+                                                                            game->tasks.monsters[index].maxHealth);
         game->tasks.monsters[index].phaseTriggered = snapshot->monsters[index].phaseTriggered;
     }
     for (index = 0; index < game->tasks.logCount; index++) {
@@ -424,6 +455,7 @@ bool Game_LoadSnapshotIntoSession(Game *game, const SaveSnapshot *snapshot) {
     Game_CloseTransientOverlays(game);
     Game_ResetCameraToPlayer(game);
     Audio_SetScene(&game->audio, Game_SelectAudioScene(game));
+    Audio_SetMusicStage(&game->audio, Game_SelectMusicStage(game));
 
     return positionAdjusted;
 }

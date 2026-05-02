@@ -1,4 +1,5 @@
 #include "task_runtime_internal.h"
+#include "localization.h"
 
 void TasksRuntime_ReducePoisonAtRecovery(Player *player, float amount) {
     if (player == NULL || amount <= 0.0f) {
@@ -113,7 +114,7 @@ bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, ch
     TaskInteractionTarget target;
 
     if (tasks == NULL || map == NULL || player == NULL) {
-        TasksRuntime_WriteMessage(message, messageSize, "Interaction unavailable.");
+        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Interaction unavailable.", "当前无法进行交互。"));
         return false;
     }
 

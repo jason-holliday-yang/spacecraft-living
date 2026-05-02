@@ -26,6 +26,7 @@ typedef enum ResourceType {
     RESOURCE_RELIC_FRAGMENT,
     RESOURCE_BOSS_SCALE,
     RESOURCE_ALIEN_SLIME,
+    RESOURCE_RECOVERY_RATION,
     RESOURCE_COUNT
 } ResourceType;
 
@@ -37,13 +38,9 @@ typedef enum RecipeType {
     RECIPE_PROTECTION_SUIT,
     RECIPE_SIGNAL_AMPLIFIER,
     RECIPE_FIELD_CAMP,
+    RECIPE_RECOVERY_RATION,
     RECIPE_COUNT
 } RecipeType;
-
-typedef enum ConsumableFocus {
-    CONSUMABLE_FOOD = 0,
-    CONSUMABLE_CALM
-} ConsumableFocus;
 
 typedef enum PlayerStatusType {
     PLAYER_STATUS_POISONED = 0,
@@ -74,8 +71,6 @@ typedef struct Player {
     Vector2 moveStartPos;
     Vector2 moveTargetPos;
     float health;
-    float stamina;
-    float pressure;
     float oxygen;
     float poison;
     float moveTimer;
@@ -88,14 +83,8 @@ typedef struct Player {
     float moveAnimDuration;
     float spriteAnimTimer;
     float maxHealthBonus;
-    float maxStaminaBonus;
     float attackBonus;
     int deathCount;
-    int lastFoodType;
-    int repeatedFoodCount;
-    bool crouching;
-    bool hasAxe;
-    bool hasKnife;
     bool hasGlowStick;
     bool hasRope;
     bool hasLaserGun;
@@ -114,8 +103,6 @@ bool Player_IsMoveAnimating(const Player *player);
 bool Player_Move(Player *player, const GameMap *map, int deltaX, int deltaY);
 float Player_GetMoveCooldown(const Player *player);
 float Player_GetMaxHealth(const Player *player);
-float Player_GetMaxStamina(const Player *player);
-float Player_GetCurrentStaminaCap(const Player *player);
 float Player_GetAttackPower(const Player *player);
 float Player_GetAggroMultiplier(const Player *player);
 float Player_GetGatherMultiplier(const Player *player);
@@ -123,10 +110,6 @@ bool Player_CanCraftAdvanced(const Player *player);
 bool Player_IsInDanger(const Player *player);
 void Player_DamageHealth(Player *player, float amount);
 void Player_RecoverHealth(Player *player, float amount);
-void Player_ConsumeStamina(Player *player, float amount);
-void Player_RecoverStamina(Player *player, float amount);
-void Player_AddPressure(Player *player, float amount);
-void Player_RelievePressure(Player *player, float amount);
 void Player_AddOxygen(Player *player, float amount);
 void Player_DamageOxygen(Player *player, float amount);
 void Player_AddPoison(Player *player, float amount);
@@ -151,7 +134,7 @@ void Player_GetStatusTooltip(const Player *player, PlayerStatusType status, char
 void Player_AddResource(Player *player, ResourceType resource, int amount);
 bool Player_SpendResource(Player *player, ResourceType resource, int amount);
 bool Player_HasResources(const Player *player, ResourceType resource, int amount);
-bool Player_UseQuickConsumable(Player *player, ConsumableFocus focus, char *message, int messageSize);
+bool Player_UseQuickConsumable(Player *player, char *message, int messageSize);
 bool Player_UseSelectedConsumable(Player *player, ResourceType resource, char *message, int messageSize);
 const char *Player_GetResourceLabel(ResourceType resource);
 const char *Player_GetRecipeName(RecipeType recipe);

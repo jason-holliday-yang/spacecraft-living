@@ -21,9 +21,9 @@ static void PopulateSnapshotSharedState(SaveSnapshot *snapshot, const T *data) {
     snapshot->oxygen = data->oxygen;
     snapshot->poison = data->poison;
     snapshot->maxStaminaBonus = data->maxStaminaBonus;
-    snapshot->attackBonus = data->attackBonus;
+    snapshot->attackBonus = 0.0f;
     snapshot->deathCount = data->deathCount;
-    snapshot->crouching = data->crouching != 0;
+    (void)data->crouching;
     snapshot->hasGlowStick = data->hasGlowStick != 0;
     snapshot->hasRope = data->hasRope != 0;
     snapshot->hasLaserGun = data->hasLaserGun != 0;

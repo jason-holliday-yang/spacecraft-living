@@ -110,6 +110,11 @@ set(SPACECRAFT_SESSION_SOURCES
     src/game_save_flow.cpp
     src/game_save_runtime.cpp
     src/game_session.cpp
+    src/game_messages.cpp
+    src/game_transition.cpp
+    src/game_audio_scene.cpp
+    src/game_route_runtime.cpp
+    src/game_state_sanitize.cpp
 )
 
 set(SPACECRAFT_UI_LAYOUT_SOURCES
@@ -221,13 +226,10 @@ set(SPACECRAFT_APP_SOURCES
     src/audio_system.cpp
     src/resource_path.cpp
     src/recipe_catalog.cpp
-    src/game_session.cpp
-    src/game_save_flow.cpp
-    src/game_save_runtime.cpp
+    ${SPACECRAFT_SESSION_SOURCES}
     src/game_overlay.cpp
     src/game_overlay_frontend.cpp
     src/game_overlay_gameplay.cpp
-    src/game_runtime.cpp
     src/game_play.c
     src/game_play_input.c
     src/game_play_story.c

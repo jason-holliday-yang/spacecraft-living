@@ -9,6 +9,12 @@ SCL_EXTERN_C_BEGIN
 
 void Game_PostMessage(Game *game, const char *text, float duration);
 void Game_ClearMessage(Game *game);
+void Game_ClearMessageHistory(Game *game);
+void Game_SanitizeGameplayState(Game *game, int screenWidth, int screenHeight);
+float Game_GetScreenTransitionDuration(const Game *game);
+float Game_GetNarrativeTransitionDuration(void);
+float Game_GetScreenTransitionAlpha(const Game *game);
+float Game_GetNarrativeOverlayAlpha(const Game *game);
 void Game_AdvanceWorldClock(Game *game, float deltaTime);
 void Game_MaybePostDayAdvanceMessage(Game *game, int previousDayCount);
 void Game_TrySaveSettings(Game *game);
@@ -22,6 +28,7 @@ void Game_EnterEndingState(Game *game);
 bool Game_OpenStoryScene(Game *game, StoryScene scene);
 void Game_CloseStoryScene(Game *game);
 AudioScene Game_SelectAudioScene(const Game *game);
+AudioMusicStage Game_SelectMusicStage(const Game *game);
 void Game_SyncTrackedLocation(Game *game);
 void Game_MaybePostNorthRouteTransitionHint(Game *game);
 

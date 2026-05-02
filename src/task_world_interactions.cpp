@@ -143,8 +143,8 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         std::snprintf(message,
                       messageSize,
                       "%s %s",
-                      Loc_PickLiteral("The monolith hums to life. Solve the sequence to harden your strikes against the guardian, take some strain off the tower climb, and let the ring explain what binds the two together before the final choice.",
-                                      "石碑开始低鸣。解开这段顺序能让你对守卫的攻击更有力，也会替攀塔路线卸掉一部分压力，并在最终抉择前解释清楚守卫与信号塔之间究竟被什么联系着。"),
+                      Loc_PickLiteral("The monolith hums to life. Solve the sequence to weaken the guardian's hold, ease the tower climb a little, and let the ring explain what binds the two together before the final choice.",
+                                      "石碑开始低鸣。解开这段顺序会稍微削弱守卫的压制、减轻部分攀塔压力，并在最终抉择前解释清楚守卫与信号塔之间究竟被什么联系着。"),
                       hint);
         return true;
     }
@@ -152,7 +152,7 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
     if (tasks->monolithPuzzle.solved) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("This monolith is already active. The ring's full resonance is still strengthening your attacks and easing the tower climb.", "这座石碑已经激活。整组石碑的共鸣仍在强化你的攻击，并减轻最后攀塔时的压力。"));
+                                  Loc_PickLiteral("This monolith is already active. The ring's full resonance is still holding back some pressure on the guardian route and easing the tower climb.", "这座石碑已经激活。整组石碑的共鸣仍在替守卫路线分担一部分压力，也会减轻最后攀塔时的负担。"));
         return true;
     }
 
@@ -161,8 +161,8 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         if (tasks->monolithsLit >= 3) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
-                                      Loc_PickLiteral("This monolith is already active. The full set is empowering your attacks against the final boss and easing the final tower climb.",
-                                                      "这座石碑已经激活。整组石碑的共鸣正在强化你对最终首领的攻击，并减轻最后登塔的压力。"));
+                                      Loc_PickLiteral("This monolith is already active. The full set is still easing the final tower climb and keeping the guardian route more manageable.",
+                                                      "这座石碑已经激活。整组石碑的共鸣仍在减轻最后登塔的压力，也让守卫路线变得更可控。"));
         } else if (nextIndex == monolithIndex) {
             TasksRuntime_WriteMessage(message,
                                       messageSize,
@@ -189,7 +189,7 @@ static bool TryUseMonolith(TaskSystem *tasks, const Player *player, int monolith
         tasks->monolithPuzzle.solved = true;
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("All three monoliths resonate in harmony. Your attacks against the guardian now hit harder, the tower route bleeds less oxygen, and the heroic path finally reads like a plan instead of a gamble.", "三座石碑已经完全共鸣。你对守卫的攻击会更重，塔楼路线的漏氧压力也减轻了，而强行救援这条路终于更像一套计划，而不只是一次豪赌。"));
+                                  Loc_PickLiteral("All three monoliths resonate in harmony. The guardian route becomes more manageable, the tower path bleeds less oxygen, and the heroic route finally reads like a plan instead of a gamble.", "三座石碑已经完全共鸣。守卫路线因此更可控，塔楼路线的漏氧压力也减轻了，而强行救援这条路终于更像一套计划，而不只是一次豪赌。"));
     } else if (tasks->monolithsLit == 1) {
         TasksRuntime_WriteMessage(message,
                                   messageSize,
@@ -349,11 +349,8 @@ static bool TryUseFieldCamp(const GameMap *map, Player *player, char *message, s
         return false;
     }
 
-    player->pressure = INITIAL_PRESSURE;
     Player_RecoverHealth(player, 22.0f);
     Player_AddOxygen(player, 24.0f);
-    Player_RecoverStamina(player, 18.0f);
-    TasksRuntime_ReducePoisonAtRecovery(player, 20.0f);
     TasksRuntime_DowngradeOxygenLeakAtRecovery(player);
     Player_SetStatus(player, PLAYER_STATUS_CAMP_RECOVERY, 1, 45.0f, SAFE_RECOVERY_AMOUNT);
     TasksRuntime_WriteMessage(message,

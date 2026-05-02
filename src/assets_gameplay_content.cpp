@@ -67,6 +67,7 @@ void AssetsInternal_LoadGameplayAssets(AssetBundle *assets,
     assets->iconProtectionSuit = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/icons/icon_protection_suit.png", uiIconSize, uiIconSize);
     assets->iconSignalAmplifier = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/icons/icon_signal_amplifier.png", uiIconSize, uiIconSize);
     assets->iconFieldCamp = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/icons/icon_field_camp.png", uiIconSize, uiIconSize);
+    assets->iconRecoveryRation = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/icons/icon_recovery_ration.png", uiIconSize, uiIconSize);
     assets->iconMapButton = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/icons/icon_map_button.png", uiIconSize, uiIconSize);
     assets->iconInventoryButton = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/icons/icon_inventory_button.png", uiIconSize, uiIconSize);
     assets->statusPoisoned = AssetsInternal_LoadOptionalTextureFitted("resources/images/ui/status/status_poisoned.png", uiIconSize, uiIconSize);
@@ -143,6 +144,7 @@ void AssetsInternal_UnloadGameplayAssets(AssetBundle *assets) {
     AssetsInternal_UnloadTextureAsset(&assets->iconProtectionSuit);
     AssetsInternal_UnloadTextureAsset(&assets->iconSignalAmplifier);
     AssetsInternal_UnloadTextureAsset(&assets->iconFieldCamp);
+    AssetsInternal_UnloadTextureAsset(&assets->iconRecoveryRation);
     AssetsInternal_UnloadTextureAsset(&assets->iconMapButton);
     AssetsInternal_UnloadTextureAsset(&assets->iconInventoryButton);
     AssetsInternal_UnloadTextureAsset(&assets->statusPoisoned);

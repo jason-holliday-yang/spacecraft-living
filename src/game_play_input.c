@@ -53,28 +53,49 @@ static bool GetHeldDirection(int *deltaX, int *deltaY) {
     return false;
 }
 
-static bool SameDirection(int ax, int ay, int bx, int by) {
-    return ax == bx && ay == by;
+static Vector2 GetMonsterCenterWorld(const Monster *monster) {
+    int originX;
+    int originY;
+    int width;
+    int height;
+
+    TasksRuntime_GetMonsterFootprint(monster, &originX, &originY, &width, &height);
+    return (Vector2){
+        (float)(originX * TILE_SIZE) + (float)(width * TILE_SIZE) * 0.5f,
+        (float)(originY * TILE_SIZE) + (float)(height * TILE_SIZE) * 0.5f
+    };
 }
 
-static const char *GetCrouchToggleMessage(const Game *game) {
-    MapArea area;
+static Vector2 GetLaserMissEndWorld(const Player *player) {
+    int facingX;
+    int facingY;
+    int step;
 
-    area = Map_GetAreaAt(game->player.gridX, game->player.gridY);
-    if (game->player.crouching) {
-        if (area == MAP_AREA_FOREST) {
-            return Loc_PickLiteral("Stealth crouch enabled. Forest cover now reduces monster detection.",
-                                   "蹲伏潜行已开启。森林掩护现在会降低怪物的发现概率。");
-        }
-        return Loc_PickLiteral("Stealth crouch enabled. It slows movement, but forest cover is where stealth matters most.",
-                               "蹲伏潜行已开启。移动会变慢，但真正能发挥潜行效果的还是森林掩护。");
+    facingX = player->facingX;
+    facingY = player->facingY;
+    if (facingX == 0 && facingY == 0) {
+        facingY = 1;
+    }
+    step = player->hasLaserGun ? 3 : 1;
+    return Map_GridToWorld(player->gridX + facingX * step, player->gridY + facingY * step);
+}
+
+static void GamePlay_StartLaserEffect(Game *game, const Monster *target, bool hit) {
+    if (game == NULL || !game->player.hasLaserGun) {
+        return;
     }
 
-    if (area == MAP_AREA_FOREST) {
-        return Loc_PickLiteral("Stealth crouch disabled. You are easier to notice in the forest now.",
-                               "蹲伏潜行已关闭。你现在在森林里会更容易被发现。");
-    }
-    return Loc_PickLiteral("Stealth crouch disabled.", "蹲伏潜行已关闭。");
+    game->laserEffectTimer = 0.18f;
+    game->laserEffectHit = hit && target != NULL;
+    game->laserEffectStart = (Vector2){
+        game->player.renderPos.x,
+        game->player.renderPos.y - (float)TILE_SIZE * 0.28f
+    };
+    game->laserEffectEnd = target != NULL ? GetMonsterCenterWorld(target) : GetLaserMissEndWorld(&game->player);
+}
+
+static bool SameDirection(int ax, int ay, int bx, int by) {
+    return ax == bx && ay == by;
 }
 
 static bool MessageStartsWith(const char *message, const char *prefix) {
@@ -117,20 +138,28 @@ static AudioCue GetFootstepCueForTile(TileType groundTile, MapArea area) {
     }
 }
 
-static AudioCue SelectInteractionCue(const char *message) {
+static bool IsMonolithInteractionTarget(TaskInteractionTarget target) {
+    return target == TASK_INTERACTION_MONOLITH_A
+        || target == TASK_INTERACTION_MONOLITH_B
+        || target == TASK_INTERACTION_MONOLITH_C;
+}
+
+static AudioCue SelectInteractionCue(const char *message,
+                                     TaskInteractionTarget target,
+                                     const ResourceNode *nearbyNode,
+                                     const ShipLog *nearbyLog) {
+    if (nearbyNode != NULL) {
+        return AUDIO_CUE_COLLECT;
+    }
+    if (nearbyLog != NULL) {
+        return AUDIO_CUE_LOG;
+    }
+    if (IsMonolithInteractionTarget(target)) {
+        return AUDIO_CUE_MONOLITH;
+    }
     if (MessageStartsWith(message, "Collected ") || MessageStartsWith(message, "Collected")
         || MessageStartsWith(message, "获得了") || MessageStartsWith(message, "收集了")) {
         return AUDIO_CUE_COLLECT;
-    }
-    if (MessageStartsWith(message, "Recovered ") || MessageStartsWith(message, "Recovered")
-        || MessageStartsWith(message, "Recovered log")
-        || strstr(message, "已回收") != NULL
-        || strstr(message, "日志") != NULL) {
-        return AUDIO_CUE_LOG;
-    }
-    if (strstr(message, "monolith") != NULL || strstr(message, "Monolith") != NULL
-        || strstr(message, "石碑") != NULL) {
-        return AUDIO_CUE_MONOLITH;
     }
     if (strstr(message, "Missing materials") != NULL
         || strstr(message, "still needs") != NULL
@@ -181,6 +210,28 @@ static bool ShouldOpenSettlementConfirm(const Game *game) {
         && IsNearLoxiTerminal(game);
 }
 
+static bool TryOpenInfoOverlayTab(Game *game, InfoOverlayTab tab) {
+    if (game == NULL) {
+        return false;
+    }
+
+    if (tab == INFO_OVERLAY_TAB_LOXI && !Tasks_IsCommunicatorUnlocked(&game->tasks)) {
+        Game_PostMessage(game,
+                         Loc_PickLiteral("Loxi link is offline. Sync with the terminal bay uplink first, then press N.",
+                                         "洛希链路尚未上线。请先在终端舱完成同步，再按 N。"),
+                         2.8f);
+        return true;
+    }
+
+    game->infoOverlayOpen = true;
+    game->infoOverlayTab = tab;
+    game->communicatorLogDetailOpen = false;
+    game->communicatorLogDetailVisibility = 0.0f;
+    game->communicatorLogDetailScroll = 0.0f;
+    Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+    return true;
+}
+
 static void HandleMovement(Game *game, int deltaX, int deltaY) {
     bool moved;
     Vector2 startPos;
@@ -222,10 +273,12 @@ static void HandleMovement(Game *game, int deltaX, int deltaY) {
 }
 
 void GamePlay_UpdateMovement(Game *game) {
+    static const float kBufferedMoveGrace = 0.03f;
     int pressedX;
     int pressedY;
     int heldX;
     int heldY;
+    float queuedBufferTime;
     bool hasPressedInput;
     bool hasHeldInput;
 
@@ -237,9 +290,13 @@ void GamePlay_UpdateMovement(Game *game) {
     hasHeldInput = GetHeldDirection(&heldX, &heldY);
 
     if (hasPressedInput) {
+        queuedBufferTime = INPUT_BUFFER_TIME;
+        if (game->player.moveTimer > 0.0f && queuedBufferTime < game->player.moveTimer + kBufferedMoveGrace) {
+            queuedBufferTime = game->player.moveTimer + kBufferedMoveGrace;
+        }
         game->bufferedMoveX = pressedX;
         game->bufferedMoveY = pressedY;
-        game->inputBufferTimer = INPUT_BUFFER_TIME;
+        game->inputBufferTimer = queuedBufferTime;
         game->heldMoveX = pressedX;
         game->heldMoveY = pressedY;
         game->holdRepeatTimer = HOLD_REPEAT_INITIAL_DELAY;
@@ -261,6 +318,16 @@ void GamePlay_UpdateMovement(Game *game) {
     }
 
     if (game->player.moveTimer > 0.0f) {
+        if (hasHeldInput
+            && (heldX != 0 || heldY != 0)
+            && (hasPressedInput || game->holdRepeatTimer <= kBufferedMoveGrace)) {
+            queuedBufferTime = game->player.moveTimer + kBufferedMoveGrace;
+            game->bufferedMoveX = heldX;
+            game->bufferedMoveY = heldY;
+            if (game->inputBufferTimer < queuedBufferTime) {
+                game->inputBufferTimer = queuedBufferTime;
+            }
+        }
         return;
     }
 
@@ -281,16 +348,17 @@ static bool TryHandleHudShortcutClick(Game *game) {
 
     rect = UI_GetHudShortcutRect(GetScreenWidth(), GetScreenHeight(), 0);
     if (CheckCollisionPointRec(mouse, rect)) {
-        game->mapOpen = true;
-        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
-        return true;
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_MAP);
     }
 
     rect = UI_GetHudShortcutRect(GetScreenWidth(), GetScreenHeight(), 1);
     if (CheckCollisionPointRec(mouse, rect)) {
-        game->backpackOpen = true;
-        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
-        return true;
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_BACKPACK);
+    }
+
+    rect = UI_GetHudShortcutRect(GetScreenWidth(), GetScreenHeight(), 2);
+    if (CheckCollisionPointRec(mouse, rect)) {
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_LOXI);
     }
 
     return false;
@@ -303,51 +371,45 @@ bool GamePlay_HandleImmediateInput(Game *game, char *actionMessage, size_t messa
         return true;
     }
     if (IsKeyPressed(KEY_B)) {
-        game->backpackOpen = true;
-        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
-        return true;
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_BACKPACK);
     }
     if (IsKeyPressed(KEY_N)) {
-        if (Tasks_IsCommunicatorUnlocked(&game->tasks)) {
-            game->communicatorOpen = true;
-            game->communicatorTab = COMMUNICATOR_TAB_TASKS;
-            game->communicatorLogDetailOpen = false;
-            game->communicatorLogDetailVisibility = 0.0f;
-            Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
-        } else {
-            Game_PostMessage(game, Loc_PickLiteral("Loxi link is offline. Sync with the terminal bay uplink first, then press N.",
-                                                   "洛希链路尚未上线。请先在终端舱完成同步，再按 N。"),
-                             2.8f);
-        }
-        return true;
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_LOXI);
     }
     if (IsKeyPressed(KEY_H)) {
         game->helpOpen = true;
         Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
         return true;
     }
+    if (IsKeyPressed(KEY_O)) {
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_SETTINGS);
+    }
     if (IsKeyPressed(KEY_M)) {
-        game->mapOpen = true;
-        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
-        return true;
+        return TryOpenInfoOverlayTab(game, INFO_OVERLAY_TAB_MAP);
     }
     if (TryHandleHudShortcutClick(game)) {
         return true;
     }
-    if (IsKeyPressed(KEY_C)) {
-        game->player.crouching = !game->player.crouching;
-        Game_PostMessage(game, GetCrouchToggleMessage(game), 2.4f);
-    }
-
     if (IsKeyPressed(KEY_F)) {
         GameEnding endingBeforeInteraction;
         bool shouldStartSleepTransition;
         bool shouldPrioritizePickup;
         TaskInteractionTarget preferredTarget;
+        ResourceNode *nearbyNode;
+        ShipLog *nearbyLog;
 
         shouldPrioritizePickup = TasksRuntime_HasNearbyPickupPriority(&game->tasks, &game->player);
         preferredTarget = TasksRuntime_GetPreferredInteractionTarget(&game->player);
         shouldStartSleepTransition = IsCrewQuartersInteraction(game, preferredTarget);
+        nearbyNode = NULL;
+        nearbyLog = NULL;
+
+        if (preferredTarget != TASK_INTERACTION_LOXI_TERMINAL) {
+            nearbyNode = TasksRuntime_FindNearbyNode(&game->tasks, &game->player);
+            if (nearbyNode == NULL) {
+                nearbyLog = TasksRuntime_FindNearbyLog(&game->tasks, &game->player);
+            }
+        }
 
         if (preferredTarget == TASK_INTERACTION_LOXI_TERMINAL
             && ShouldOpenSettlementConfirm(game)) {
@@ -367,7 +429,7 @@ bool GamePlay_HandleImmediateInput(Game *game, char *actionMessage, size_t messa
 
         if (Tasks_HandleInteraction(&game->tasks, &game->map, &game->player, actionMessage, messageSize)) {
             if (actionMessage[0] != '\0' && game->tasks.ending == endingBeforeInteraction) {
-                Audio_PlayCue(&game->audio, SelectInteractionCue(actionMessage));
+                Audio_PlayCue(&game->audio, SelectInteractionCue(actionMessage, preferredTarget, nearbyNode, nearbyLog));
             }
             if (actionMessage[0] != '\0') {
                 Game_PostMessage(game, actionMessage, 4.0f);
@@ -383,7 +445,11 @@ bool GamePlay_HandleImmediateInput(Game *game, char *actionMessage, size_t messa
     }
 
     if (IsKeyPressed(KEY_SPACE)) {
+        Monster *attackTarget;
+
+        attackTarget = game->player.hasLaserGun ? TasksRuntime_FindAttackTarget(&game->tasks, &game->player) : NULL;
         if (Tasks_HandleAttack(&game->tasks, &game->map, &game->player, actionMessage, messageSize)) {
+            GamePlay_StartLaserEffect(game, attackTarget, attackTarget != NULL);
             Audio_PlayCue(&game->audio, game->player.hasLaserGun ? AUDIO_CUE_LASER : AUDIO_CUE_MELEE);
             Game_PostMessage(game, actionMessage, 2.8f);
         } else {
@@ -391,16 +457,8 @@ bool GamePlay_HandleImmediateInput(Game *game, char *actionMessage, size_t messa
         }
     }
 
-    if (IsKeyPressed(KEY_Z)) {
-        if (Player_UseQuickConsumable(&game->player, CONSUMABLE_FOOD, actionMessage, (int)messageSize)) {
-            Game_PostMessage(game, actionMessage, 2.8f);
-        } else {
-            Game_PostMessage(game, actionMessage, 2.4f);
-        }
-    }
-
     if (IsKeyPressed(KEY_X)) {
-        if (Player_UseQuickConsumable(&game->player, CONSUMABLE_CALM, actionMessage, (int)messageSize)) {
+        if (Player_UseQuickConsumable(&game->player, actionMessage, (int)messageSize)) {
             Game_PostMessage(game, actionMessage, 2.8f);
         } else {
             Game_PostMessage(game, actionMessage, 2.4f);

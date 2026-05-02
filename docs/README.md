@@ -45,6 +45,8 @@
   当前主执行计划之一，聚焦数值、路线压力和测试护栏。
 - [`plans/NEXT_STEPS.md`](plans/NEXT_STEPS.md)
   当前阶段（第二轮深化与终局整合）最适合直接执行的开发清单。
+- [`plans/STAGE_MUSIC_PLAYBACK_PLAN.md`](plans/STAGE_MUSIC_PLAYBACK_PLAN.md)
+  阶段化 BGM 播放改造计划，用于把当前按地图位置切换的主音乐改为按主线阶段 / 关键剧情状态切换，并接入新入库的阶段与路线音乐。
 
 ## 活动文档
 
@@ -64,6 +66,8 @@
   当前代码版主线阶段说明，用于核对每一阶段的材料、交互点、坐标、解锁结果与终局开放条件。
 - [`plans/MAP_STORY_ALIGNMENT_PLAN.md`](plans/MAP_STORY_ALIGNMENT_PLAN.md)
   地图与剧情联动补齐执行单，用来固定基地、东线、北线、西线与南线职责。
+- [`plans/STAGE_MUSIC_PLAYBACK_PLAN.md`](plans/STAGE_MUSIC_PLAYBACK_PLAN.md)
+  阶段化音乐播放改造执行单，用来固定新 BGM 资源路径、阶段映射、代码接线点和测试要求。
 - [`plans/STORY_DOCUMENT_REPAIR_CHECKLIST.md`](plans/STORY_DOCUMENT_REPAIR_CHECKLIST.md)
   新剧情稿修正清单，用于维护长篇母稿、活动剧情文档和当前实现之间的一致性。
 

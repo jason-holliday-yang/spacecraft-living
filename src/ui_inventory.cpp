@@ -1,6 +1,7 @@
 #include "ui_inventory_internal.h"
 
 #include "localization.h"
+#include "task_runtime_internal.h"
 #include "ui_runtime_internal.h"
 
 #include <cstdio>
@@ -80,9 +81,20 @@ bool UIInventory_IsRecipeCraftable(const TaskSystem *tasks, const Player *player
 
 void UIInventory_GetRecipeStatusText(const TaskSystem *tasks, const Player *player, RecipeType recipe, char *buffer, size_t bufferSize) {
     const RecipeCatalogEntry *entry;
+    int ingredientIndex;
 
     if (!Tasks_GetVisibleRecipeCount(tasks)) {
         std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("No recipes available", "暂无可用配方"));
+        return;
+    }
+
+    entry = RecipeCatalog_Get(recipe);
+    if (entry != NULL && TasksRuntime_IsRecipeCompleted(tasks, NULL, player, recipe)) {
+        std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Already ready in pack", "已在背包中就绪"));
+        return;
+    }
+    if (recipe == RECIPE_REINFORCED_METAL && player != NULL && player->attackBonus >= 8.0f) {
+        std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Frame service complete", "框架维护已完成"));
         return;
     }
 
@@ -91,7 +103,6 @@ void UIInventory_GetRecipeStatusText(const TaskSystem *tasks, const Player *play
         return;
     }
 
-    entry = RecipeCatalog_Get(recipe);
     if (entry != NULL && (entry->requiresWorkbench || entry->requiresLowStress)
         && (!Tasks_IsNearWorkbench(player) || !Player_CanCraftAdvanced(player))) {
         if (!Tasks_IsNearWorkbench(player)) {
@@ -100,6 +111,24 @@ void UIInventory_GetRecipeStatusText(const TaskSystem *tasks, const Player *play
             std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Stabilize health, oxygen, and anomalies", "请先稳定生命、氧气与异常状态"));
         }
         return;
+    }
+
+    if (entry != NULL && player != NULL) {
+        for (ingredientIndex = 0; ingredientIndex < entry->ingredientCount; ingredientIndex++) {
+            const RecipeIngredient *ingredient;
+
+            ingredient = &entry->ingredients[ingredientIndex];
+            if (!Player_HasResources(player, ingredient->resource, ingredient->amount)) {
+                std::snprintf(buffer,
+                              bufferSize,
+                              "%s: %s %d/%d",
+                              Loc_PickLiteral("Missing", "缺少"),
+                              Player_GetResourceLabel(ingredient->resource),
+                              player->resources[ingredient->resource],
+                              ingredient->amount);
+                return;
+            }
+        }
     }
 
     std::snprintf(buffer, bufferSize, "%s", Loc_PickLiteral("Missing materials", "材料不足"));

@@ -12,7 +12,7 @@
 
 SCL_EXTERN_C_BEGIN
 
-#define RECIPE_MAX_INGREDIENTS 3
+#define RECIPE_MAX_INGREDIENTS 5
 
 typedef struct RecipeIngredient {
     ResourceType resource;

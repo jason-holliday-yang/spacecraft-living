@@ -14,9 +14,8 @@
 - `N`：洛希面板（第一次与洛希终端同步后开放，显示当前任务 + 日志）
 - `M`：地图
 - `H`：帮助
-- `Z`：快速使用食物类补给
-- `X`：快速使用解毒/过滤类道具
-- `C`：潜行切换
+- `O`：设置
+- `X`：快速使用复苏口粮
 - `ESC`：暂停
 
 ## 3. 七段主线流程
@@ -47,7 +46,7 @@
 
 ## 6. 制作与推进建议
 1. 关键制作优先级：照明 -> 武器/防护 -> 长线探索支援。
-2. 深区任务尽量带解毒与氧气补给。
+2. 深区任务尽量带解毒与氧气补给；如果已经能进工作台制作，优先准备 `复苏口粮（Recovery Ration）`。
 3. 日志分布固定为：飞船 `3` 份、东线主线异常记录 `1` 份、西线 `5` 份、南线 `5` 份。卡进度时先看 `N` 面板目标与当前待完成任务。
 4. 西线 / 南线不是每份日志都要靠战斗拿到：一部分在怪物压力区，一部分是直接调查拾取。
 5. 任务卡住时再确认地图上的当前路线是否已解锁。
@@ -61,11 +60,12 @@
 
 ## 8. 中文术语对照
 - 洛希（Loxi）
-- 荧光棒（Glow Stick）、简易绳索（Simple Rope）、强化金属（Reinforced Metal）、激光枪（Laser Gun）、防护服（Protection Suit）、信号放大器（Signal Amplifier）、野外营地（Field Camp）
-- 植物果实（Plant Fruit）、特殊菌株（Special Fungus）、发光苔（Glow Moss）、异星藤蔓（Alien Vine）、壳果（Shell Fruit）、能源核心（Energy Core）、能量晶体（Energy Crystal）、宁神蘑菇（Calming Mushroom）、防护纤维（Protective Fiber）、遗迹碎片（Relic Fragment）、守卫鳞片（Boss Scale）
+- 荧光棒（Glow Stick）、简易绳索（Simple Rope）、武器校准（Weapon Calibration）、激光枪（Laser Gun）、防护服（Protection Suit）、信号放大器（Signal Amplifier）、野外营地（Field Camp）
+- 植物果实（Plant Fruit）、特殊菌株（Special Fungus）、发光苔（Glow Moss）、异星藤蔓（Alien Vine）、壳果（Shell Fruit）、能源核心（Energy Core）、能量晶体（Energy Crystal）、宁神蘑菇（Calming Mushroom）、防护纤维（Protective Fiber）、遗迹碎片（Relic Fragment）、守卫鳞片（Boss Scale）、异星黏液（Alien Slime）、复苏口粮（Recovery Ration）
 
 ## 9. 快速排错
 - 感觉太难推进：先回基地补给，再做短线往返，不要一次压太深。
+- 氧气总是不够：用 `植物果实 + 壳果 + 特殊菌株 + 发光苔 + 宁神蘑菇` 在工作台制作 `复苏口粮`，按 `X` 或在背包里使用后可同时恢复生命、解毒、补氧并获得短暂氧气储备。
 - 资源不够：优先完成当前阶段关键资源，非关键采集可延后。
 - 路线不开放：优先补前置修复（通讯或电力）。
 - 强行救援卡住：先回飞船与洛希完成路线确认，再沿北线推进到西北遗迹完成守卫战；没有打赢守卫前，信号塔不会进入最终发射。

@@ -42,9 +42,9 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
     },
     {
         RECIPE_REINFORCED_METAL,
-        LT("Reinforced Metal", "强化金属"),
-        LT("1 Junk Metal + 2 Metal Scrap. Forge braced parts for advanced gear.", "1 废旧金属 + 2 金属残片。锻成用于高级装备的承压部件。"),
-        LT("Workbench-forged reinforced parts that can survive real load and heat, clearing the way for the laser weapon build.", "必须在工作台上成形的强化构件，能扛住真正的冲击和热量，是激光武器装配前的关键步骤。"),
+        LT("Weapon Frame Tuning", "武器框架调校"),
+        LT("1 Junk Metal + 2 Metal Scrap. Service the weapon frame at the bench.", "1 废旧金属 + 2 金属残片。在工作台对武器框架做一次维护调校。"),
+        LT("A bench-side maintenance pass for the weapon frame. It restores alignment and keeps the ranged setup reliable, but it is not a permanent stat-growth route.", "在工作台完成的一次武器框架维护调校。它用于恢复对位、保证远程武器稳定运转，但不再是永久属性成长路线。"),
         LT("1 Junk Metal, 2 Metal Scrap", "1 废旧金属，2 金属残片"),
         4,
         true,
@@ -118,12 +118,32 @@ const std::array<RecipeCatalogEntry, RECIPE_COUNT> kRecipeCatalog = {{
         {
             {RESOURCE_WOOD, 5}
         }
+    },
+    {
+        RECIPE_RECOVERY_RATION,
+        LT("Recovery Ration", "复苏口粮"),
+        LT("Fruit + Shell Fruit + Fungus + Glow Moss + Calm Mushroom. One sealed ration for healing, detox, and oxygen recovery.", "植物果实 + 壳果 + 特殊菌株 + 发光苔 + 宁神蘑菇。封装成一份同时负责恢复、解毒与补氧的应急口粮。"),
+        LT("A workbench-sealed survival ration that blends field fruit pulp, medicinal fungus, calming mushroom, and glow-moss vapor into one emergency pack. It is the only quick-use consumable now: one pack restores health, clears poison, stabilizes breathing, and pushes oxygen back up during a dangerous run.", "在工作台完成密封的综合生存口粮，把野外果浆、药用菌株、宁神蘑菇与发光苔气雾压进同一份应急包里。它现在就是唯一的快捷消耗品：一包下去，会同时恢复生命、清除中毒、稳定呼吸，并把氧气重新抬上来。"),
+        LT("1 Plant Fruit, 1 Shell Fruit, 1 Special Fungus, 1 Glow Moss, 1 Calm Mushroom", "1 植物果实，1 壳果，1 特殊菌株，1 发光苔，1 宁神蘑菇"),
+        BASE_CAMP_UNLOCK_STAGE,
+        true,
+        false,
+        false,
+        5,
+        {
+            {RESOURCE_FRUIT, 1},
+            {RESOURCE_SHELL_FRUIT, 1},
+            {RESOURCE_SPECIAL_FUNGUS, 1},
+            {RESOURCE_GLOW_MOSS, 1},
+            {RESOURCE_CALM_MUSHROOM, 1}
+        }
     }
 }};
 
-const std::array<RecipeType, 7> kRecipeOrder = {{
+const std::array<RecipeType, 8> kRecipeOrder = {{
     RECIPE_GLOW_STICK,
     RECIPE_ROPE,
+    RECIPE_RECOVERY_RATION,
     RECIPE_FIELD_CAMP,
     RECIPE_REINFORCED_METAL,
     RECIPE_LASER_GUN,

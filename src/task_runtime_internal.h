@@ -58,6 +58,10 @@ bool TasksRuntime_SpendRecipeResources(TaskSystem *tasks,
                                        const char *advancedRequirementMessage,
                                        char *message,
                                        size_t messageSize);
+bool TasksRuntime_IsRecipeCompleted(const TaskSystem *tasks,
+                                    const GameMap *map,
+                                    const Player *player,
+                                    RecipeType recipe);
 
 bool TasksRuntime_FindNodeSpawnTile(const TaskSystem *tasks,
                                     const GameMap *map,

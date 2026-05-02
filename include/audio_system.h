@@ -47,6 +47,23 @@ typedef enum AudioScene {
     AUDIO_SCENE_ENDING
 } AudioScene;
 
+typedef enum AudioMusicStage {
+    AUDIO_MUSIC_NONE = 0,
+    AUDIO_MUSIC_MENU,
+    AUDIO_MUSIC_STAGE_1_WAKE,
+    AUDIO_MUSIC_STAGE_2_FIRST_STEPS,
+    AUDIO_MUSIC_STAGE_3_WILD,
+    AUDIO_MUSIC_STAGE_4_RISK,
+    AUDIO_MUSIC_STAGE_5_POWER,
+    AUDIO_MUSIC_STAGE_6_RELICS,
+    AUDIO_MUSIC_STAGE_7_CHOICE,
+    AUDIO_MUSIC_ROUTE_HERO,
+    AUDIO_MUSIC_ROUTE_PEACEFUL,
+    AUDIO_MUSIC_ROUTE_SETTLEMENT,
+    AUDIO_MUSIC_BOSS,
+    AUDIO_MUSIC_ENDING
+} AudioMusicStage;
+
 typedef struct OptionalSound {
     Sound sound;
     bool loaded;
@@ -68,9 +85,14 @@ typedef struct AudioManager {
     float sceneTransitionTimer;
     int activeSceneVariant;
     int pendingSceneVariant;
+    int activeMusicVariant;
+    int pendingMusicVariant;
     AudioScene activeScene;
     AudioScene requestedScene;
     AudioScene pendingScene;
+    AudioMusicStage activeMusicStage;
+    AudioMusicStage requestedMusicStage;
+    AudioMusicStage pendingMusicStage;
     OptionalSound confirm;
     OptionalSound open;
     OptionalSound close;
@@ -94,6 +116,14 @@ typedef struct AudioManager {
     OptionalMusic menuLoopAlt;
     OptionalMusic baseLoop;
     OptionalMusic baseLoopAlt;
+    OptionalMusic stage3WildLoop;
+    OptionalMusic stage3WildLoopAlt;
+    OptionalMusic stage4RiskLoop;
+    OptionalMusic stage4RiskLoopAlt;
+    OptionalMusic stage5PowerLoop;
+    OptionalMusic stage5PowerLoopAlt;
+    OptionalMusic stage7ChoiceLoop;
+    OptionalMusic stage7ChoiceLoopAlt;
     OptionalMusic forestLoop;
     OptionalMusic forestRouteLoop;
     OptionalMusic swampLoop;
@@ -102,6 +132,8 @@ typedef struct AudioManager {
     OptionalMusic ruinsFacilityLoop;
     OptionalMusic bossLoop;
     OptionalMusic bossArenaLoop;
+    OptionalMusic settlementLoop;
+    OptionalMusic settlementLoopAlt;
     OptionalMusic endingLoop;
     OptionalMusic endingLoopAlt;
 } AudioManager;
@@ -114,6 +146,7 @@ void Audio_SetMasterVolumeSetting(AudioManager *audio, float volume);
 void Audio_SetMusicVolumeSetting(AudioManager *audio, float volume);
 void Audio_SetSfxVolumeSetting(AudioManager *audio, float volume);
 void Audio_SetSfxEnabled(AudioManager *audio, bool enabled);
+void Audio_SetMusicStage(AudioManager *audio, AudioMusicStage stage);
 void Audio_SetScene(AudioManager *audio, AudioScene scene);
 void Audio_PlayCue(AudioManager *audio, AudioCue cue);
 

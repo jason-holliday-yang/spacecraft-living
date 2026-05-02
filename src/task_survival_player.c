@@ -27,6 +27,12 @@ static void SetPlayerStatusActive(Player *player, PlayerStatusType status, bool 
     Player_ClearStatus(player, status);
 }
 
+static bool HasStableBaseOxygenSupport(const TaskSystem *tasks, MapArea area) {
+    return tasks != NULL
+        && area == MAP_AREA_BASE
+        && tasks->oxygenRepairLevel >= 2;
+}
+
 void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *player, float deltaTime) {
     const PlayerStatusEffect *filteredEffect;
     const PlayerStatusEffect *oxygenLeakEffect;
@@ -49,6 +55,7 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
     float lowOxygenThreshold;
     float criticalOxygenThreshold;
     bool inSafeRecoveryZone;
+    bool stableBaseOxygenSupport;
     bool filteredActive;
     bool oxygenLeakActive;
     bool oxygenReserveActive;
@@ -89,6 +96,7 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
 
     area = Map_GetAreaAt(player->gridX, player->gridY);
     hazard = Map_GetHazardAt(map, player->gridX, player->gridY);
+    stableBaseOxygenSupport = HasStableBaseOxygenSupport(tasks, area);
     ruinsPreparationFactor = 1.0f;
     if (area == MAP_AREA_RUINS) {
         ruinsPreparationFactor = TasksRuntime_GetRuinsPreparationFactor(tasks, player);
@@ -130,11 +138,16 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
     totalOxygenDrain = TasksRuntime_GetOxygenLeakRate(tasks)
         + TasksRuntime_GetAreaOxygenDrain(area, player)
         + oxygenLeakStrength;
+    if (stableBaseOxygenSupport) {
+        totalOxygenDrain = 0.0f;
+    }
     if (area == MAP_AREA_RUINS) {
         totalOxygenDrain *= ruinsPreparationFactor;
     }
 
-    if (area == MAP_AREA_FOREST && tasks->phase == DAY_PHASE_NIGHT && player->glowStickTimer <= 0.0f) {
+    if (stableBaseOxygenSupport) {
+        totalOxygenDrain = 0.0f;
+    } else if (area == MAP_AREA_FOREST && tasks->phase == DAY_PHASE_NIGHT && player->glowStickTimer <= 0.0f) {
         totalOxygenDrain += 0.10f;
     } else if (area == MAP_AREA_SWAMP_OUTER && tasks->phase != DAY_PHASE_DAY) {
         totalOxygenDrain += TasksRuntime_IsOuterSwampLowerRoute(player) ? 0.14f : 0.08f;
@@ -145,7 +158,7 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
             * ruinsPreparationFactor;
     }
 
-    if (tasks->currentEvent == EVENT_SPORE_STORM) {
+    if (!stableBaseOxygenSupport && tasks->currentEvent == EVENT_SPORE_STORM) {
         if (area == MAP_AREA_SWAMP_OUTER) {
             totalOxygenDrain += TasksRuntime_IsOuterSwampLowerRoute(player) ? 0.22f : 0.15f;
             Player_AddPoison(player,
@@ -157,19 +170,20 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
         }
     }
 
-    if (area == MAP_AREA_SWAMP_DEEP && TasksRuntime_IsDeepSwampCore(player) && !player->hasProtectionSuit) {
+    if (!stableBaseOxygenSupport
+        && area == MAP_AREA_SWAMP_DEEP
+        && TasksRuntime_IsDeepSwampCore(player)
+        && !player->hasProtectionSuit) {
         Player_AddPoison(player, deltaTime * 0.75f * (1.0f - filterStrength * 0.5f));
     }
 
-    if (hazard == HAZARD_SWAMP) {
+    if (!stableBaseOxygenSupport && hazard == HAZARD_SWAMP) {
         hazardDrain = 0.62f * (1.0f - filterStrength * 0.75f);
         totalOxygenDrain += fmaxf(0.18f, hazardDrain);
-        Player_AddPressure(player, deltaTime * 0.25f * (1.0f - filterStrength * 0.40f));
-    } else if (hazard == HAZARD_POISON) {
+    } else if (!stableBaseOxygenSupport && hazard == HAZARD_POISON) {
         hazardDrain = 0.82f * (1.0f - filterStrength * 0.85f);
         totalOxygenDrain += fmaxf(0.20f, hazardDrain);
         Player_AddPoison(player, deltaTime * 5.0f * (1.0f - filterStrength));
-        Player_AddPressure(player, deltaTime * 0.28f * (1.0f - filterStrength * 0.35f));
     } else if (hazard == HAZARD_TRIP) {
         Player_DamageHealth(player, deltaTime * 0.50f);
     }
@@ -216,10 +230,14 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
     if (poisonLevel > 0) {
         poisonMitigation = 1.0f - filterStrength * 0.45f;
         Player_DamageHealth(player, poisonHealthRate * poisonMitigation * deltaTime);
-        Player_DamageOxygen(player, poisonOxygenRate * poisonMitigation * deltaTime);
+        if (!stableBaseOxygenSupport) {
+            Player_DamageOxygen(player, poisonOxygenRate * poisonMitigation * deltaTime);
+        }
     }
 
-    if (player->oxygen <= 0.0f) {
+    if (stableBaseOxygenSupport) {
+        Player_ClearStatus(player, PLAYER_STATUS_SUFFOCATING);
+    } else if (player->oxygen <= 0.0f) {
         Player_DamageHealth(player, deltaTime * 7.0f);
         SetPlayerStatusActive(player, PLAYER_STATUS_SUFFOCATING, true, 1, 7.0f);
     } else {
@@ -269,20 +287,11 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
         player->safeRecoveryTimer += deltaTime;
         safeRecoveryAmount = tasks->oxygenRepairLevel >= 2 ? 5.0f : SAFE_RECOVERY_AMOUNT;
         while (player->safeRecoveryTimer >= SAFE_RECOVERY_INTERVAL) {
-            Player_RecoverStamina(player, safeRecoveryAmount);
             Player_RecoverHealth(player, area == MAP_AREA_BASE ? 6.0f : 4.0f);
             Player_AddOxygen(player, area == MAP_AREA_BASE ? 12.0f : 8.0f);
             player->safeRecoveryTimer -= SAFE_RECOVERY_INTERVAL;
         }
 
-        if (player->poison > 0.0f) {
-            player->poison = fmaxf(0.0f, player->poison - (area == MAP_AREA_BASE ? 4.0f : 2.0f) * deltaTime);
-            if (player->poison <= 0.0f) {
-                Player_ClearPoison(player);
-            } else {
-                Player_SyncPoisonStatus(player);
-            }
-        }
         Player_SetStatus(player,
                          PLAYER_STATUS_CAMP_RECOVERY,
                          area == MAP_AREA_BASE ? 2 : 1,
@@ -292,15 +301,7 @@ void TasksRuntime_UpdatePlayerSurvival(TaskSystem *tasks, GameMap *map, Player *
         player->safeRecoveryTimer = 0.0f;
         if (campRecoveryActive) {
             Player_RecoverHealth(player, deltaTime * (0.12f * campRecoveryStrength));
-            Player_AddOxygen(player, deltaTime * (0.36f * campRecoveryStrength));
-            if (player->poison > 0.0f) {
-                player->poison = fmaxf(0.0f, player->poison - deltaTime * (0.25f * campRecoveryStrength));
-                if (player->poison <= 0.0f) {
-                    Player_ClearPoison(player);
-                } else {
-                    Player_SyncPoisonStatus(player);
-                }
-            }
+            Player_AddOxygen(player, deltaTime * (0.72f * campRecoveryStrength));
         }
     }
 

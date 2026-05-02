@@ -65,6 +65,8 @@ static const TextureAsset *GetNodeTexture(const AssetBundle *assets, ResourceTyp
             return &assets->nodeBossScale;
         case RESOURCE_ALIEN_SLIME:
             return &assets->nodeAlienSlime;
+        case RESOURCE_RECOVERY_RATION:
+            return &assets->statusOxygenReserve;
         case RESOURCE_COUNT:
         default:
             return NULL;
@@ -227,20 +229,82 @@ static int GetBossPhaseForPresentation(const Monster *boss) {
     return 3;
 }
 
+static float GetMonsterHealthRatio(const Monster *monster) {
+    float ratio;
+
+    if (monster == NULL || monster->maxHealth <= 0.0f) {
+        return 0.0f;
+    }
+
+    ratio = monster->health / monster->maxHealth;
+    if (ratio < 0.0f) {
+        return 0.0f;
+    }
+    if (ratio > 1.0f) {
+        return 1.0f;
+    }
+    return ratio;
+}
+
+static void DrawMonsterHealthBar(Rectangle rect, const Monster *monster, float widthRatio, Color fillColor) {
+    const float healthRatio = GetMonsterHealthRatio(monster);
+    const float barWidth = rect.width * widthRatio;
+    const float barHeight = monster != NULL && monster->type == MONSTER_FINAL_BOSS ? 6.0f : 5.0f;
+    const float barX = rect.x + (rect.width - barWidth) * 0.5f;
+    const float barY = monster != NULL && monster->type == MONSTER_FINAL_BOSS ? rect.y - 10.0f : rect.y - 8.0f;
+
+    DrawRectangle((int)barX,
+                  (int)barY,
+                  (int)barWidth,
+                  (int)barHeight,
+                  Color{33, 20, 22, 230});
+    DrawRectangle((int)barX,
+                  (int)barY,
+                  (int)(barWidth * healthRatio),
+                  (int)barHeight,
+                  fillColor);
+    DrawRectangleLines((int)barX,
+                       (int)barY,
+                       (int)barWidth,
+                       (int)barHeight,
+                       Color{255, 245, 220, 80});
+}
+
 static const char *GetBossAttackLabel(BossAttackType attack) {
     switch (attack) {
         case BOSS_ATTACK_MELEE:
             return Loc_PickLiteral("Swipe", "挥击");
         case BOSS_ATTACK_CHARGE:
-            return Loc_PickLiteral("Charge", "冲锋");
+            return Loc_PickLiteral("Line Lock", "直线锁定");
         case BOSS_ATTACK_SPAWN:
-            return Loc_PickLiteral("Summon", "呼援");
         case BOSS_ATTACK_AOE:
-            return Loc_PickLiteral("Shockwave", "震荡");
         case BOSS_ATTACK_NONE:
         default:
             return "";
     }
+}
+
+static bool IsBossLineTelegraphHorizontal(const Monster *monster) {
+    int bossCenterX;
+    int bossCenterY;
+    int deltaX;
+    int deltaY;
+
+    if (monster == NULL) {
+        return true;
+    }
+
+    bossCenterX = monster->gridX + MONSTER_FOOTPRINT_SIZE / 2;
+    bossCenterY = monster->gridY + MONSTER_FOOTPRINT_SIZE / 2;
+    deltaX = monster->targetX - bossCenterX;
+    deltaY = monster->targetY - bossCenterY;
+    if (deltaX < 0) {
+        deltaX = -deltaX;
+    }
+    if (deltaY < 0) {
+        deltaY = -deltaY;
+    }
+    return deltaX >= deltaY;
 }
 
 static void DrawMonster(const Monster *monster, const AssetBundle *assets, float elapsedSeconds, int bossDebuffStacks) {
@@ -322,30 +386,13 @@ static void DrawMonster(const Monster *monster, const AssetBundle *assets, float
                          32,
                          Color{107, 242, 255, (unsigned char)(50 + bossDebuffStacks * 20)});
             }
-            if (monster->weakPointTimer > 0.0f) {
-                const float weakPointPulse = sinf(elapsedSeconds * 10.0f) * 0.5f + 0.5f;
-
-                DrawRing(pos,
-                         rect.width * 0.55f,
-                         rect.width * 0.68f + weakPointPulse * 5.0f,
-                         0.0f,
-                         360.0f,
-                         40,
-                         Color{255, 234, 162, (unsigned char)(90 + weakPointPulse * 70.0f)});
-            }
             if (!assets->boss.loaded) {
                 DrawCircleV(pos, radius, body);
             }
-            DrawRectangle((int)(rect.x + rect.width * 0.15f),
-                          (int)(rect.y - 10.0f),
-                          (int)(rect.width * 0.70f),
-                          6,
-                          Color{44, 22, 22, 255});
-            DrawRectangle((int)(rect.x + rect.width * 0.15f),
-                          (int)(rect.y - 10.0f),
-                          (int)(rect.width * 0.70f * (monster->health / monster->maxHealth)),
-                          6,
-                          monster->weakPointTimer > 0.0f ? Color{255, 224, 132, 255} : Color{245, 94, 81, 255});
+            DrawMonsterHealthBar(rect,
+                                 monster,
+                                 0.70f,
+                                 Color{245, 94, 81, 255});
             DrawRectangleRounded(Rectangle{rect.x + rect.width * 0.08f, rect.y - 30.0f, 74.0f, 16.0f}, 0.35f, 6, Fade(phaseColor, 0.18f));
             DrawText(phaseLabel, (int)(rect.x + rect.width * 0.10f), (int)(rect.y - 31.0f), 13, phaseColor);
             if (monster->attackTelegraph > 0.0f && attackLabel[0] != '\0') {
@@ -363,6 +410,7 @@ static void DrawMonster(const Monster *monster, const AssetBundle *assets, float
                    (int)(pos.y - radius * 0.6f),
                    radius * 0.55f + sinf(elapsedSeconds * 4.0f) * 1.2f,
                    Color{255, 255, 255, 28});
+        DrawMonsterHealthBar(rect, monster, 0.62f, Color{237, 96, 78, 255});
         return;
     }
 
@@ -371,6 +419,7 @@ static void DrawMonster(const Monster *monster, const AssetBundle *assets, float
                (int)(pos.y - radius * 0.6f),
                radius * 0.55f + sinf(elapsedSeconds * 4.0f) * 1.2f,
                Color{255, 255, 255, 40});
+    DrawMonsterHealthBar(rect, monster, 0.62f, Color{237, 96, 78, 255});
 }
 
 static void DrawBossTelegraph(const Monster *monster, float elapsedSeconds) {
@@ -407,30 +456,42 @@ static void DrawBossTelegraph(const Monster *monster, float elapsedSeconds) {
                      Color{255, 132, 102, (unsigned char)(95 + pulse * 70.0f)});
             break;
         case BOSS_ATTACK_CHARGE: {
-            Vector2 targetPos;
+            Rectangle lineRect;
+            Color lineColor;
 
-            targetPos = Map_GridToWorld(monster->targetX, monster->targetY);
-            DrawLineEx(pos, targetPos, 8.0f + pulse * 3.0f, Color{255, 184, 108, (unsigned char)(95 + pulse * 70.0f)});
-            DrawCircleV(targetPos, 12.0f + pulse * 4.0f, Color{255, 184, 108, (unsigned char)(60 + pulse * 45.0f)});
+            lineColor = Color{255, 184, 108, (unsigned char)(70 + pulse * 72.0f)};
+            if (IsBossLineTelegraphHorizontal(monster)) {
+                const int lockedY = monster->targetY < BOSS_ARENA_Y + 1
+                    ? BOSS_ARENA_Y + 1
+                    : (monster->targetY > BOSS_ARENA_Y + BOSS_ARENA_HEIGHT - 2
+                        ? BOSS_ARENA_Y + BOSS_ARENA_HEIGHT - 2
+                        : monster->targetY);
+
+                lineRect = Rectangle{
+                    (float)((BOSS_ARENA_X + 1) * TILE_SIZE),
+                    (float)(lockedY * TILE_SIZE + TILE_SIZE / 2 - 5),
+                    (float)((BOSS_ARENA_WIDTH - 2) * TILE_SIZE),
+                    10.0f + pulse * 4.0f
+                };
+            } else {
+                const int lockedX = monster->targetX < BOSS_ARENA_X + 1
+                    ? BOSS_ARENA_X + 1
+                    : (monster->targetX > BOSS_ARENA_X + BOSS_ARENA_WIDTH - 2
+                        ? BOSS_ARENA_X + BOSS_ARENA_WIDTH - 2
+                        : monster->targetX);
+
+                lineRect = Rectangle{
+                    (float)(lockedX * TILE_SIZE + TILE_SIZE / 2 - 5),
+                    (float)((BOSS_ARENA_Y + 1) * TILE_SIZE),
+                    10.0f + pulse * 4.0f,
+                    (float)((BOSS_ARENA_HEIGHT - 2) * TILE_SIZE)
+                };
+            }
+            DrawRectangleRounded(lineRect, 0.35f, 6, lineColor);
             break;
         }
         case BOSS_ATTACK_SPAWN:
-            DrawRing(pos,
-                     rect.width * 0.45f,
-                     rect.width * 0.70f + pulse * 5.0f,
-                     0.0f,
-                     360.0f,
-                     36,
-                     Color{112, 223, 255, (unsigned char)(90 + pulse * 65.0f)});
-            break;
         case BOSS_ATTACK_AOE:
-            DrawRing(pos,
-                     rect.width * 0.72f,
-                     rect.width * 0.90f + pulse * 6.0f,
-                     0.0f,
-                     360.0f,
-                     48,
-                     Color{255, 208, 118, (unsigned char)(85 + pulse * 70.0f)});
             break;
         case BOSS_ATTACK_NONE:
         default:

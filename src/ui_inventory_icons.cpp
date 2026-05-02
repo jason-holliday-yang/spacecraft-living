@@ -37,16 +37,18 @@ static const TextureAsset *GetBackpackEntryTexture(const AssetBundle *assets, in
         case 15:
             return &assets->nodeAlienSlime;
         case 16:
-            return &assets->iconGlowStick;
+            return &assets->iconRecoveryRation;
         case 17:
-            return &assets->iconRope;
+            return &assets->iconGlowStick;
         case 18:
-            return &assets->iconLaserGun;
+            return &assets->iconRope;
         case 19:
-            return &assets->iconProtectionSuit;
+            return &assets->iconLaserGun;
         case 20:
-            return &assets->iconSignalAmplifier;
+            return &assets->iconProtectionSuit;
         case 21:
+            return &assets->iconSignalAmplifier;
+        case 22:
             return &assets->iconFieldCamp;
         default:
             return NULL;
@@ -134,30 +136,38 @@ void UIInventory_DrawBackpackIcon(const AssetBundle *assets, int itemIndex, Rect
             DrawCircleV(Vector2{center.x, center.y - unit * 0.55f}, unit * 0.34f, secondary);
             break;
         case 16:
+            DrawRectangleRounded(Rectangle{center.x - unit * 1.05f, center.y - unit * 0.90f, unit * 2.10f, unit * 1.80f}, 0.28f, 8, secondary);
+            DrawRectangleRounded(Rectangle{center.x - unit * 0.82f, center.y - unit * 0.64f, unit * 1.64f, unit * 1.28f}, 0.22f, 8, primary);
+            DrawRectangleRounded(Rectangle{center.x - unit * 0.25f, center.y - unit * 1.15f, unit * 0.50f, unit * 0.36f}, 0.14f, 6, secondary);
+            DrawCircleV(Vector2{center.x - unit * 0.34f, center.y - unit * 0.08f}, unit * 0.22f, Color{255, 214, 154, 230});
+            DrawCircleV(Vector2{center.x + unit * 0.18f, center.y + unit * 0.12f}, unit * 0.24f, Color{216, 245, 232, 230});
+            DrawLineEx(Vector2{center.x - unit * 0.16f, center.y - unit * 0.54f}, Vector2{center.x + unit * 0.46f, center.y + unit * 0.48f}, unit * 0.13f, Color{238, 250, 255, 225});
+            break;
+        case 17:
             DrawRectangleRounded(Rectangle{center.x - unit * 0.32f, center.y - unit * 1.1f, unit * 0.64f, unit * 2.2f}, 0.30f, 8, primary);
             DrawCircleV(Vector2{center.x, center.y - unit * 0.75f}, unit * 0.16f, secondary);
             break;
-        case 17:
+        case 18:
             DrawCircleLines((int)center.x, (int)center.y, unit * 0.95f, primary);
             DrawCircleLines((int)(center.x + unit * 0.55f), (int)(center.y + unit * 0.10f), unit * 0.72f, primary);
             break;
-        case 18:
+        case 19:
             DrawRectangleRounded(Rectangle{center.x - unit * 1.0f, center.y - unit * 0.32f, unit * 1.4f, unit * 0.64f}, 0.18f, 6, secondary);
             DrawRectangleRounded(Rectangle{center.x - unit * 0.1f, center.y - unit * 0.55f, unit * 0.9f, unit * 0.44f}, 0.12f, 6, primary);
             DrawCircleV(Vector2{center.x + unit * 0.95f, center.y}, unit * 0.28f, primary);
             break;
-        case 19:
+        case 20:
             DrawTriangle(Vector2{center.x, center.y - unit * 1.1f}, Vector2{center.x - unit * 0.9f, center.y + unit * 0.9f}, Vector2{center.x + unit * 0.9f, center.y + unit * 0.9f}, primary);
             DrawTriangle(Vector2{center.x, center.y - unit * 0.7f}, Vector2{center.x - unit * 0.52f, center.y + unit * 0.60f}, Vector2{center.x + unit * 0.52f, center.y + unit * 0.60f}, secondary);
             break;
-        case 20:
+        case 21:
             DrawLineEx(Vector2{center.x, center.y - unit * 1.0f}, Vector2{center.x, center.y + unit * 0.4f}, unit * 0.16f, primary);
             DrawLineEx(Vector2{center.x - unit * 0.8f, center.y + unit * 0.3f}, Vector2{center.x + unit * 0.8f, center.y + unit * 0.3f}, unit * 0.16f, primary);
             DrawCircleLines((int)center.x, (int)(center.y - unit * 0.95f), unit * 0.30f, secondary);
             DrawCircleLines((int)(center.x - unit * 0.7f), (int)(center.y + unit * 0.1f), unit * 0.22f, secondary);
             DrawCircleLines((int)(center.x + unit * 0.7f), (int)(center.y + unit * 0.1f), unit * 0.22f, secondary);
             break;
-        case 21:
+        case 22:
             DrawTriangle(Vector2{center.x, center.y - unit * 0.9f}, Vector2{center.x - unit * 1.1f, center.y + unit * 0.9f}, Vector2{center.x + unit * 1.1f, center.y + unit * 0.9f}, primary);
             DrawTriangle(Vector2{center.x, center.y - unit * 0.4f}, Vector2{center.x - unit * 0.58f, center.y + unit * 0.55f}, Vector2{center.x + unit * 0.58f, center.y + unit * 0.55f}, secondary);
             break;
@@ -183,6 +193,8 @@ static const TextureAsset *GetRecipeTexture(const AssetBundle *assets, RecipeTyp
             return &assets->iconSignalAmplifier;
         case RECIPE_FIELD_CAMP:
             return &assets->iconFieldCamp;
+        case RECIPE_RECOVERY_RATION:
+            return &assets->iconRecoveryRation;
         case RECIPE_COUNT:
         default:
             return NULL;
@@ -203,7 +215,10 @@ void UIInventory_DrawRecipeIcon(const AssetBundle *assets, RecipeType recipe, Re
             UIInventory_DrawBackpackIcon(assets, 16, rect, primary, secondary);
             break;
         case RECIPE_ROPE:
-            UIInventory_DrawBackpackIcon(assets, 17, rect, primary, secondary);
+            UIInventory_DrawBackpackIcon(assets, 18, rect, primary, secondary);
+            break;
+        case RECIPE_RECOVERY_RATION:
+            UIInventory_DrawBackpackIcon(assets, 16, rect, primary, secondary);
             break;
         case RECIPE_REINFORCED_METAL: {
             Vector2 center;
@@ -212,22 +227,30 @@ void UIInventory_DrawRecipeIcon(const AssetBundle *assets, RecipeType recipe, Re
             center = Vector2{rect.x + rect.width * 0.5f, rect.y + rect.height * 0.48f};
             unit = rect.width < rect.height ? rect.width : rect.height;
             unit *= 0.18f;
-            DrawRectanglePro(Rectangle{center.x - unit * 1.2f, center.y - unit * 0.5f, unit * 1.55f, unit * 0.82f}, Vector2{0.0f, 0.0f}, -15.0f, primary);
-            DrawRectanglePro(Rectangle{center.x - unit * 0.20f, center.y - unit * 0.15f, unit * 1.45f, unit * 0.82f}, Vector2{0.0f, 0.0f}, 15.0f, secondary);
-            DrawRectangle((int)(center.x - unit * 0.30f), (int)(center.y - unit * 1.0f), (int)(unit * 0.6f), (int)(unit * 2.0f), Color{220, 232, 242, 150});
+            DrawCircleLines((int)center.x, (int)center.y, unit * 1.15f, primary);
+            DrawCircleLines((int)center.x, (int)center.y, unit * 0.58f, secondary);
+            DrawLineEx(Vector2{center.x - unit * 1.55f, center.y},
+                       Vector2{center.x + unit * 1.55f, center.y},
+                       unit * 0.14f,
+                       primary);
+            DrawLineEx(Vector2{center.x, center.y - unit * 1.55f},
+                       Vector2{center.x, center.y + unit * 1.55f},
+                       unit * 0.14f,
+                       primary);
+            DrawRectangleRounded(Rectangle{center.x + unit * 0.32f, center.y + unit * 0.12f, unit * 1.35f, unit * 0.42f}, 0.2f, 5, secondary);
             break;
         }
         case RECIPE_LASER_GUN:
-            UIInventory_DrawBackpackIcon(assets, 18, rect, primary, secondary);
-            break;
-        case RECIPE_PROTECTION_SUIT:
             UIInventory_DrawBackpackIcon(assets, 19, rect, primary, secondary);
             break;
-        case RECIPE_SIGNAL_AMPLIFIER:
+        case RECIPE_PROTECTION_SUIT:
             UIInventory_DrawBackpackIcon(assets, 20, rect, primary, secondary);
             break;
-        case RECIPE_FIELD_CAMP:
+        case RECIPE_SIGNAL_AMPLIFIER:
             UIInventory_DrawBackpackIcon(assets, 21, rect, primary, secondary);
+            break;
+        case RECIPE_FIELD_CAMP:
+            UIInventory_DrawBackpackIcon(assets, 22, rect, primary, secondary);
             break;
         case RECIPE_COUNT:
         default:

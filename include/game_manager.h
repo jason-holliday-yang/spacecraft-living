@@ -48,6 +48,21 @@ typedef enum CommunicatorTab {
     COMMUNICATOR_TAB_COUNT
 } CommunicatorTab;
 
+#define GAME_MESSAGE_HISTORY_LIMIT 20
+
+typedef struct GameMessageNode {
+    char text[160];
+    float postedAt;
+    float duration;
+    struct GameMessageNode *next;
+} GameMessageNode;
+
+typedef struct GameMessageHistory {
+    GameMessageNode *head;
+    GameMessageNode *tail;
+    int count;
+} GameMessageHistory;
+
 typedef struct Game {
     GameState state;
     GameMap map;
@@ -58,11 +73,16 @@ typedef struct Game {
     AssetBundle assets;
     Camera2D camera;
     HudMessage hudMessage;
+    GameMessageHistory messageHistory;
     MiniMap miniMap;
     float elapsedSeconds;
     float openingCutsceneElapsed;
     float hurtSoundCooldown;
     float monsterCueCooldown;
+    float laserEffectTimer;
+    bool laserEffectHit;
+    Vector2 laserEffectStart;
+    Vector2 laserEffectEnd;
     int bufferedMoveX;
     int bufferedMoveY;
     float inputBufferTimer;
@@ -75,10 +95,9 @@ typedef struct Game {
     bool settingsDirty;
     bool settingsSliderDragging;
     int settingsSliderDragIndex;
-    bool backpackOpen;
+    bool infoOverlayOpen;
+    InfoOverlayTab infoOverlayTab;
     bool craftOpen;
-    bool mapOpen;
-    bool communicatorOpen;
     bool helpOpen;
     bool logReaderOpen;
     bool storySceneOpen;
@@ -120,6 +139,7 @@ typedef struct Game {
     int communicatorFirstVisibleStorySceneIndex;
     bool communicatorLogDetailOpen;
     float communicatorLogDetailVisibility;
+    float communicatorLogDetailScroll;
     bool showDeathPopup;
     int deathPopupSelection;
     bool settlementConfirmOpen;

@@ -4,6 +4,13 @@ static bool IsRectBounds(int gridX, int gridY, int x, int y, int width, int heig
     return gridX >= x && gridX < x + width && gridY >= y && gridY < y + height;
 }
 
+static bool IsSouthFacilityBounds(int gridX, int gridY) {
+    return gridX >= EXTERIOR_X(62)
+        && gridX <= WORLD_MAX_X
+        && gridY >= EXTERIOR_Y(86)
+        && gridY <= WORLD_MAX_Y;
+}
+
 bool Map_IsWithinBounds(int gridX, int gridY) {
     return gridX >= 0 && gridX < MAP_WIDTH && gridY >= 0 && gridY < MAP_HEIGHT;
 }
@@ -100,6 +107,9 @@ MapArea Map_GetAreaAt(int gridX, int gridY) {
     }
     if (IsRectBounds(gridX, gridY, RUINS_MAIN_X, RUINS_MAIN_Y, RUINS_MAIN_WIDTH, RUINS_MAIN_HEIGHT)
         || IsRectBounds(gridX, gridY, RUINS_APPROACH_X, RUINS_APPROACH_Y, RUINS_APPROACH_WIDTH, RUINS_APPROACH_HEIGHT)) {
+        return MAP_AREA_RUINS;
+    }
+    if (IsSouthFacilityBounds(gridX, gridY)) {
         return MAP_AREA_RUINS;
     }
     if (IsRectBounds(gridX, gridY, SWAMP_DEEP_X, SWAMP_DEEP_Y, SWAMP_DEEP_WIDTH, SWAMP_DEEP_HEIGHT)) {

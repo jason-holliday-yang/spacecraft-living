@@ -75,24 +75,26 @@ int main(void) {
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 2, 12.0f, 38.0f);
     player.resources[RESOURCE_SPECIAL_FUNGUS] = 1;
     memset(message, 0, sizeof(message));
-    Require(Player_UseSelectedConsumable(&player, RESOURCE_SPECIAL_FUNGUS, message, (int)sizeof(message)),
-            "special fungus should be usable as a selected consumable");
-    Require(player.poison == 20.0f,
-            "special fungus should reduce poison immediately");
-    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
-                && Player_GetStatusEffect(&player, PLAYER_STATUS_POISONED)->level == 1,
-            "poison status should downgrade immediately when poison drops into a lower tier");
+    Require(!Player_UseSelectedConsumable(&player, RESOURCE_SPECIAL_FUNGUS, message, (int)sizeof(message)),
+            "special fungus should no longer be directly usable as a selected consumable");
+    Require(player.poison == 38.0f,
+            "special fungus should stay raw material until processed at the workbench");
+    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED),
+            "raw fungus should not clear poison directly");
 
     player.poison = 52.0f;
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 3, 12.0f, 52.0f);
     player.resources[RESOURCE_CALM_MUSHROOM] = 1;
     memset(message, 0, sizeof(message));
-    Require(Player_UseSelectedConsumable(&player, RESOURCE_CALM_MUSHROOM, message, (int)sizeof(message)),
-            "calming mushroom should be usable as a selected consumable");
-    Require(player.poison == 0.0f,
-            "calming mushroom should fully clear poison once it pushes the value into the clear range");
-    Require(!Player_HasStatus(&player, PLAYER_STATUS_POISONED),
-            "poison status should clear immediately when poison is purged");
+    Require(!Player_UseSelectedConsumable(&player, RESOURCE_CALM_MUSHROOM, message, (int)sizeof(message)),
+            "calming mushroom should no longer be directly usable as a selected consumable");
+    Require(player.poison == 52.0f,
+            "calming mushroom should stay raw material until processed at the workbench");
+    Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
+                && Player_GetStatusEffect(&player, PLAYER_STATUS_POISONED)->level == 3,
+            "poison status should remain until a prepared Recovery Ration is used");
+    Require(!Player_HasStatus(&player, PLAYER_STATUS_FILTERED),
+            "raw calming mushroom should not provide a filtered breathing buffer");
 
     puts("status_system smoke ok");
     return 0;

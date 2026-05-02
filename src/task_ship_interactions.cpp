@@ -171,7 +171,6 @@ static bool TryRepairAtOxygenConsole(TaskSystem *tasks, GameMap *map, Player *pl
     }
 
     if (Map_GetAreaAt(player->gridX, player->gridY) == MAP_AREA_BASE) {
-        player->pressure = INITIAL_PRESSURE;
         player->oxygen = MAX_OXYGEN;
         Player_ClearStatus(player, PLAYER_STATUS_LOW_OXYGEN);
         Player_ClearStatus(player, PLAYER_STATUS_SUFFOCATING);
@@ -179,8 +178,8 @@ static bool TryRepairAtOxygenConsole(TaskSystem *tasks, GameMap *map, Player *pl
         Player_ClearStatus(player, PLAYER_STATUS_CRITICAL_CONDITION);
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("Base oxygen reset complete. Your oxygen reserves are full, pressure has settled, and the breathing alerts finally shut up.",
-                                                  "基地氧气控制台重置完成：氧气储备已补满，气压重新稳定，恼人的呼吸警报也总算停了。"));
+                                  Loc_PickLiteral("Base oxygen reset complete. Your oxygen reserves are full, and the breathing alerts finally shut up.",
+                                                  "基地氧气控制台重置完成：氧气储备已补满，恼人的呼吸警报也总算停了。"));
         return true;
     }
 
@@ -390,14 +389,10 @@ static bool TryRoomInteraction(TaskSystem *tasks, Player *player, char *message,
     }
 
     if (std::strcmp(roomName, "Crew Quarters") == 0) {
-        player->pressure = INITIAL_PRESSURE;
         player->health = Player_GetMaxHealth(player);
-        Player_AddOxygen(player, 18.0f);
-        Player_RecoverStamina(player, 34.0f);
-        TasksRuntime_ReducePoisonAtRecovery(player, 12.0f);
         TasksRuntime_WriteMessage(message,
                                   messageSize,
-                                  Loc_PickLiteral("Crew Quarters: the bunk finally lets your body unclench. You fully recover your health here, your pulse drops, and the ship almost feels inhabited again for a minute.", "船员舱：躺回床铺后，身体总算能短暂松开。你会在这里把生命值完全恢复，心率也会回落，整艘船在这一刻几乎像是又有人真正住在这里。"));
+                                  Loc_PickLiteral("Crew Quarters: the bunk finally lets your body unclench. You fully recover your health here, your pulse drops, and the ship almost feels inhabited again for a minute. Oxygen still has to be topped off manually at the base console, and field toxins are now handled with a prepared Recovery Ration.", "船员舱：躺回床铺后，身体总算能短暂松开。你会在这里把生命值完全恢复，心率也会回落，整艘船在这一刻几乎像是又有人真正住在这里。至于氧气，仍然要去基地控制台手动补满；野外毒素则改由备好的复苏口粮处理。"));
         return true;
     }
 

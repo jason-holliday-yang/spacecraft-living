@@ -17,11 +17,17 @@ void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, con
     RecipeVisualDef visual;
     char buffer[256];
     char statusBuffer[128];
+    float contentGap;
+    float listWidth;
+    float detailWidth;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
-    listPanel = Rectangle{panel.x + 20.0f * scale, panel.y + 102.0f * scale, 630.0f * scale, panel.height - 134.0f * scale};
-    detailPanel = Rectangle{panel.x + 674.0f * scale, panel.y + 102.0f * scale, panel.width - 706.0f * scale, panel.height - 134.0f * scale};
+    contentGap = 24.0f * scale;
+    listWidth = (panel.width - 40.0f * scale - contentGap) * (2.0f / 3.0f);
+    detailWidth = panel.width - 40.0f * scale - contentGap - listWidth;
+    listPanel = Rectangle{panel.x + 20.0f * scale, panel.y + 102.0f * scale, listWidth, panel.height - 134.0f * scale};
+    detailPanel = Rectangle{listPanel.x + listPanel.width + contentGap, panel.y + 102.0f * scale, detailWidth, panel.height - 134.0f * scale};
     buttonRect = UI_GetCraftActionButtonRect(screenWidth, screenHeight);
     recipeCount = Tasks_GetVisibleRecipeCount(tasks);
     selectedRecipe = UIInventory_NormalizeSelectedIndex(selectedRecipe, recipeCount);

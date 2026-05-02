@@ -78,8 +78,6 @@ bool ShouldShowMapAreaLabel(const MiniMap *minimap,
                             const GameMap *map,
                             int anchorX,
                             int anchorY,
-                            int objectiveX,
-                            int objectiveY,
                             const Player *player,
                             bool forceReveal) {
     if (forceReveal || IsMapTileExplored(minimap, anchorX, anchorY)) {
@@ -88,16 +86,13 @@ bool ShouldShowMapAreaLabel(const MiniMap *minimap,
     if (player != nullptr && IsContextInSameArea(map, anchorX, anchorY, player->gridX, player->gridY)) {
         return true;
     }
-
-    return IsContextInSameArea(map, anchorX, anchorY, objectiveX, objectiveY);
+    return false;
 }
 
 bool ShouldShowMapLocationLabel(const MiniMap *minimap,
                                 const GameMap *map,
                                 int anchorX,
                                 int anchorY,
-                                int objectiveX,
-                                int objectiveY,
                                 const Player *player,
                                 bool forceReveal) {
     if (forceReveal || IsMapTileExplored(minimap, anchorX, anchorY)) {
@@ -106,8 +101,7 @@ bool ShouldShowMapLocationLabel(const MiniMap *minimap,
     if (player != nullptr && IsContextInSameLocation(map, anchorX, anchorY, player->gridX, player->gridY)) {
         return true;
     }
-
-    return IsContextInSameLocation(map, anchorX, anchorY, objectiveX, objectiveY);
+    return false;
 }
 
 MapContentBounds GetMapContentBounds(const GameMap *map, bool revealNorthwestRuinsFight) {
@@ -211,15 +205,15 @@ Color GetPropTileColor(TileType propTile) {
 }
 
 void DrawLegendSwatch(const AssetBundle *assets, Rectangle rect, Color swatch, const char *label, float scale) {
-    Rectangle swatchRect = Rectangle{rect.x, rect.y + 4.0f * scale, 16.0f * scale, 16.0f * scale};
+    Rectangle swatchRect = Rectangle{rect.x, rect.y + 4.0f * scale, 14.0f * scale, 14.0f * scale};
 
     DrawRectangleRounded(swatchRect, 0.28f, 6, swatch);
     UIRuntime_DrawWrappedText(
         assets,
         label,
-        Rectangle{rect.x + 24.0f * scale, rect.y, rect.width - 24.0f * scale, rect.height},
-        15.0f * scale,
-        16.0f * scale,
+        Rectangle{rect.x + 22.0f * scale, rect.y, rect.width - 22.0f * scale, rect.height},
+        13.8f * scale,
+        15.2f * scale,
         Color{214, 226, 238, 255}
     );
 }
@@ -227,6 +221,11 @@ void DrawLegendSwatch(const AssetBundle *assets, Rectangle rect, Color swatch, c
 void DrawReserveFrame(Rectangle rect, Color fill, Color outline) {
     DrawRectangleRec(rect, fill);
     DrawRectangleLinesEx(rect, 2.0f, outline);
+}
+
+void DrawMapInfoCard(Rectangle rect, Color fill, Color outline) {
+    DrawRectangleRounded(rect, 0.16f, 8, fill);
+    DrawRectangleRoundedLinesEx(rect, 0.16f, 8, 1.4f, outline);
 }
 
 void DrawArchiveMarker(Rectangle rect, bool mainline, float elapsedSeconds) {
@@ -284,24 +283,17 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
                        int screenHeight) {
     float scale = UIRuntime_GetScale(screenWidth, screenHeight);
     Rectangle panel = UI_GetStandardOverlayRect(screenWidth, screenHeight);
+    float sideGap = 22.0f * scale;
     Rectangle mapPanel{
-        panel.x + 20.0f * scale,
-        panel.y + 110.0f * scale,
-        620.0f * scale,
-        panel.height - 142.0f * scale,
-    };
-    Rectangle infoPanel{
-        panel.x + 662.0f * scale,
-        panel.y + 110.0f * scale,
-        panel.width - 682.0f * scale,
-        panel.height - 142.0f * scale,
+        panel.x + sideGap,
+        panel.y + 96.0f * scale,
+        panel.width - sideGap * 2.0f,
+        panel.height - 128.0f * scale,
     };
     const bool revealNorthwestRuinsFight = ShouldRevealNorthwestRuinsFightOnMap(player, tasks);
     const bool northwestGuardianPending = tasks != nullptr
         && !tasks->bossDefeated
         && (tasks->selectedEndingRoute == ENDING_HEROIC || tasks->selectedEndingRoute == ENDING_SETTLEMENT);
-    const char *routeHint = Loc_PickLiteral("West frontier opens after the comm relay. The southern descent opens after the power bay. Ruins prep deepens as you bring back more field evidence.",
-                                            "通讯中继修复后会开放西部前线；动力舱恢复后会开放南侧下行路线。随着你带回更多现场证据，遗迹推进也会继续加深。");
     MapContentBounds contentBounds = GetMapContentBounds(map, revealNorthwestRuinsFight);
     int contentWidth = contentBounds.maxX - contentBounds.minX + 1;
     int contentHeight = contentBounds.maxY - contentBounds.minY + 1;
@@ -313,10 +305,16 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
     float originY;
     Rectangle westReserveRect;
     Rectangle southReserveRect;
+    Rectangle legendCard;
+    float legendWidth;
+    float legendColumnWidth;
+    float legendColumnGap;
+    float legendLeftX;
+    float legendRightX;
+    float legendRowY;
     int objectiveX = 0;
     int objectiveY = 0;
     bool hasObjective;
-    char buffer[128];
 
     if (cellSize < 3.0f) {
         cellSize = 3.0f;
@@ -327,6 +325,18 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
     originY = mapPanel.y + (mapPanel.height - mapHeight) * 0.5f;
     auto TileScreenX = [&](int gridX) { return originX + (gridX - contentBounds.minX) * cellSize; };
     auto TileScreenY = [&](int gridY) { return originY + (gridY - contentBounds.minY) * cellSize; };
+    legendWidth = fminf(440.0f * scale, mapPanel.width - 36.0f * scale);
+    legendCard = Rectangle{
+        mapPanel.x + mapPanel.width - legendWidth - 20.0f * scale,
+        mapPanel.y + 18.0f * scale,
+        legendWidth,
+        224.0f * scale
+    };
+    legendColumnGap = 18.0f * scale;
+    legendColumnWidth = (legendCard.width - 32.0f * scale - legendColumnGap) * 0.5f;
+    legendLeftX = legendCard.x + 16.0f * scale;
+    legendRightX = legendLeftX + legendColumnWidth + legendColumnGap;
+    legendRowY = legendCard.y + 42.0f * scale;
     westReserveRect = Rectangle{
         TileScreenX(EXTERIOR_X(10)),
         TileScreenY(EXTERIOR_Y(30)),
@@ -354,9 +364,8 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         17.0f * scale,
         Color{182, 199, 214, 255}
     );
-    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Explore, track objectives, and plan return routes.", "探索地图、追踪目标，并规划返程路线。"), Rectangle{panel.x + 28.0f * scale, panel.y + 66.0f * scale, panel.width - 56.0f * scale, 42.0f * scale}, 15.5f * scale, 16.0f * scale, Color{194, 224, 255, 255});
+    UIRuntime_DrawWrappedText(assets, Loc_PickLiteral("Explore terrain, read route structure, and plan return paths.", "查看地形结构、判断路线，并规划返程。"), Rectangle{panel.x + 28.0f * scale, panel.y + 66.0f * scale, panel.width - 56.0f * scale, 42.0f * scale}, 17.0f * scale, 18.6f * scale, Color{194, 224, 255, 255});
     UIRuntime_DrawPanel(mapPanel, Color{11, 20, 32, 235}, Color{255, 255, 255, 22});
-    UIRuntime_DrawPanel(infoPanel, Color{14, 26, 42, 220}, Color{255, 255, 255, 22});
 
     for (int y = contentBounds.minY; y <= contentBounds.maxY; ++y) {
         for (int x = contentBounds.minX; x <= contentBounds.maxX; ++x) {
@@ -388,30 +397,38 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
         }
     }
 
-    if (tasks != nullptr && tasks->selectedEndingRoute == ENDING_HEROIC && !tasks->bossDefeated) {
-        routeHint = Loc_PickLiteral("Heroic route: follow the North Route to Northwest Ruins, clear the guardian, then return to the Signal Tower.",
-                                    "强行救援路线：沿北线推进至西北遗迹，清除守卫后再返回信号塔。");
-    } else if (tasks != nullptr && tasks->selectedEndingRoute == ENDING_SETTLEMENT && !tasks->bossDefeated) {
-        routeHint = Loc_PickLiteral("Settlement route: secure the Northwest Ruins guardian first, then report back to Loxi at the ship.",
-                                    "异星定居路线：先处理西北遗迹守卫，再回飞船向洛希确认。");
-    } else if (tasks != nullptr && tasks->bossDefeated) {
-        routeHint = Loc_PickLiteral("Northwest Ruins secured. Finish at the Signal Tower, or report back to Loxi if your route asks for settlement confirmation.",
-                                    "西北遗迹已经安全。按路线前往信号塔收束，或回飞船向洛希确认定居方案。");
+    for (int x = contentBounds.minX; x <= contentBounds.maxX; x += 8) {
+        DrawLineEx(Vector2{TileScreenX(x), originY},
+                   Vector2{TileScreenX(x), originY + mapHeight},
+                   1.0f,
+                   Color{146, 170, 194, 18});
+    }
+    for (int y = contentBounds.minY; y <= contentBounds.maxY; y += 8) {
+        DrawLineEx(Vector2{originX, TileScreenY(y)},
+                   Vector2{originX + mapWidth, TileScreenY(y)},
+                   1.0f,
+                   Color{146, 170, 194, 18});
     }
 
     if (hasObjective && objectiveX >= 0 && objectiveX < MAP_WIDTH && objectiveY >= 0 && objectiveY < MAP_HEIGHT
         && (minimap == nullptr || minimap->explored[objectiveY][objectiveX]
             || (revealNorthwestRuinsFight && IsNorthwestRuinsFightTile(objectiveX, objectiveY)))) {
-        DrawRectangleLinesEx(
-            Rectangle{
-                TileScreenX(objectiveX) - 1.0f,
-                TileScreenY(objectiveY) - 1.0f,
-                cellSize + 2.0f,
-                cellSize + 2.0f,
-            },
-            2.0f,
-            Color{255, 214, 154, 220}
-        );
+        const Vector2 objectiveCenter = Vector2{
+            TileScreenX(objectiveX) + cellSize * 0.5f,
+            TileScreenY(objectiveY) + cellSize * 0.5f
+        };
+        const float objectiveRadius = fmaxf(cellSize * 0.42f, 3.2f);
+        const float objectivePulse = 0.5f + 0.5f * std::sin(GetTime() * 4.0f);
+
+        DrawRing(objectiveCenter,
+                 objectiveRadius + cellSize * 0.18f,
+                 objectiveRadius + cellSize * 0.32f + objectivePulse * cellSize * 0.12f,
+                 0.0f,
+                 360.0f,
+                 24,
+                 Color{255, 214, 154, 92});
+        DrawCircleLinesV(objectiveCenter, objectiveRadius, Color{255, 214, 154, 245});
+        DrawCircleV(objectiveCenter, fmaxf(cellSize * 0.13f, 1.8f), Color{255, 238, 204, 255});
     }
 
     if (tasks != nullptr) {
@@ -458,131 +475,105 @@ void UI_DrawMapOverlay(const AssetBundle *assets,
                            northwestGuardianPending ? Color{255, 210, 156, 245} : Color{206, 224, 238, 220});
     }
 
-    DrawRectangle(static_cast<int>(TileScreenX(player->gridX)),
-                  static_cast<int>(TileScreenY(player->gridY)),
-                  static_cast<int>(cellSize),
-                  static_cast<int>(cellSize),
-                  Color{88, 255, 180, 255});
+    {
+        const Vector2 playerCenter = Vector2{
+            TileScreenX(player->gridX) + cellSize * 0.5f,
+            TileScreenY(player->gridY) + cellSize * 0.5f
+        };
+        const float playerRadius = fmaxf(cellSize * 0.34f, 2.8f);
+        const float playerPulse = 0.5f + 0.5f * std::sin(GetTime() * 3.2f);
 
-    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(42), EXTERIOR_Y(4), objectiveX, objectiveY, player, false)) {
+        DrawRing(playerCenter,
+                 playerRadius + cellSize * 0.18f,
+                 playerRadius + cellSize * 0.36f + playerPulse * cellSize * 0.10f,
+                 0.0f,
+                 360.0f,
+                 24,
+                 Color{88, 255, 180, 86});
+        DrawCircleV(playerCenter, playerRadius, Color{88, 255, 180, 255});
+        DrawCircleLinesV(playerCenter, playerRadius + 1.0f, Color{220, 255, 238, 220});
+    }
+
+    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(42), EXTERIOR_Y(4), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetAreaNameText("Ruins"), Vector2{TileScreenX(EXTERIOR_X(42)), TileScreenY(EXTERIOR_Y(4))}, 14.0f * scale, Color{226, 233, 240, 245});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(57), EXTERIOR_Y(8), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(57), EXTERIOR_Y(8), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Signal Tower Plateau"), Vector2{TileScreenX(EXTERIOR_X(57)), TileScreenY(EXTERIOR_Y(8))}, 11.5f * scale, Color{200, 227, 242, 225});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(48), EXTERIOR_Y(15), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(48), EXTERIOR_Y(15), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Monolith Ring"), Vector2{TileScreenX(EXTERIOR_X(48)), TileScreenY(EXTERIOR_Y(15))}, 11.5f * scale, Color{200, 227, 242, 225});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(52), EXTERIOR_Y(26), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(52), EXTERIOR_Y(26), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Ruins Approach"), Vector2{TileScreenX(EXTERIOR_X(52)), TileScreenY(EXTERIOR_Y(26))}, 11.5f * scale, Color{200, 227, 242, 225});
     }
-    if (ShouldShowMapAreaLabel(minimap, map, 56, 49, objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapAreaLabel(minimap, map, 56, 49, player, false)) {
         UIRuntime_DrawText(assets, Loc_GetAreaNameText("Ship Base"), Vector2{TileScreenX(56), TileScreenY(49)}, 14.0f * scale, Color{196, 226, 250, 245});
     }
-    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(98), EXTERIOR_Y(33), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(98), EXTERIOR_Y(33), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetAreaNameText("Spore Swamp"), Vector2{TileScreenX(EXTERIOR_X(98)), TileScreenY(EXTERIOR_Y(33))}, 14.0f * scale, Color{214, 227, 164, 245});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(96), EXTERIOR_Y(37), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(96), EXTERIOR_Y(37), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Outer Swamp Rim"), Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(37))}, 11.5f * scale, Color{224, 235, 176, 220});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(100), EXTERIOR_Y(59), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(100), EXTERIOR_Y(59), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Flooded Detour"), Vector2{TileScreenX(EXTERIOR_X(100)), TileScreenY(EXTERIOR_Y(59))}, 11.5f * scale, Color{214, 228, 180, 210});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(107), EXTERIOR_Y(28), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(107), EXTERIOR_Y(28), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Deep Gate"), Vector2{TileScreenX(EXTERIOR_X(107)), TileScreenY(EXTERIOR_Y(28))}, 11.5f * scale, Color{236, 212, 132, 220});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(108), EXTERIOR_Y(43), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(108), EXTERIOR_Y(43), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Deep Basin"), Vector2{TileScreenX(EXTERIOR_X(108)), TileScreenY(EXTERIOR_Y(43))}, 11.5f * scale, Color{224, 212, 136, 220});
     }
-    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(14), EXTERIOR_Y(45), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(14), EXTERIOR_Y(45), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetAreaNameText("Echo Wilds"), Vector2{TileScreenX(EXTERIOR_X(14)), TileScreenY(EXTERIOR_Y(45))}, 13.0f * scale, Color{208, 196, 184, 220});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(12), EXTERIOR_Y(67), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(12), EXTERIOR_Y(67), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("West Frontier"), Vector2{TileScreenX(EXTERIOR_X(12)), TileScreenY(EXTERIOR_Y(67))}, 12.0f * scale, Color{196, 206, 220, 210});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(30), EXTERIOR_Y(76), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(30), EXTERIOR_Y(76), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Survey Break"), Vector2{TileScreenX(EXTERIOR_X(30)), TileScreenY(EXTERIOR_Y(76))}, 11.5f * scale, Color{196, 206, 220, 198});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(34), EXTERIOR_Y(55), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(34), EXTERIOR_Y(55), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Canopy Hollow"), Vector2{TileScreenX(EXTERIOR_X(34)), TileScreenY(EXTERIOR_Y(55))}, 11.0f * scale, Color{196, 206, 220, 188});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(16), EXTERIOR_Y(90), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(16), EXTERIOR_Y(90), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Echo Basin"), Vector2{TileScreenX(EXTERIOR_X(16)), TileScreenY(EXTERIOR_Y(90))}, 10.8f * scale, Color{196, 206, 220, 180});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(40), EXTERIOR_Y(87), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(40), EXTERIOR_Y(87), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Last Camp"), Vector2{TileScreenX(EXTERIOR_X(40)), TileScreenY(EXTERIOR_Y(87))}, 10.8f * scale, Color{196, 206, 220, 174});
     }
-    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(64), EXTERIOR_Y(84), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapAreaLabel(minimap, map, EXTERIOR_X(64), EXTERIOR_Y(84), player, false)) {
         UIRuntime_DrawText(assets, Loc_PickLiteral("Subsurface Sink", "地下沉降带"), Vector2{TileScreenX(EXTERIOR_X(64)), TileScreenY(EXTERIOR_Y(84))}, 13.0f * scale, Color{214, 190, 168, 220});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(64), EXTERIOR_Y(92), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(64), EXTERIOR_Y(92), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("South Collapse"), Vector2{TileScreenX(EXTERIOR_X(64)), TileScreenY(EXTERIOR_Y(92))}, 12.0f * scale, Color{198, 205, 214, 210});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(82), EXTERIOR_Y(89), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(82), EXTERIOR_Y(89), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Vent Galleries"), Vector2{TileScreenX(EXTERIOR_X(82)), TileScreenY(EXTERIOR_Y(89))}, 11.5f * scale, Color{198, 205, 214, 198});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(96), EXTERIOR_Y(98), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(96), EXTERIOR_Y(98), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Service Shafts"), Vector2{TileScreenX(EXTERIOR_X(96)), TileScreenY(EXTERIOR_Y(98))}, 11.0f * scale, Color{198, 205, 214, 188});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(109), EXTERIOR_Y(91), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(109), EXTERIOR_Y(91), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Purifier Ring"), Vector2{TileScreenX(EXTERIOR_X(109)), TileScreenY(EXTERIOR_Y(91))}, 10.8f * scale, Color{198, 205, 214, 180});
     }
-    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(116), EXTERIOR_Y(101), objectiveX, objectiveY, player, false)) {
+    if (ShouldShowMapLocationLabel(minimap, map, EXTERIOR_X(116), EXTERIOR_Y(101), player, false)) {
         UIRuntime_DrawText(assets, Loc_GetLocationNameText("Root Vault"), Vector2{TileScreenX(EXTERIOR_X(116)), TileScreenY(EXTERIOR_Y(101))}, 10.8f * scale, Color{198, 205, 214, 174});
     }
 
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Legend", "图例"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 18.0f * scale}, 24.0f * scale, WHITE);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 56.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{88, 255, 180, 255}, Loc_PickLiteral("Player marker", "玩家位置"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 84.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{255, 214, 154, 255}, Loc_PickLiteral("Objective marker", "目标位置"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 112.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{255, 204, 140, 255}, Loc_PickLiteral("Archive log", "档案日志"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 148.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{68, 98, 128, 255}, Loc_PickLiteral("Ship base", "飞船基地"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 176.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{58, 114, 78, 255}, Loc_PickLiteral("Crash forest", "坠毁森林"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 204.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{92, 121, 62, 255}, Loc_PickLiteral("East swamp route", "东侧沼泽路线"), scale);
-    DrawLegendSwatch(assets, Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 232.0f * scale, infoPanel.width - 36.0f * scale, 24.0f * scale}, Color{108, 111, 122, 255}, Loc_PickLiteral("Ruins", "遗迹"), scale);
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Current Objective", "当前目标"), Vector2{infoPanel.x + 18.0f * scale, infoPanel.y + 274.0f * scale}, 21.0f * scale, WHITE);
-    UIRuntime_DrawWrappedText(
-        assets,
-        tasks->objective,
-        Rectangle{
-            infoPanel.x + 18.0f * scale,
-            infoPanel.y + 306.0f * scale,
-            infoPanel.width - 36.0f * scale,
-            92.0f * scale,
-        },
-        14.5f * scale,
-        17.0f * scale,
-        Color{214, 226, 238, 255}
-    );
-    UIRuntime_DrawPanel(Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 408.0f * scale, infoPanel.width - 36.0f * scale, 118.0f * scale}, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
-    std::snprintf(buffer,
-                  sizeof(buffer),
-                  "%s  %d: %s",
-                  Loc_PickLiteral("Stage", "阶段"),
-                  tasks->stage,
-                  Tasks_GetStageName(tasks->stage));
-    UIRuntime_DrawText(assets, buffer, Vector2{infoPanel.x + 32.0f * scale, infoPanel.y + 426.0f * scale}, 16.0f * scale, Color{194, 224, 255, 255});
-    std::snprintf(buffer, sizeof(buffer), "%s  %s", Loc_PickLiteral("Current Area", "当前区域"), Loc_GetAreaNameText(Map_GetAreaName(Map_GetAreaAt(player->gridX, player->gridY))));
-    UIRuntime_DrawWrappedText(
-        assets,
-        buffer,
-        Rectangle{infoPanel.x + 32.0f * scale, infoPanel.y + 448.0f * scale, infoPanel.width - 64.0f * scale, 22.0f * scale},
-        15.0f * scale,
-        18.0f * scale,
-        Color{174, 226, 255, 255}
-    );
-    std::snprintf(buffer, sizeof(buffer), "%s  %s", Loc_PickLiteral("Location", "位置"), Loc_GetLocationNameText(Map_GetLocationNameAt(player->gridX, player->gridY)));
-    UIRuntime_DrawWrappedText(
-        assets,
-        buffer,
-        Rectangle{infoPanel.x + 32.0f * scale, infoPanel.y + 470.0f * scale, infoPanel.width - 64.0f * scale, 24.0f * scale},
-        15.0f * scale,
-        16.0f * scale,
-        Color{198, 211, 224, 255}
-    );
-    UIRuntime_DrawWrappedText(assets,
-                              routeHint,
-                              Rectangle{infoPanel.x + 18.0f * scale, infoPanel.y + 510.0f * scale, infoPanel.width - 36.0f * scale, 80.0f * scale},
-                              13.0f * scale,
-                              14.5f * scale,
-                              Color{182, 199, 214, 255});
+    DrawMapInfoCard(legendCard, Color{6, 13, 22, 210}, Color{122, 166, 214, 72});
+    UIRuntime_DrawText(assets, Loc_PickLiteral("Map Legend", "地图图例"), Vector2{legendCard.x + 16.0f * scale, legendCard.y + 14.0f * scale}, 18.0f * scale, WHITE);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 0.0f * scale, legendColumnWidth, 22.0f * scale}, Color{88, 255, 180, 255}, Loc_PickLiteral("Player position", "玩家位置"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendRightX, legendRowY + 0.0f * scale, legendColumnWidth, 22.0f * scale}, Color{68, 98, 128, 255}, Loc_PickLiteral("Ship base", "飞船基地"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 26.0f * scale, legendColumnWidth, 22.0f * scale}, Color{255, 214, 154, 255}, Loc_PickLiteral("Objective marker", "目标标记"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendRightX, legendRowY + 26.0f * scale, legendColumnWidth, 22.0f * scale}, Color{58, 114, 78, 255}, Loc_PickLiteral("Forest ground", "森林地表"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 52.0f * scale, legendColumnWidth, 22.0f * scale}, Color{255, 198, 118, 255}, Loc_PickLiteral("Main archive", "主线档案"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendRightX, legendRowY + 52.0f * scale, legendColumnWidth, 22.0f * scale}, Color{92, 121, 62, 255}, Loc_PickLiteral("Swamp route", "沼泽路线"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 78.0f * scale, legendColumnWidth, 22.0f * scale}, Color{118, 226, 255, 255}, Loc_PickLiteral("Supplemental archive", "补充档案"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendRightX, legendRowY + 78.0f * scale, legendColumnWidth, 22.0f * scale}, Color{96, 104, 54, 255}, Loc_PickLiteral("Deep swamp", "深沼区域"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 104.0f * scale, legendColumnWidth, 22.0f * scale}, Color{14, 18, 26, 240}, Loc_PickLiteral("Unexplored area", "未探索区域"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendRightX, legendRowY + 104.0f * scale, legendColumnWidth, 22.0f * scale}, Color{108, 111, 122, 255}, Loc_PickLiteral("Ruins ground", "遗迹地表"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 130.0f * scale, legendColumnWidth, 22.0f * scale}, Color{176, 134, 98, 150}, Loc_PickLiteral("Future route frame", "后续路线框"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendRightX, legendRowY + 130.0f * scale, legendColumnWidth, 22.0f * scale}, Color{180, 210, 232, 255}, Loc_PickLiteral("Facility node", "设施节点"), scale);
+    DrawLegendSwatch(assets, Rectangle{legendLeftX, legendRowY + 156.0f * scale, legendColumnWidth, 22.0f * scale}, Color{196, 214, 232, 190}, Loc_PickLiteral("Revealed key zone", "已揭示关键区"), scale);
 }

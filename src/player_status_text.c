@@ -94,7 +94,7 @@ void Player_GetStatusSummary(const Player *player, PlayerStatusType status, char
                      effect->magnitude);
             break;
         case PLAYER_STATUS_CAMP_RECOVERY:
-            CopyText(buffer, bufferSize, Loc_PickLiteral("Recovery boost: gradual healing, oxygen stabilization, and poison relief while retreating.", "恢复增益：撤退时会缓慢治疗、稳定氧气并减轻毒素。"));
+            CopyText(buffer, bufferSize, Loc_PickLiteral("Recovery boost: gradual healing and oxygen stabilization while retreating.", "恢复增益：撤退时会缓慢治疗并稳定氧气。"));
             break;
         case PLAYER_STATUS_COUNT:
         default:
@@ -124,7 +124,7 @@ void Player_GetStatusSourceText(PlayerStatusType status, char *buffer, int buffe
             CopyText(buffer, bufferSize, Loc_PickLiteral("Source: protection gear, filters, or defensive support effects.", "来源：防护装备、过滤装置或防御型支援效果。"));
             break;
         case PLAYER_STATUS_OXYGEN_RESERVE:
-            CopyText(buffer, bufferSize, Loc_PickLiteral("Source: reserve oxygen canisters or emergency support devices.", "来源：备用氧气装置或紧急支援设备。"));
+            CopyText(buffer, bufferSize, Loc_PickLiteral("Source: Recovery Rations or emergency support devices.", "来源：复苏口粮或紧急支援设备。"));
             break;
         case PLAYER_STATUS_CAMP_RECOVERY:
             CopyText(buffer, bufferSize, Loc_PickLiteral("Source: resting near the field camp or safe recovery point.", "来源：在野外营地或安全恢复点附近休整。"));
@@ -139,7 +139,7 @@ void Player_GetStatusSourceText(PlayerStatusType status, char *buffer, int buffe
 void Player_GetStatusReliefText(PlayerStatusType status, char *buffer, int bufferSize) {
     switch (status) {
         case PLAYER_STATUS_POISONED:
-            CopyText(buffer, bufferSize, Loc_PickLiteral("Relief: antidotes, calm mushrooms, camp rest, or full base treatment.", "缓解方式：解毒物、宁神蘑菇、在营地休息，或基地完整治疗。"));
+            CopyText(buffer, bufferSize, Loc_PickLiteral("Relief: use a Recovery Ration, then retreat before poison stacks higher.", "缓解方式：使用复苏口粮，并在毒素继续叠高前尽快撤退。"));
             break;
         case PLAYER_STATUS_OXYGEN_LEAK:
             CopyText(buffer, bufferSize, Loc_PickLiteral("Relief: seal the suit, rest at camp, or return to base support.", "缓解方式：修补防护服、在营地休息，或返回基地支援。"));

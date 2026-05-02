@@ -66,49 +66,49 @@ void UIRuntime_DrawShortcutIcon(Rectangle rect,
 void UIRuntime_DrawHudShortcut(const AssetBundle *assets,
                                Rectangle rect,
                                const char *label,
-                               const char *subtitle,
                                const char *keyLabel,
                                const TextureAsset *iconTexture,
                                int iconKind,
                                Color primary,
                                Color secondary) {
-    float localScale;
+    float diameter;
+    float radius;
+    Vector2 center;
     Rectangle iconRect;
-    Rectangle keyRect;
-    Vector2 subtitleSize;
-    float textX;
-    float textTopY;
-    float textBottomY;
-    float keyFontSize;
-    Vector2 keySize;
 
-    localScale = rect.height / 58.0f;
-    UIRuntime_DrawPanel(rect, Color{10, 22, 36, 228}, Color{255, 255, 255, 28});
-    iconRect = Rectangle{rect.x + 8.0f * localScale, rect.y + 8.0f * localScale, 34.0f * localScale, rect.height - 16.0f * localScale};
-    keyRect = Rectangle{rect.x + rect.width - 30.0f * localScale, rect.y + rect.height - 28.0f * localScale, 20.0f * localScale, 18.0f * localScale};
-    textX = iconRect.x + iconRect.width + 8.0f * localScale;
-    textTopY = rect.y + 10.0f * localScale;
-    textBottomY = rect.y + rect.height - 22.0f * localScale;
-    keyFontSize = 12.0f * localScale;
+    (void)assets;
+    (void)label;
+    (void)keyLabel;
 
-    UIRuntime_DrawPanel(iconRect, Color{18, 34, 52, 235}, Color{109, 201, 234, 65});
+    diameter = rect.width < rect.height ? rect.width : rect.height;
+    radius = diameter * 0.5f;
+    center = Vector2{rect.x + rect.width * 0.5f, rect.y + rect.height * 0.5f};
+    iconRect = Rectangle{center.x - diameter * 0.30f,
+                         center.y - diameter * 0.30f,
+                         diameter * 0.60f,
+                         diameter * 0.60f};
+
+    DrawCircleV(center, radius, Color{7, 18, 30, 92});
+    DrawCircleV(center, radius * 0.92f, Color{10, 22, 36, 228});
+    DrawCircleLines((int)center.x, (int)center.y, radius * 0.88f, Color{255, 255, 255, 38});
+    DrawCircleLines((int)center.x, (int)center.y, radius * 0.74f, Color{primary.r, primary.g, primary.b, 54});
     UIRuntime_DrawShortcutIcon(iconRect, iconTexture, iconKind, primary, secondary);
-    subtitleSize = UIRuntime_MeasureText(assets, subtitle, 10.5f * localScale);
-    UIRuntime_DrawText(assets,
-                       label,
-                       Vector2{textX, textTopY},
-                       13.0f * localScale,
-                       WHITE);
-    UIRuntime_DrawText(assets,
-                       subtitle,
-                       Vector2{textX, textBottomY - subtitleSize.y * 0.5f},
-                       10.5f * localScale,
-                       Color{182, 199, 214, 255});
-    UIRuntime_DrawPanel(keyRect, Color{33, 56, 80, 245}, Color{255, 214, 154, 85});
-    keySize = UIRuntime_MeasureText(assets, keyLabel, keyFontSize);
-    UIRuntime_DrawText(assets,
-                       keyLabel,
-                       Vector2{keyRect.x + (keyRect.width - keySize.x) * 0.5f, keyRect.y + (keyRect.height - keySize.y) * 0.5f - 0.5f * localScale},
-                       keyFontSize,
-                       Color{255, 234, 206, 255});
+
+    if (keyLabel != nullptr && keyLabel[0] != '\0') {
+        Rectangle badgeRect = Rectangle{
+            rect.x + rect.width - diameter * 0.36f,
+            rect.y + diameter * 0.02f,
+            diameter * 0.26f,
+            diameter * 0.22f
+        };
+        Vector2 keySize = UIRuntime_MeasureText(assets, keyLabel, diameter * 0.15f);
+
+        UIRuntime_DrawPanel(badgeRect, Color{22, 39, 58, 245}, Color{255, 214, 154, 120});
+        UIRuntime_DrawText(assets,
+                           keyLabel,
+                           Vector2{badgeRect.x + (badgeRect.width - keySize.x) * 0.5f,
+                                   badgeRect.y + (badgeRect.height - keySize.y) * 0.5f - diameter * 0.01f},
+                           diameter * 0.15f,
+                           Color{255, 236, 214, 255});
+    }
 }

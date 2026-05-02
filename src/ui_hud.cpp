@@ -46,46 +46,37 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
     float edgeInset;
     float bottomLift;
     float sidePanelWidth;
-    float topPanelHeight;
-    float shortcutsPanelHeight;
     float vitalsPanelHeight;
     Rectangle vitalsPanel;
     Rectangle statusBarRect;
     Rectangle healthBarRect;
     Rectangle oxygenBarRect;
-    Rectangle objectivePanel;
-    Rectangle statusPanel;
-    Rectangle shortcutsPanel;
     Rectangle messagePanel;
     Rectangle messageTextRect;
-    char smallBuffer[128];
-    char cycleBuffer[128];
-    char reserveBuffer[128];
+    char quickUseCount[16];
     float messageFontSize;
     float messageLineSpacing;
     int messageLines;
     float messageHeight;
     float messageWidth;
     float messageCenterY;
-    bool showLoxiGuidance;
     PlayerStatusType hoveredStatus;
     bool statusHovered;
+    int recoveryRationCount;
+    Rectangle quickUseRect;
+    Color quickUsePrimary;
+    Color quickUseSecondary;
 
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    (void)tasks;
     edgeInset = 18.0f * scale;
     bottomLift = 22.0f * scale;
     sidePanelWidth = 316.0f * scale;
-    topPanelHeight = 128.0f * scale;
-    shortcutsPanelHeight = 106.0f * scale;
     vitalsPanelHeight = 214.0f * scale;
     vitalsPanel = Rectangle{edgeInset, screenHeight - edgeInset - vitalsPanelHeight - bottomLift, sidePanelWidth, vitalsPanelHeight};
     statusBarRect = Rectangle{vitalsPanel.x + 10.0f * scale, vitalsPanel.y + 38.0f * scale, vitalsPanel.width - 20.0f * scale, 54.0f * scale};
     healthBarRect = Rectangle{vitalsPanel.x + 10.0f * scale, vitalsPanel.y + 98.0f * scale, vitalsPanel.width - 20.0f * scale, 56.0f * scale};
     oxygenBarRect = Rectangle{vitalsPanel.x + 10.0f * scale, vitalsPanel.y + 158.0f * scale, vitalsPanel.width - 20.0f * scale, 46.0f * scale};
-    objectivePanel = Rectangle{edgeInset, edgeInset, sidePanelWidth, topPanelHeight};
-    statusPanel = Rectangle{screenWidth - edgeInset - sidePanelWidth, edgeInset, sidePanelWidth, topPanelHeight};
-    shortcutsPanel = Rectangle{screenWidth - edgeInset - sidePanelWidth, screenHeight - edgeInset - shortcutsPanelHeight - bottomLift, sidePanelWidth, shortcutsPanelHeight};
-    showLoxiGuidance = Tasks_IsCommunicatorUnlocked(tasks);
     messageFontSize = 25.0f * scale;
     messageLineSpacing = 30.0f * scale;
     messageWidth = screenWidth - sidePanelWidth * 2.0f - 140.0f * scale;
@@ -113,6 +104,10 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
     messageTextRect = Rectangle{messagePanel.x + 20.0f * scale, messagePanel.y + 16.0f * scale, messagePanel.width - 40.0f * scale, messagePanel.height - 28.0f * scale};
     hoveredStatus = PLAYER_STATUS_COUNT;
     statusHovered = false;
+    recoveryRationCount = player->resources[RESOURCE_RECOVERY_RATION];
+    quickUseRect = UI_GetHudShortcutRect(screenWidth, screenHeight, 3);
+    quickUsePrimary = recoveryRationCount > 0 ? Color{126, 212, 255, 255} : Color{119, 131, 145, 255};
+    quickUseSecondary = recoveryRationCount > 0 ? Color{57, 112, 172, 255} : Color{68, 79, 92, 255};
 
     UIRuntime_DrawPanel(vitalsPanel, Color{8, 18, 30, 220}, Color{124, 166, 214, 65});
     UIRuntime_DrawText(assets, Loc_PickLiteral("Survival", "生存状态"), Vector2{vitalsPanel.x + 16.0f * scale, vitalsPanel.y + 12.0f * scale}, 24.0f * scale, WHITE);
@@ -120,45 +115,54 @@ void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage 
     DrawBar(assets, healthBarRect, LOC_UI_HEALTH, player->health, Player_GetMaxHealth(player), Color{239, 107, 98, 255}, Color{44, 24, 30, 255});
     DrawBar(assets, oxygenBarRect, LOC_UI_OXYGEN, player->oxygen, MAX_OXYGEN, Color{92, 218, 255, 255}, Color{20, 41, 52, 255});
 
-    UIRuntime_DrawPanel(statusPanel, Color{8, 18, 30, 214}, Color{99, 221, 194, 75});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Mission Status", "任务状态"), Vector2{statusPanel.x + 18.0f * scale, statusPanel.y + 14.0f * scale}, 25.0f * scale, WHITE);
-    snprintf(smallBuffer, sizeof(smallBuffer), "%s: %s", LOC_UI_STAGE, Tasks_GetStageName(tasks->stage));
-    UIRuntime_DrawWrappedText(assets, smallBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 48.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 16.0f * scale, 17.0f * scale, Color{166, 255, 226, 255});
-    snprintf(cycleBuffer, sizeof(cycleBuffer), "%s: %s", Loc_PickLiteral("Environment", "环境"), Tasks_GetPhaseName(tasks->phase));
-    UIRuntime_DrawWrappedText(assets, cycleBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 68.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 14.5f * scale, 16.0f * scale, Color{194, 224, 255, 255});
-    snprintf(reserveBuffer, sizeof(reserveBuffer), "%s: %d", Loc_PickLiteral("Active Effects", "当前效果"), Player_GetActiveStatusCount(player));
-    UIRuntime_DrawWrappedText(assets, reserveBuffer, Rectangle{statusPanel.x + 18.0f * scale, statusPanel.y + 88.0f * scale, statusPanel.width - 36.0f * scale, 18.0f * scale}, 14.5f * scale, 16.0f * scale, Color{255, 214, 154, 255});
-    if (showLoxiGuidance) {
-        UIRuntime_DrawPanel(objectivePanel, Color{8, 18, 30, 214}, Color{99, 221, 194, 75});
-        UIRuntime_DrawText(assets, Loc_PickLiteral("Loxi Guidance", "洛希指引"), Vector2{objectivePanel.x + 18.0f * scale, objectivePanel.y + 14.0f * scale}, 25.0f * scale, WHITE);
-        UIRuntime_DrawText(assets, LOC_UI_OBJECTIVE, Vector2{objectivePanel.x + 18.0f * scale, objectivePanel.y + 48.0f * scale}, 15.0f * scale, Color{255, 214, 154, 255});
-        UIRuntime_DrawWrappedText(assets,
-                                  tasks->objective,
-                                  Rectangle{objectivePanel.x + 18.0f * scale, objectivePanel.y + 66.0f * scale, objectivePanel.width - 36.0f * scale, objectivePanel.height - 80.0f * scale},
-                                  14.8f * scale,
-                                  18.0f * scale,
-                                  Color{214, 226, 238, 255});
-    }
-    UIRuntime_DrawPanel(shortcutsPanel, Color{8, 18, 30, 220}, Color{255, 255, 255, 36});
-    UIRuntime_DrawText(assets, Loc_PickLiteral("Quick Access", "快捷功能"), Vector2{shortcutsPanel.x + 12.0f * scale, shortcutsPanel.y - 22.0f * scale}, 15.0f * scale, Color{182, 199, 214, 255});
     UIRuntime_DrawHudShortcut(assets,
                               UI_GetHudShortcutRect(screenWidth, screenHeight, 0),
-                              Loc_PickLiteral("Map", "地图"),
-                              Loc_PickLiteral("Scout", "侦察"),
-                              "M",
+                              "",
+                              "",
                               &assets->iconMapButton,
                               0,
                               Color{110, 201, 255, 255},
                               Color{62, 118, 192, 255});
     UIRuntime_DrawHudShortcut(assets,
                               UI_GetHudShortcutRect(screenWidth, screenHeight, 1),
-                              Loc_PickLiteral("Bag", "背包"),
-                              Loc_PickLiteral("Supplies", "补给"),
-                              "B",
+                              "",
+                              "",
                               &assets->iconInventoryButton,
                               1,
                               Color{232, 180, 113, 255},
                               Color{127, 84, 44, 255});
+    UIRuntime_DrawHudShortcut(assets,
+                              UI_GetHudShortcutRect(screenWidth, screenHeight, 2),
+                              "",
+                              "",
+                              nullptr,
+                              2,
+                              Color{118, 226, 255, 255},
+                              Color{60, 120, 188, 255});
+    UIRuntime_DrawHudShortcut(assets,
+                              quickUseRect,
+                              "",
+                              "X",
+                              &assets->iconRecoveryRation,
+                              16,
+                              quickUsePrimary,
+                              quickUseSecondary);
+    if (recoveryRationCount > 0) {
+        Rectangle countBadge = Rectangle{
+            quickUseRect.x + quickUseRect.width - 22.0f * scale,
+            quickUseRect.y + quickUseRect.height - 18.0f * scale,
+            18.0f * scale,
+            14.0f * scale
+        };
+
+        std::snprintf(quickUseCount, sizeof(quickUseCount), "%d", recoveryRationCount);
+        UIRuntime_DrawPanel(countBadge, Color{22, 39, 58, 245}, Color{166, 255, 226, 120});
+        UIRuntime_DrawText(assets,
+                           quickUseCount,
+                           Vector2{countBadge.x + 4.0f * scale, countBadge.y + 1.0f * scale},
+                           9.5f * scale,
+                           WHITE);
+    }
 
     if (message->timer > 0.0f && message->text[0] != '\0') {
         UIRuntime_DrawPanel(messagePanel, Color{11, 15, 26, 220}, Color{255, 192, 129, 80});

@@ -73,11 +73,14 @@
 | --- | --- | --- | --- |
 | `Glow Stick` | `Stage 2` | 否 | 无 |
 | `Simple Rope` | `Stage 3` | 否 | 无 |
+| `Recovery Ration` | `BASE_CAMP_UNLOCK_STAGE`，当前即 `Stage 3` | 是 | 可重复制作；消耗 `1 Plant Fruit + 1 Shell Fruit + 1 Special Fungus + 1 Glow Moss + 1 Calm Mushroom` |
 | `Field Camp` | `BASE_CAMP_UNLOCK_STAGE`，当前即 `Stage 3` | 否 | 无 |
-| `Reinforced Metal` | `Stage 4` | 是 | 还要求状态稳定 |
+| `Weapon Calibration` | `Stage 4` | 是 | 还要求状态稳定；代码枚举名仍为 `RECIPE_REINFORCED_METAL` |
 | `Laser Gun` | `Stage 4` | 是 | 还要求状态稳定 |
 | `Protection Suit` | `Stage 4` | 是 | 还要求状态稳定 |
 | `Signal Amplifier` | 只有 `Stage 6` 在洛希终端同步完碎片后才可见 | 是 | 还要求状态稳定 |
+
+`Recovery Ration` 是当前唯一快捷消耗品：制作后作为 `RESOURCE_RECOVERY_RATION` 进入背包，可直接使用或按 `X` 使用，恢复生命、清除中毒、补充氧气并附加 `Oxygen Reserve`。它不会像装备配方一样被“一次完成”锁住，只要材料足够就可以继续制作。
 
 ### 3.2 关于 `N` 键界面
 
@@ -87,10 +90,10 @@
 
 ### 3.3 关于日志奖励
 
-当前代码里，日志仍然不是纯叙事收集物。
+当前代码里，日志已经不再承担属性或物资奖励。
 
 - `TasksRuntime_GrantLogReward()` 仍会给出回收提示，并引导玩家按 `N` 查看日志正文、故事背景与当前目标
-- 运行时 `rewardDesc` 字段仍保留在数据结构里，主要作为兼容与写作层记录；当前拾取不再发放额外属性或物资奖励
+- 旧 `rewardKind / rewardDesc / TaskLogRewardSpec` 已从运行时日志结构和内容表中移除
 - 日志在当前版本的主要收益已经转回 `剧情理解`、`任务归档`、`终局前判断` 与 `结算价值`
 
 ## 4. 七阶段代码校准流程
@@ -242,7 +245,7 @@
 
 ### 当前代码备注
 
-- `Reinforced Metal` 配方在 `Stage 4` 也会可见，但它不是推进 `Stage 4` 的硬条件。
+- `Weapon Calibration` 配方在 `Stage 4` 也会可见，但它不是推进 `Stage 4` 的硬条件；代码枚举名仍沿用 `RECIPE_REINFORCED_METAL`。
 - 当前真正推进只检查“是否已经有激光枪和防护服”。
 
 ## Stage 5: Power Breakthrough / 动力突破

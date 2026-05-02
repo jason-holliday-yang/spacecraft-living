@@ -1,4 +1,5 @@
 #include "player.h"
+#include "localization.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -7,25 +8,6 @@ static void WriteMessage(char *message, int messageSize, const char *text) {
     if (message != NULL && messageSize > 0) {
         snprintf(message, (size_t)messageSize, "%s", text);
     }
-}
-
-static float ClampFloatLocal(float value, float minValue, float maxValue) {
-    if (value < minValue) {
-        return minValue;
-    }
-    if (value > maxValue) {
-        return maxValue;
-    }
-    return value;
-}
-
-static void ReducePoison(Player *player, float amount) {
-    if (player == NULL || amount <= 0.0f) {
-        return;
-    }
-
-    player->poison = ClampFloatLocal(player->poison - amount, 0.0f, MAX_POISON);
-    Player_SyncPoisonStatus(player);
 }
 
 static void DowngradeOxygenLeak(Player *player) {
@@ -64,185 +46,58 @@ static void ApplyOxygenReserveBuff(Player *player, int level, float duration, fl
     Player_SetStatus(player, PLAYER_STATUS_OXYGEN_RESERVE, level, duration, magnitude);
 }
 
-static float GetRepeatModifier(Player *player, int foodType) {
-    float modifier;
-
-    if (player->lastFoodType == foodType) {
-        if (player->repeatedFoodCount < 3) {
-            player->repeatedFoodCount += 1;
-        }
-    } else {
-        player->lastFoodType = foodType;
-        player->repeatedFoodCount = 1;
+static void UseRecoveryRation(Player *player) {
+    Player_RecoverHealth(player, 26.0f);
+    Player_AddOxygen(player, 34.0f);
+    Player_ClearStatus(player, PLAYER_STATUS_SUFFOCATING);
+    if (player->oxygen > 32.0f) {
+        Player_ClearStatus(player, PLAYER_STATUS_LOW_OXYGEN);
     }
-
-    modifier = 1.0f;
-    if (player->repeatedFoodCount >= 2) {
-        modifier *= 0.70f;
-    }
-    if (player->repeatedFoodCount >= 3) {
-        modifier *= 0.70f;
-    }
-    return modifier;
+    Player_ClearPoison(player);
+    DowngradeOxygenLeak(player);
+    Player_ClearStatus(player, PLAYER_STATUS_OXYGEN_LEAK);
+    ApplyFilteredBuff(player, 2, 62.0f, 0.28f);
+    ApplyOxygenReserveBuff(player, 2, 60.0f, 22.0f);
+    player->speedBoostTimer = 14.0f;
 }
 
-bool Player_UseQuickConsumable(Player *player, ConsumableFocus focus, char *message, int messageSize) {
-    float modifier;
-
-    if (focus == CONSUMABLE_FOOD) {
-        if (player->resources[RESOURCE_FRUIT] > 0 && player->resources[RESOURCE_SHELL_FRUIT] > 0) {
-            modifier = GetRepeatModifier(player, 100);
-            player->resources[RESOURCE_FRUIT] -= 1;
-            player->resources[RESOURCE_SHELL_FRUIT] -= 1;
-            Player_RecoverHealth(player, 28.0f * modifier);
-            Player_RecoverStamina(player, 10.0f * modifier);
-            Player_AddOxygen(player, 15.0f);
-            ApplyOxygenReserveBuff(player, 2, 48.0f, 20.0f);
-            player->speedBoostTimer = 25.0f;
-            WriteMessage(message, messageSize, "You finish the field ration combo. Warmth comes back to your limbs, your breathing steadies, and a reserve oxygen margin settles in.");
-            return true;
-        }
-
-        if (player->resources[RESOURCE_SHELL_FRUIT] > 0) {
-            modifier = GetRepeatModifier(player, 101);
-            player->resources[RESOURCE_SHELL_FRUIT] -= 1;
-            Player_RecoverHealth(player, 18.0f * modifier);
-            Player_RecoverStamina(player, 6.0f * modifier);
-            Player_AddOxygen(player, 10.0f);
-            ApplyOxygenReserveBuff(player, 1, 32.0f, 12.0f);
-            player->speedBoostTimer = 18.0f;
-            WriteMessage(message, messageSize, "You crack the shell fruit open and swallow the dense pulp. Strength returns, and your lungs hold a little more reserve.");
-            return true;
-        }
-
-        if (player->resources[RESOURCE_FRUIT] > 0) {
-            modifier = GetRepeatModifier(player, 102);
-            player->resources[RESOURCE_FRUIT] -= 1;
-            Player_RecoverHealth(player, 16.0f * modifier);
-            Player_RecoverStamina(player, 4.0f * modifier);
-            WriteMessage(message, messageSize, "You eat the plant fruit on the move. It is simple field food, but enough to pull your body back from the edge.");
-            return true;
-        }
-
-        WriteMessage(message, messageSize, "No quick field food is left to eat.");
-        return false;
-    }
-
-    if (player->resources[RESOURCE_SPECIAL_FUNGUS] > 0 && player->resources[RESOURCE_CALM_MUSHROOM] > 0) {
-        player->resources[RESOURCE_SPECIAL_FUNGUS] -= 1;
-        player->resources[RESOURCE_CALM_MUSHROOM] -= 1;
-        Player_RecoverHealth(player, 18.0f);
-        Player_AddOxygen(player, 10.0f);
-        ReducePoison(player, 60.0f);
-        Player_ClearPoison(player);
-        DowngradeOxygenLeak(player);
-        Player_ClearStatus(player, PLAYER_STATUS_OXYGEN_LEAK);
-        ApplyFilteredBuff(player, 2, 70.0f, 0.35f);
-        WriteMessage(message, messageSize, "The medicinal mix burns going down, then clears everything at once: poison drops away, the suit settles, and filtered breathing deepens.");
+bool Player_UseQuickConsumable(Player *player, char *message, int messageSize) {
+    if (player->resources[RESOURCE_RECOVERY_RATION] > 0) {
+        player->resources[RESOURCE_RECOVERY_RATION] -= 1;
+        UseRecoveryRation(player);
+        WriteMessage(message,
+                     messageSize,
+                     Loc_PickLiteral("You break the Recovery Ration seal. The processed mix clears poison, steadies breathing, and pushes both health and oxygen back up at once.",
+                                     "你撕开了复苏口粮的密封层。处理好的混合物会同时解毒、稳住呼吸，并把生命和氧气一起抬上来。"));
         return true;
     }
 
-    if (player->resources[RESOURCE_CALM_MUSHROOM] > 0) {
-        player->resources[RESOURCE_CALM_MUSHROOM] -= 1;
-        Player_RecoverHealth(player, 10.0f);
-        ReducePoison(player, 45.0f);
-        if (player->poison <= 10.0f) {
-            Player_ClearPoison(player);
-        }
-        ApplyFilteredBuff(player, 1, 45.0f, 0.22f);
-        WriteMessage(message, messageSize, "You chew the calming mushroom despite the bitter taste. The poison slackens, and your breathing smooths into a cleaner rhythm.");
-        return true;
-    }
-
-    if (player->resources[RESOURCE_SPECIAL_FUNGUS] > 0) {
-        player->resources[RESOURCE_SPECIAL_FUNGUS] -= 1;
-        Player_RecoverHealth(player, 8.0f);
-        ReducePoison(player, 18.0f);
-        DowngradeOxygenLeak(player);
-        WriteMessage(message, messageSize, "The special fungus reacts fast. Pressure in your body eases, the leak anomaly calms, and poison buildup slows.");
-        return true;
-    }
-
-    if (player->resources[RESOURCE_GLOW_MOSS] > 0) {
-        player->resources[RESOURCE_GLOW_MOSS] -= 1;
-        Player_AddOxygen(player, 18.0f);
-        ApplyFilteredBuff(player, 1, 24.0f, 0.18f);
-        ApplyOxygenReserveBuff(player, 1, 22.0f, 10.0f);
-        WriteMessage(message, messageSize, "You crush the glow moss and breathe through the cold vapor. Oxygen rises, and a thin protective buffer settles over your next few breaths.");
-        return true;
-    }
-
-    WriteMessage(message, messageSize, "No quick antidote or breathing aid is available.");
+    WriteMessage(message,
+                 messageSize,
+                 Loc_PickLiteral("No Recovery Ration is ready. Raw forage has to be processed at the workbench first.",
+                                 "目前没有现成的复苏口粮。野外采来的食材必须先到工作台加工。"));
     return false;
 }
 
 bool Player_UseSelectedConsumable(Player *player, ResourceType resource, char *message, int messageSize) {
-    float modifier;
-
     switch (resource) {
-        case RESOURCE_FRUIT:
-            if (player->resources[RESOURCE_FRUIT] <= 0) {
-                WriteMessage(message, messageSize, "No plant fruit remains.");
+        case RESOURCE_RECOVERY_RATION:
+            if (player->resources[RESOURCE_RECOVERY_RATION] <= 0) {
+                WriteMessage(message, messageSize, Loc_PickLiteral("No Recovery Ration remains.", "已经没有复苏口粮了。"));
                 return false;
             }
-            modifier = GetRepeatModifier(player, 102);
-            player->resources[RESOURCE_FRUIT] -= 1;
-            Player_RecoverHealth(player, 16.0f * modifier);
-            Player_RecoverStamina(player, 4.0f * modifier);
-            WriteMessage(message, messageSize, "You eat the plant fruit on the move. It is simple field food, but enough to pull your body back from the edge.");
-            return true;
-        case RESOURCE_SHELL_FRUIT:
-            if (player->resources[RESOURCE_SHELL_FRUIT] <= 0) {
-                WriteMessage(message, messageSize, "No shell fruit remains.");
-                return false;
-            }
-            modifier = GetRepeatModifier(player, 101);
-            player->resources[RESOURCE_SHELL_FRUIT] -= 1;
-            Player_RecoverHealth(player, 18.0f * modifier);
-            Player_RecoverStamina(player, 6.0f * modifier);
-            Player_AddOxygen(player, 10.0f);
-            ApplyOxygenReserveBuff(player, 1, 32.0f, 12.0f);
-            player->speedBoostTimer = 18.0f;
-            WriteMessage(message, messageSize, "You crack the shell fruit open and swallow the dense pulp. Strength returns, and your lungs hold a little more reserve.");
-            return true;
-        case RESOURCE_SPECIAL_FUNGUS:
-            if (player->resources[RESOURCE_SPECIAL_FUNGUS] <= 0) {
-                WriteMessage(message, messageSize, "No special fungus remains.");
-                return false;
-            }
-            player->resources[RESOURCE_SPECIAL_FUNGUS] -= 1;
-            Player_RecoverHealth(player, 8.0f);
-            ReducePoison(player, 18.0f);
-            DowngradeOxygenLeak(player);
-            WriteMessage(message, messageSize, "The special fungus reacts fast. Pressure in your body eases, the leak anomaly calms, and poison buildup slows.");
-            return true;
-        case RESOURCE_CALM_MUSHROOM:
-            if (player->resources[RESOURCE_CALM_MUSHROOM] <= 0) {
-                WriteMessage(message, messageSize, "No calming mushroom remains.");
-                return false;
-            }
-            player->resources[RESOURCE_CALM_MUSHROOM] -= 1;
-            Player_RecoverHealth(player, 10.0f);
-            ReducePoison(player, 45.0f);
-            if (player->poison <= 10.0f) {
-                Player_ClearPoison(player);
-            }
-            ApplyFilteredBuff(player, 1, 45.0f, 0.22f);
-            WriteMessage(message, messageSize, "You chew the calming mushroom despite the bitter taste. The poison slackens, and your breathing smooths into a cleaner rhythm.");
-            return true;
-        case RESOURCE_GLOW_MOSS:
-            if (player->resources[RESOURCE_GLOW_MOSS] <= 0) {
-                WriteMessage(message, messageSize, "No glow moss remains.");
-                return false;
-            }
-            player->resources[RESOURCE_GLOW_MOSS] -= 1;
-            Player_AddOxygen(player, 18.0f);
-            ApplyFilteredBuff(player, 1, 24.0f, 0.18f);
-            ApplyOxygenReserveBuff(player, 1, 22.0f, 10.0f);
-            WriteMessage(message, messageSize, "You crush the glow moss and breathe through the cold vapor. Oxygen rises, and a thin protective buffer settles over your next few breaths.");
+            player->resources[RESOURCE_RECOVERY_RATION] -= 1;
+            UseRecoveryRation(player);
+            WriteMessage(message,
+                         messageSize,
+                         Loc_PickLiteral("You use the prepared Recovery Ration. Health returns, poison clears, and the processed air mix restores oxygen in the same motion.",
+                                         "你使用了备好的复苏口粮。生命回升、中毒清空，连处理过的呼吸混合物也在同一口里把氧气补了回来。"));
             return true;
         default:
-            WriteMessage(message, messageSize, "This item is not something you can use directly.");
+            WriteMessage(message,
+                         messageSize,
+                         Loc_PickLiteral("Raw materials cannot be used directly anymore. Process them into a Recovery Ration at the workbench first.",
+                                         "原始素材现在不能直接使用。请先到工作台把它们加工成复苏口粮。"));
             return false;
     }
 }

@@ -62,16 +62,6 @@ static Vector2 LerpVector2(Vector2 from, Vector2 to, float t) {
     };
 }
 
-static float SmoothStep(float t) {
-    if (t <= 0.0f) {
-        return 0.0f;
-    }
-    if (t >= 1.0f) {
-        return 1.0f;
-    }
-    return t * t * (3.0f - 2.0f * t);
-}
-
 void Player_Init(Player *player) {
     int resourceIndex;
 
@@ -84,8 +74,6 @@ void Player_Init(Player *player) {
     player->moveStartPos = player->worldPos;
     player->moveTargetPos = player->worldPos;
     player->health = INITIAL_HEALTH;
-    player->stamina = INITIAL_STAMINA;
-    player->pressure = INITIAL_PRESSURE;
     player->oxygen = INITIAL_OXYGEN;
     player->poison = 0.0f;
     player->moveTimer = 0.0f;
@@ -98,14 +86,8 @@ void Player_Init(Player *player) {
     player->moveAnimDuration = 0.0f;
     player->spriteAnimTimer = 0.0f;
     player->maxHealthBonus = 0.0f;
-    player->maxStaminaBonus = 0.0f;
     player->attackBonus = 0.0f;
     player->deathCount = 0;
-    player->lastFoodType = -1;
-    player->repeatedFoodCount = 0;
-    player->crouching = false;
-    player->hasAxe = true;
-    player->hasKnife = true;
     player->hasGlowStick = false;
     player->hasRope = false;
     player->hasLaserGun = false;
@@ -170,7 +152,11 @@ void Player_UpdateAnimation(Player *player, float deltaTime) {
             player->moveAnimElapsed = 0.0f;
         }
 
-        player->renderPos = LerpVector2(player->moveStartPos, player->moveTargetPos, SmoothStep(progress));
+        if (progress < 0.0f) {
+            progress = 0.0f;
+        }
+
+        player->renderPos = LerpVector2(player->moveStartPos, player->moveTargetPos, progress);
         player->spriteAnimTimer += deltaTime;
         return;
     }
@@ -186,14 +172,12 @@ bool Player_IsMoveAnimating(const Player *player) {
 float Player_GetMoveCooldown(const Player *player) {
     float cooldown;
 
-    if (player->crouching) {
-        cooldown = CROUCH_MOVE_COOLDOWN;
-    } else if (player->oxygen <= 28.0f
-               || Player_HasStatus(player, PLAYER_STATUS_LOW_OXYGEN)
-               || Player_HasStatus(player, PLAYER_STATUS_OXYGEN_LEAK)
-               || Player_HasStatus(player, PLAYER_STATUS_CRITICAL_CONDITION)
-               || GetPoisonTier(player) >= 2) {
-        cooldown = LOW_STAMINA_MOVE_COOLDOWN;
+    if (player->oxygen <= 28.0f
+        || Player_HasStatus(player, PLAYER_STATUS_LOW_OXYGEN)
+        || Player_HasStatus(player, PLAYER_STATUS_OXYGEN_LEAK)
+        || Player_HasStatus(player, PLAYER_STATUS_CRITICAL_CONDITION)
+        || GetPoisonTier(player) >= 2) {
+        cooldown = IMPAIRED_MOVE_COOLDOWN;
     } else {
         cooldown = NORMAL_MOVE_COOLDOWN;
     }
@@ -209,18 +193,10 @@ float Player_GetMaxHealth(const Player *player) {
     return BASE_MAX_HEALTH + player->maxHealthBonus;
 }
 
-float Player_GetMaxStamina(const Player *player) {
-    return BASE_MAX_STAMINA + player->maxStaminaBonus;
-}
-
-float Player_GetCurrentStaminaCap(const Player *player) {
-    return Player_GetMaxStamina(player);
-}
-
 float Player_GetAttackPower(const Player *player) {
     float basePower;
 
-    basePower = player->hasLaserGun ? 28.0f : 16.0f;
+    basePower = player->hasLaserGun ? 24.0f : 14.0f;
     if (Player_HasStatus(player, PLAYER_STATUS_CRITICAL_CONDITION) || player->health <= 35.0f) {
         basePower *= 0.88f;
     }
@@ -233,7 +209,7 @@ float Player_GetAttackPower(const Player *player) {
     if (GetPoisonTier(player) >= 2) {
         basePower *= 0.90f;
     }
-    return basePower + player->attackBonus;
+    return basePower;
 }
 
 float Player_GetAggroMultiplier(const Player *player) {
@@ -295,28 +271,6 @@ void Player_RecoverHealth(Player *player, float amount) {
     player->health = ClampFloat(player->health + amount, 0.0f, Player_GetMaxHealth(player));
     if (player->health > 35.0f) {
         Player_ClearStatus(player, PLAYER_STATUS_CRITICAL_CONDITION);
-    }
-}
-
-void Player_ConsumeStamina(Player *player, float amount) {
-    player->stamina = ClampFloat(player->stamina - amount, 0.0f, Player_GetCurrentStaminaCap(player));
-}
-
-void Player_RecoverStamina(Player *player, float amount) {
-    player->stamina = ClampFloat(player->stamina + amount, 0.0f, Player_GetCurrentStaminaCap(player));
-}
-
-void Player_AddPressure(Player *player, float amount) {
-    (void)amount;
-    if (player != NULL) {
-        player->pressure = INITIAL_PRESSURE;
-    }
-}
-
-void Player_RelievePressure(Player *player, float amount) {
-    (void)amount;
-    if (player != NULL) {
-        player->pressure = INITIAL_PRESSURE;
     }
 }
 

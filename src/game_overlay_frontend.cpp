@@ -804,7 +804,10 @@ static void UpdatePauseMenu(Game *game) {
             }
             return;
         case PAUSE_MENU_BUTTON_SETTINGS:
-            game->settingsOpen = true;
+            game->pauseMenuOpen = false;
+            game->infoOverlayOpen = true;
+            game->infoOverlayTab = INFO_OVERLAY_TAB_SETTINGS;
+            game->settingsOpen = false;
             Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
             return;
         case PAUSE_MENU_BUTTON_MENU:
@@ -848,11 +851,6 @@ static void UpdateSettingsOverlay(Game *game) {
     if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
         ApplySettingsSliderValue(game, 0, game->settings.masterVolume + 0.05f);
     }
-    if (IsKeyPressed(KEY_TAB)) {
-        Game_BeginLanguageTransition(game, game->settings.language == GAME_LANGUAGE_EN ? GAME_LANGUAGE_ZH_CN : GAME_LANGUAGE_EN);
-        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
-    }
-
     mouse = GetMousePosition();
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         if (CheckCollisionPointRec(mouse, closeRect)) {
@@ -1043,11 +1041,6 @@ static void UpdateSavePanel(Game *game) {
         return;
     }
 
-    if (IsKeyPressed(KEY_DELETE) || IsKeyPressed(KEY_BACKSPACE)) {
-        Game_DeleteSelectedSaveSlot(game);
-        return;
-    }
-
     if (!GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
         return;
     }
@@ -1119,11 +1112,6 @@ bool Game_UpdateFrontEndOverlayState(Game *game) {
 
     if (game->savePanelOpen) {
         UpdateSavePanel(game);
-        return true;
-    }
-
-    if (game->settingsOpen) {
-        UpdateSettingsOverlay(game);
         return true;
     }
 

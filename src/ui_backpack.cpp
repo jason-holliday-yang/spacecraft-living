@@ -31,8 +31,8 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
                                  Loc_PickLiteral("Press B or ESC to seal the pack again.", "按 B 或 ESC 收起背包。"),
                                  16.5f * scale,
                                  Loc_PickLiteral("Check what is left, what can still save you, and what the next push will cost.", "看看还剩下什么、哪些东西还能救命，以及下一次推进会消耗掉什么。"),
-                                 16.0f * scale,
-                                 17.0f * scale);
+                                 17.6f * scale,
+                                 19.6f * scale);
 
     for (itemIndex = 0; itemIndex < BACKPACK_ENTRY_COUNT; itemIndex++) {
         const BackpackEntryDef *entry;
@@ -61,8 +61,8 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
 
         UIRuntime_DrawPanel(slotRect, fill, outline);
         UIInventory_DrawBackpackIcon(assets, itemIndex, Rectangle{slotRect.x + 10.0f * scale, slotRect.y + 8.0f * scale, 44.0f * scale, slotRect.height - 16.0f * scale}, primary, secondary);
-        UIRuntime_DrawWrappedText(assets, Loc_PickText(entry->name), titleRect, 12.0f * scale, 13.0f * scale, owned ? Color{229, 238, 246, 255} : Color{134, 145, 160, 255});
-        UIRuntime_DrawText(assets, UIInventory_BackpackEntryGetCategory(entry), Vector2{slotRect.x + 62.0f * scale, slotRect.y + slotRect.height - 22.0f * scale}, 10.5f * scale, owned ? Color{166, 255, 226, 255} : Color{120, 133, 150, 255});
+        UIRuntime_DrawWrappedText(assets, Loc_PickText(entry->name), titleRect, 13.2f * scale, 14.6f * scale, owned ? Color{229, 238, 246, 255} : Color{134, 145, 160, 255});
+        UIRuntime_DrawText(assets, UIInventory_BackpackEntryGetCategory(entry), Vector2{slotRect.x + 62.0f * scale, slotRect.y + slotRect.height - 22.0f * scale}, 11.6f * scale, owned ? Color{166, 255, 226, 255} : Color{120, 133, 150, 255});
 
         if (entry->kind == BACKPACK_ENTRY_RESOURCE) {
             std::snprintf(buffer, sizeof(buffer), "%d", count);
@@ -92,20 +92,20 @@ void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int
         std::snprintf(buffer, sizeof(buffer), "%s", UIInventory_BackpackEntryGetCategory(selectedEntry));
         UIRuntime_DrawText(assets, buffer, Vector2{detailPanel.x + 128.0f * scale, detailPanel.y + 82.0f * scale}, 15.0f * scale, Color{166, 255, 226, 255});
         UIInventory_GetBackpackEntryStatus(player, selectedItem, statusBuffer, sizeof(statusBuffer));
-        UIRuntime_DrawWrappedText(assets, statusBuffer, Rectangle{detailPanel.x + 128.0f * scale, detailPanel.y + 104.0f * scale, detailPanel.width - 146.0f * scale, 36.0f * scale}, 14.5f * scale, 16.0f * scale, Color{255, 214, 154, 255});
+        UIRuntime_DrawWrappedText(assets, statusBuffer, Rectangle{detailPanel.x + 128.0f * scale, detailPanel.y + 104.0f * scale, detailPanel.width - 146.0f * scale, 36.0f * scale}, 16.0f * scale, 18.5f * scale, Color{255, 214, 154, 255});
         UIRuntime_DrawPanel(descriptionPanel, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
         UIRuntime_DrawPanel(actionPanel, Color{12, 24, 39, 220}, Color{255, 255, 255, 18});
-        UIRuntime_DrawText(assets, Loc_PickLiteral("Field Notes", "现场描述"), Vector2{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 14.0f * scale}, 17.0f * scale, WHITE);
-        UIRuntime_DrawWrappedText(assets, Loc_PickText(selectedEntry->description), Rectangle{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 42.0f * scale, descriptionPanel.width - 28.0f * scale, descriptionPanel.height - 56.0f * scale}, 14.8f * scale, 18.0f * scale, Color{214, 226, 238, 255});
+        UIRuntime_DrawText(assets, Loc_PickLiteral("Field Notes", "现场描述"), Vector2{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 14.0f * scale}, 18.8f * scale, WHITE);
+        UIRuntime_DrawWrappedText(assets, Loc_PickText(selectedEntry->description), Rectangle{descriptionPanel.x + 14.0f * scale, descriptionPanel.y + 42.0f * scale, descriptionPanel.width - 28.0f * scale, descriptionPanel.height - 56.0f * scale}, 16.8f * scale, 21.0f * scale, Color{214, 226, 238, 255});
         UIRuntime_DrawText(assets, Loc_PickLiteral("Use Case", "使用方式"), Vector2{actionPanel.x + 14.0f * scale, actionPanel.y + 14.0f * scale}, 18.0f * scale, WHITE);
         UIRuntime_DrawWrappedText(
             assets,
             UIInventory_BackpackEntryCanUseDirectly(selectedItem)
-                ? Loc_PickLiteral("Press F or Enter to use this field item immediately.", "按 F 或 Enter 立即使用当前选中的野外物品。")
-                : Loc_PickLiteral("This item stays packed for crafting, route setup, or passive protection.", "该物品会继续留在背包里，用于制作、路线准备或被动防护。"),
+                ? Loc_PickLiteral("Press F or Enter to use the selected item now.", "按 F 或 Enter 立即使用当前选中物品。")
+                : Loc_PickLiteral("This item is passive, crafted material, or used through a specific world interaction.", "该物品属于被动效果、制作材料，或需要通过特定场景交互使用。"),
             Rectangle{actionPanel.x + 14.0f * scale, actionPanel.y + 42.0f * scale, actionPanel.width - 28.0f * scale, actionPanel.height - 54.0f * scale},
-            14.5f * scale,
-            18.0f * scale,
+            16.0f * scale,
+            20.0f * scale,
             UIInventory_BackpackEntryCanUseDirectly(selectedItem) ? Color{166, 255, 226, 255} : Color{190, 207, 222, 255}
         );
     }

@@ -385,14 +385,6 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
             messageColor
         );
     }
-    UIRuntime_DrawWrappedText(
-        assets,
-        Loc_PickLiteral("TAB switches fields. ENTER confirms. Exit is available here.", "按 TAB 切换输入项，按 ENTER 确认；此界面可直接退出游戏。"),
-        Rectangle{panel.x + 52.0f * scale, panel.y + panel.height - 176.0f * scale, panel.width - 104.0f * scale, 38.0f * scale},
-        14.0f * scale,
-        16.0f * scale,
-        Color{181, 198, 216, 255}
-    );
 }
 
 void UI_DrawMainMenu(const AssetBundle *assets,
@@ -681,12 +673,12 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
         titleText = Loc_PickLiteral("Confirm Ending", "确认结局");
         std::snprintf(singleEndingBody,
                       sizeof(singleEndingBody),
-                      Loc_PickLiteral("Loxi's archive review now supports only one final answer: %s. Confirming below will lock that route, but you still need to carry out its final in-world step before the run ends.",
-                                      "洛希完成档案复核后，目前只剩下一个被证据支持的终局回答：%s。若在下方确认，只会锁定这条路线；你仍需完成它在世界里的最后一步，本轮才会结束。"),
+                      Loc_PickLiteral("Loxi's archive review now supports only one final answer: %s. Confirming here means you are no longer choosing in uncertainty; you are accepting the route the full record now makes possible. The run will still continue until you carry out its final in-world step.",
+                                      "洛希完成档案复核后，目前只剩下一个被完整证据支撑的终局回答：%s。在这里确认，不再只是挑选路线，而是正式接受整套记录如今所指向的结论；但本轮仍不会立刻结束，你还需要在世界里把它最后一步真正做完。"),
                       onlyEndingTitle);
         std::snprintf(singleEndingNote,
                       sizeof(singleEndingNote),
-                      Loc_PickLiteral("Route to confirm: %s", "将要确认的路线：%s"),
+                      Loc_PickLiteral("Final route under review: %s", "当前进入最终复核的路线：%s"),
                       onlyEndingTitle);
         bodyText = singleEndingBody;
         noteText = singleEndingNote;
@@ -694,10 +686,10 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
         buttonLabels[1] = Loc_PickLiteral("Cancel", "取消");
     } else {
         titleText = Loc_PickLiteral("Choose Final Ending", "选择最终结局");
-        bodyText = Loc_PickLiteral("Loxi has assembled enough route evidence to support multiple endings. Choose the route you want to commit to here, then carry it through in the world before the run actually ends.",
-                                   "洛希已经拼出了足够的路线证据，当前存在多个可成立的结局。请在这里先锁定你要执行的路线，再回到世界里把它真正完成，本轮才会结束。");
-        noteText = Loc_PickLiteral("Only endings supported by the logs, route archive, and any required world-state conditions are shown here.",
-                                   "这里仅显示那些已经被你实际回收的日志、路线档案以及必要世界状态共同支撑起来的结局。");
+        bodyText = Loc_PickLiteral("Loxi has assembled enough evidence for more than one honest ending. Choose the answer you are willing to put your name on here, then return to the world and carry that decision through before the run truly ends.",
+                                   "洛希已经把证据拼到足以支撑不止一种诚实结局。请在这里选出你愿意亲自承担的回答，然后回到世界里把这个决定真正执行到底，本轮才会结束。");
+        noteText = Loc_PickLiteral("Only routes supported by recovered logs, archived investigations, and any required world-state conditions are shown here.",
+                                   "这里出现的每条路线，都已经被你亲自回收的日志、完成归档的调查线以及对应世界状态共同支撑。");
         for (buttonIndex = 0; buttonIndex < availableEndingCount && buttonIndex < SETTLEMENT_CONFIRM_BUTTON_COUNT - 1; buttonIndex++) {
             buttonLabels[buttonIndex] = Tasks_GetEndingTitle(Tasks_GetAvailableEndingAt(tasks, buttonIndex));
         }

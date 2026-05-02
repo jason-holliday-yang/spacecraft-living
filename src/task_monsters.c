@@ -4,6 +4,8 @@
 
 #include <stdlib.h>
 
+static const float kMonsterDisengageRecoveryDelay = 6.0f;
+
 static float GetSuitFilterStrength(const Player *player) {
     return player->hasProtectionSuit ? 0.28f : 0.0f;
 }
@@ -29,10 +31,10 @@ static float GetBossWeakeningFactor(const TaskSystem *tasks) {
 
     factor = 1.0f;
     if (tasks != NULL) {
-        factor -= 0.08f * (float)tasks->monolithsLit;
+        factor -= 0.05f * (float)tasks->monolithsLit;
     }
-    if (factor < 0.76f) {
-        factor = 0.76f;
+    if (factor < 0.84f) {
+        factor = 0.84f;
     }
     return factor;
 }
@@ -54,12 +56,12 @@ static float GetBossMoveInterval(const Monster *boss) {
 
     switch (phase) {
         case 1:
-            return 0.46f;
+            return 0.78f;
         case 2:
-            return 0.40f;
+            return 0.62f;
         case 3:
         default:
-            return 0.34f;
+            return 0.48f;
     }
 }
 
@@ -75,28 +77,33 @@ static float GetBossTelegraphScale(const TaskSystem *tasks) {
     return scale;
 }
 
-static float GetBossWeakPointDuration(const TaskSystem *tasks, float baseDuration) {
-    float duration = baseDuration;
-
-    if (tasks != NULL) {
-        duration *= 1.0f + 0.15f * (float)tasks->monolithsLit;
-    }
-    if (duration > baseDuration + 0.85f) {
-        duration = baseDuration + 0.85f;
-    }
-    return duration;
+static bool IsMonsterDamaged(const Monster *monster) {
+    return monster != NULL
+        && monster->active
+        && monster->maxHealth > 0.0f
+        && monster->health < monster->maxHealth - 0.05f;
 }
 
-static void OpenBossWeakPoint(TaskSystem *tasks, Monster *boss, float baseDuration) {
-    float duration;
-
-    if (tasks == NULL || boss == NULL || boss->type != MONSTER_FINAL_BOSS) {
+static void UpdateMonsterDisengageRecovery(Monster *monster, bool disengaged, float deltaTime) {
+    if (!IsMonsterDamaged(monster)) {
+        if (monster != NULL) {
+            monster->disengageTimer = 0.0f;
+        }
         return;
     }
 
-    duration = GetBossWeakPointDuration(tasks, baseDuration);
-    if (duration > boss->weakPointTimer) {
-        boss->weakPointTimer = duration;
+    if (!disengaged || deltaTime <= 0.0f) {
+        monster->disengageTimer = 0.0f;
+        return;
+    }
+
+    monster->disengageTimer += deltaTime;
+    if (monster->disengageTimer >= kMonsterDisengageRecoveryDelay) {
+        monster->health = monster->maxHealth;
+        monster->disengageTimer = 0.0f;
+        monster->attackTelegraph = 0.0f;
+        monster->currentAttack = BOSS_ATTACK_NONE;
+        monster->recoverTimer = 0.0f;
     }
 }
 
@@ -115,61 +122,130 @@ static bool MonsterCanAct(const Monster *monster, const TaskSystem *tasks) {
 static float GetMonsterWindupDuration(MonsterType type) {
     switch (type) {
         case MONSTER_WING_BUG:
-            return 0.22f;
+            return 0.18f;
         case MONSTER_THORN_LARVA:
-            return 0.28f;
+            return 0.24f;
         case MONSTER_SWAMP_STALKER:
-            return 0.34f;
-        case MONSTER_SENTINEL_JELLY:
-            return 0.46f;
-        case MONSTER_FOG_WORM:
-            return 0.52f;
-        case MONSTER_RELIC_GUARD:
-            return 0.58f;
-        case MONSTER_RAPTOR:
             return 0.30f;
+        case MONSTER_SENTINEL_JELLY:
+            return 0.42f;
+        case MONSTER_FOG_WORM:
+            return 0.48f;
+        case MONSTER_RELIC_GUARD:
+            return 0.54f;
+        case MONSTER_RAPTOR:
+            return 0.24f;
         case MONSTER_FINAL_BOSS:
             return 0.0f;
         default:
-            return 0.32f;
+            return 0.28f;
     }
 }
 
 static float GetMonsterRecoverDuration(MonsterType type) {
     switch (type) {
         case MONSTER_WING_BUG:
-            return 0.18f;
+            return 0.14f;
         case MONSTER_THORN_LARVA:
-            return 0.22f;
+            return 0.18f;
         case MONSTER_SWAMP_STALKER:
-            return 0.28f;
+            return 0.24f;
         case MONSTER_SENTINEL_JELLY:
-            return 0.34f;
+            return 0.30f;
         case MONSTER_FOG_WORM:
-            return 0.38f;
+            return 0.34f;
         case MONSTER_RELIC_GUARD:
-            return 0.44f;
+            return 0.40f;
         case MONSTER_RAPTOR:
-            return 0.26f;
+            return 0.20f;
         case MONSTER_FINAL_BOSS:
             return 0.0f;
         default:
-            return 0.24f;
+            return 0.20f;
     }
 }
 
 static float GetMonsterAttackInterval(MonsterType type) {
     switch (type) {
+        case MONSTER_WING_BUG:
+            return 0.72f;
+        case MONSTER_THORN_LARVA:
+            return 0.76f;
+        case MONSTER_RAPTOR:
+            return 0.78f;
+        case MONSTER_SWAMP_STALKER:
+            return 0.84f;
         case MONSTER_RELIC_GUARD:
-            return 1.15f;
+            return 1.00f;
         case MONSTER_SENTINEL_JELLY:
         case MONSTER_FOG_WORM:
-            return 1.05f;
+            return 0.92f;
         case MONSTER_FINAL_BOSS:
             return 1.20f;
         default:
-            return 0.90f;
+            return 0.82f;
     }
+}
+
+static float GetMonsterMoveInterval(MonsterType type) {
+    switch (type) {
+        case MONSTER_WING_BUG:
+            return 0.50f;
+        case MONSTER_THORN_LARVA:
+            return 0.58f;
+        case MONSTER_RAPTOR:
+            return 0.56f;
+        case MONSTER_SWAMP_STALKER:
+            return 0.62f;
+        case MONSTER_SENTINEL_JELLY:
+            return 0.66f;
+        case MONSTER_FOG_WORM:
+            return 0.64f;
+        case MONSTER_RELIC_GUARD:
+            return 0.68f;
+        case MONSTER_FINAL_BOSS:
+            return 0.0f;
+        default:
+            return 0.60f;
+    }
+}
+
+static float GetMonsterAggroRange(const Monster *monster, const TaskSystem *tasks, const Player *player) {
+    float aggroRange;
+
+    (void)player;
+
+    if (monster == NULL) {
+        return 0.0f;
+    }
+
+    aggroRange = 6.0f;
+    switch (monster->type) {
+        case MONSTER_FINAL_BOSS:
+            aggroRange = 10.0f;
+            break;
+        case MONSTER_RELIC_GUARD:
+            aggroRange = 7.5f;
+            break;
+        case MONSTER_SENTINEL_JELLY:
+        case MONSTER_FOG_WORM:
+            aggroRange = 6.8f;
+            break;
+        case MONSTER_SWAMP_STALKER:
+            aggroRange = tasks != NULL && tasks->phase != DAY_PHASE_DAY ? 7.5f : 6.5f;
+            break;
+        case MONSTER_WING_BUG:
+            aggroRange = tasks != NULL && tasks->phase == DAY_PHASE_DAY ? 5.5f : 6.2f;
+            break;
+        case MONSTER_RAPTOR:
+            aggroRange = 6.8f;
+            break;
+        case MONSTER_THORN_LARVA:
+        default:
+            break;
+    }
+
+    return aggroRange;
 }
 
 static float GetBossAttackInterval(const Monster *boss) {
@@ -177,27 +253,13 @@ static float GetBossAttackInterval(const Monster *boss) {
 
     switch (phase) {
         case 1:
-            return 1.55f;
+            return 1.45f;
         case 2:
-            return 1.35f;
+            return 1.20f;
         case 3:
         default:
-            return 1.10f;
+            return 1.00f;
     }
-}
-
-static int GetBossChargeReach(const Monster *boss) {
-    if (GetBossPhase(boss) >= 3) {
-        return 6;
-    }
-    return 5;
-}
-
-static int GetBossAoeRadius(const Monster *boss) {
-    if (GetBossPhase(boss) >= 3) {
-        return 4;
-    }
-    return 3;
 }
 
 static void StartNormalMonsterAttackTelegraph(Monster *monster) {
@@ -215,11 +277,11 @@ static int GetMonsterLeashRadius(const Monster *monster) {
 
     switch (monster->type) {
         case MONSTER_FINAL_BOSS:
-            return 10;
+            return 12;
         case MONSTER_RELIC_GUARD:
-            return 6;
+            return 8;
         default:
-            return 5;
+            return 7;
     }
 }
 
@@ -350,7 +412,6 @@ static void MoveMonsterToward(TaskSystem *tasks, Monster *monster, const GameMap
 
 static void ApplyMonsterAttack(const TaskSystem *tasks, MonsterType type, Player *player) {
     float damage;
-    float pressure;
     float filterStrength;
     float poisonAmount;
     float leakMagnitude;
@@ -358,10 +419,8 @@ static void ApplyMonsterAttack(const TaskSystem *tasks, MonsterType type, Player
 
     if (TasksContent_GetMonsterSpec(type, &monsterSpec)) {
         damage = monsterSpec.attackDamage;
-        pressure = monsterSpec.attackPressure;
     } else {
         damage = 4.0f;
-        pressure = 6.0f;
     }
 
     filterStrength = GetPlayerFilterStrength(player);
@@ -370,22 +429,18 @@ static void ApplyMonsterAttack(const TaskSystem *tasks, MonsterType type, Player
 
     if (player->hasProtectionSuit) {
         damage *= 0.70f;
-        pressure *= 0.60f;
     }
 
     if (tasks->currentEvent == EVENT_MONSTER_FRENZY) {
         damage *= 1.25f;
-        pressure *= 1.15f;
     }
 
     if (type == MONSTER_FINAL_BOSS) {
         const float bossWeakeningFactor = GetBossWeakeningFactor(tasks);
         damage *= bossWeakeningFactor;
-        pressure *= bossWeakeningFactor;
     }
 
     Player_DamageHealth(player, damage);
-    Player_AddPressure(player, pressure * 0.45f);
 
     switch (type) {
         case MONSTER_WING_BUG:
@@ -418,7 +473,7 @@ static void ApplyMonsterAttack(const TaskSystem *tasks, MonsterType type, Player
             leakMagnitude = 0.82f * (1.0f - filterStrength * 0.75f);
             leakMagnitude *= GetBossWeakeningFactor(tasks);
             ApplyOxygenLeakStatus(player, 2, 11.0f, leakMagnitude);
-            Player_DamageOxygen(player, 6.0f * GetBossWeakeningFactor(tasks) * (1.0f - filterStrength * 0.55f));
+            Player_DamageOxygen(player, 9.0f * GetBossWeakeningFactor(tasks) * (1.0f - filterStrength * 0.55f));
             break;
         case MONSTER_THORN_LARVA:
         case MONSTER_RAPTOR:
@@ -427,74 +482,54 @@ static void ApplyMonsterAttack(const TaskSystem *tasks, MonsterType type, Player
     }
 }
 
-static int CountActiveBossArenaGuards(const TaskSystem *tasks) {
-    int count;
-    int index;
+static bool IsBossLineLockHorizontal(const Monster *boss) {
+    int bossCenterX;
+    int bossCenterY;
+    int deltaX;
+    int deltaY;
 
-    if (tasks == NULL) {
-        return 0;
+    if (boss == NULL) {
+        return true;
     }
 
-    count = 0;
-    for (index = 0; index < tasks->monsterCount; index++) {
-        const Monster *monster;
-
-        monster = &tasks->monsters[index];
-        if (monster->active
-            && monster->type == MONSTER_RELIC_GUARD
-            && monster->area == MAP_AREA_BOSS_ARENA) {
-            count += 1;
-        }
+    bossCenterX = boss->gridX + MONSTER_FOOTPRINT_SIZE / 2;
+    bossCenterY = boss->gridY + MONSTER_FOOTPRINT_SIZE / 2;
+    deltaX = boss->targetX - bossCenterX;
+    deltaY = boss->targetY - bossCenterY;
+    if (deltaX < 0) {
+        deltaX = -deltaX;
     }
-
-    return count;
+    if (deltaY < 0) {
+        deltaY = -deltaY;
+    }
+    return deltaX >= deltaY;
 }
 
-static void TrySpawnBossGuards(TaskSystem *tasks, const GameMap *map) {
-    static const int kPreferredOrigins[][2] = {
-        {BOSS_ARENA_X + 1, BOSS_ARENA_Y + 1},
-        {BOSS_ARENA_X + 1, BOSS_ARENA_Y + 3},
-        {BOSS_ARENA_X + 4, BOSS_ARENA_Y + 1},
-        {BOSS_ARENA_X + 3, BOSS_ARENA_Y + 4}
-    };
-    const int maxArenaGuards = 2;
-    int activeGuards;
-    int index;
-
-    if (tasks == NULL || map == NULL) {
-        return;
+static bool IsPlayerInBossLineLock(const Monster *boss, const Player *player) {
+    if (boss == NULL || player == NULL) {
+        return false;
     }
 
-    activeGuards = CountActiveBossArenaGuards(tasks);
-    for (index = 0;
-         index < (int)(sizeof(kPreferredOrigins) / sizeof(kPreferredOrigins[0]))
-            && activeGuards < maxArenaGuards
-            && tasks->monsterCount < MAX_MONSTERS;
-         index++) {
-        if (TasksRuntime_AddMonsterSpawn(tasks,
-                                         map,
-                                         MONSTER_RELIC_GUARD,
-                                         kPreferredOrigins[index][0],
-                                         kPreferredOrigins[index][1],
-                                         7)) {
-            activeGuards += 1;
-        }
+    if (Map_GetAreaAt(player->gridX, player->gridY) != MAP_AREA_BOSS_ARENA) {
+        return false;
     }
+
+    if (IsBossLineLockHorizontal(boss)) {
+        return player->gridY == boss->targetY;
+    }
+    return player->gridX == boss->targetX;
 }
 
-static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player, const GameMap *map) {
+static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player) {
     const int phase = GetBossPhase(boss);
     float nextAttackTimer;
 
-    (void)map;
     nextAttackTimer = GetBossAttackInterval(boss);
 
     switch (boss->currentAttack) {
         case BOSS_ATTACK_MELEE: {
             if (TasksRuntime_GetDistanceToMonster(boss, player->gridX, player->gridY) == 1) {
                 ApplyMonsterAttack(tasks, boss->type, player);
-            } else {
-                OpenBossWeakPoint(tasks, boss, 0.70f);
             }
             if (phase >= 3) {
                 nextAttackTimer *= 0.82f;
@@ -502,82 +537,18 @@ static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player, 
             break;
         }
         case BOSS_ATTACK_CHARGE: {
-            int steps;
-            int maxSteps;
-            int x;
-            int y;
-            int dirX;
-            int dirY;
-            bool playerHit;
-
-            steps = 0;
-            maxSteps = GetBossChargeReach(boss);
-            x = boss->gridX;
-            y = boss->gridY;
-            dirX = (player->gridX > x) ? 1 : (player->gridX < x) ? -1 : 0;
-            dirY = (player->gridY > y) ? 1 : (player->gridY < y) ? -1 : 0;
-            playerHit = false;
-
-            while (steps < maxSteps && CanMonsterOccupy(tasks, boss, map, x + dirX, y + dirY)) {
-                x += dirX;
-                y += dirY;
-                steps++;
-
-                if (player->gridX >= x && player->gridX < x + MONSTER_FOOTPRINT_SIZE
-                    && player->gridY >= y && player->gridY < y + MONSTER_FOOTPRINT_SIZE) {
-                    ApplyMonsterAttack(tasks, boss->type, player);
-                    playerHit = true;
-                    break;
+            if (IsPlayerInBossLineLock(boss, player)) {
+                ApplyMonsterAttack(tasks, boss->type, player);
+                if (phase >= 3) {
+                    nextAttackTimer *= 0.78f;
                 }
-            }
-            boss->gridX = x;
-            boss->gridY = y;
-            if (!playerHit) {
-                OpenBossWeakPoint(tasks, boss, 1.10f);
-            } else if (phase >= 3) {
-                nextAttackTimer *= 0.78f;
             }
             break;
         }
-        case BOSS_ATTACK_AOE: {
-            int dist;
-            int aoeRadius;
-
-            dist = TasksRuntime_GetDistanceToMonster(boss, player->gridX, player->gridY);
-            aoeRadius = GetBossAoeRadius(boss);
-            if (dist <= aoeRadius) {
-                float aoeDamage;
-                float aoePressure;
-                float bossWeakeningFactor;
-
-                aoeDamage = 8.5f;
-                aoePressure = 12.0f;
-                if (phase >= 3) {
-                    aoeDamage += 1.5f;
-                    aoePressure += 2.0f;
-                }
-                bossWeakeningFactor = GetBossWeakeningFactor(tasks);
-
-                if (player->hasProtectionSuit) {
-                    aoeDamage *= 0.70f;
-                    aoePressure *= 0.60f;
-                }
-
-                Player_DamageHealth(player, aoeDamage * bossWeakeningFactor);
-                Player_AddPressure(player, aoePressure * bossWeakeningFactor * 0.45f);
-                if (phase >= 3) {
-                    nextAttackTimer *= 0.82f;
-                }
-            } else {
-                OpenBossWeakPoint(tasks, boss, 1.25f);
-            }
-            break;
-        }
+        case BOSS_ATTACK_AOE:
         case BOSS_ATTACK_SPAWN:
-            TrySpawnBossGuards(tasks, map);
-            OpenBossWeakPoint(tasks, boss, 0.95f);
-            if (phase == 2) {
-                nextAttackTimer *= 0.88f;
+            if (phase >= 3) {
+                nextAttackTimer *= 0.78f;
             }
             break;
         default:
@@ -588,96 +559,26 @@ static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player, 
     boss->attackTimer = nextAttackTimer;
 }
 
-static void ChooseBossAttack(TaskSystem *tasks, Monster *boss, Player *player, const GameMap *map) {
-    float healthPercent;
-    int activeArenaGuards;
-    int attackChoice;
+static void ChooseBossAttack(TaskSystem *tasks, Monster *boss, Player *player) {
+    int phase;
+    int distance;
     float telegraphScale;
 
-    healthPercent = boss->health / boss->maxHealth;
+    phase = GetBossPhase(boss);
+    distance = TasksRuntime_GetDistanceToMonster(boss, player->gridX, player->gridY);
     boss->targetX = player->gridX;
     boss->targetY = player->gridY;
     telegraphScale = GetBossTelegraphScale(tasks);
-    activeArenaGuards = CountActiveBossArenaGuards(tasks);
 
-    if (healthPercent > 0.70f) {
-        attackChoice = rand() % 3;
-        switch (attackChoice) {
-            case 0:
-                boss->currentAttack = BOSS_ATTACK_MELEE;
-                boss->attackTelegraph = 1.10f * telegraphScale;
-                break;
-            case 1:
-                boss->currentAttack = BOSS_ATTACK_CHARGE;
-                boss->attackTelegraph = 1.70f * telegraphScale;
-                break;
-            case 2:
-                boss->currentAttack = BOSS_ATTACK_AOE;
-                boss->attackTelegraph = 2.20f * telegraphScale;
-                break;
-        }
-    } else if (healthPercent > 0.35f) {
-        if (activeArenaGuards == 0 && rand() % 3 == 0) {
-            boss->currentAttack = BOSS_ATTACK_SPAWN;
-            boss->attackTelegraph = 1.55f * telegraphScale;
-            if (!boss->phaseTriggered) {
-                boss->phaseTriggered = true;
-                TrySpawnBossGuards(tasks, map);
-            }
-            return;
-        }
-        attackChoice = rand() % 4;
-        switch (attackChoice) {
-            case 0:
-                boss->currentAttack = BOSS_ATTACK_MELEE;
-                boss->attackTelegraph = 1.00f * telegraphScale;
-                break;
-            case 1:
-                boss->currentAttack = BOSS_ATTACK_CHARGE;
-                boss->attackTelegraph = 1.40f * telegraphScale;
-                break;
-            case 2:
-                boss->currentAttack = BOSS_ATTACK_SPAWN;
-                boss->attackTelegraph = 1.60f * telegraphScale;
-                if (!boss->phaseTriggered) {
-                    boss->phaseTriggered = true;
-                    TrySpawnBossGuards(tasks, map);
-                }
-                break;
-            case 3:
-                boss->currentAttack = BOSS_ATTACK_AOE;
-                boss->attackTelegraph = 1.70f * telegraphScale;
-                break;
-        }
+    if (distance == 1) {
+        boss->currentAttack = BOSS_ATTACK_MELEE;
+        boss->attackTelegraph = (phase == 1 ? 0.92f : (phase == 2 ? 0.80f : 0.68f)) * telegraphScale;
+    } else if (phase >= 2) {
+        boss->currentAttack = BOSS_ATTACK_CHARGE;
+        boss->attackTelegraph = (phase == 2 ? 1.18f : 0.98f) * telegraphScale;
     } else {
-        if (activeArenaGuards == 0) {
-            boss->currentAttack = BOSS_ATTACK_SPAWN;
-            boss->attackTelegraph = 1.05f * telegraphScale;
-            TrySpawnBossGuards(tasks, map);
-            return;
-        }
-
-        attackChoice = rand() % 5;
-        switch (attackChoice) {
-            case 0:
-                boss->currentAttack = BOSS_ATTACK_MELEE;
-                boss->attackTelegraph = 0.88f * telegraphScale;
-                break;
-            case 1:
-            case 4:
-                boss->currentAttack = BOSS_ATTACK_CHARGE;
-                boss->attackTelegraph = 1.05f * telegraphScale;
-                break;
-            case 2:
-                boss->currentAttack = BOSS_ATTACK_SPAWN;
-                boss->attackTelegraph = 1.10f * telegraphScale;
-                TrySpawnBossGuards(tasks, map);
-                break;
-            case 3:
-                boss->currentAttack = BOSS_ATTACK_AOE;
-                boss->attackTelegraph = 1.18f * telegraphScale;
-                break;
-        }
+        boss->currentAttack = BOSS_ATTACK_NONE;
+        boss->attackTelegraph = 0.0f;
     }
 }
 
@@ -690,8 +591,9 @@ void TasksRuntime_UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *
     for (index = 0; index < tasks->monsterCount; index++) {
         Monster *monster;
         float aggroRange;
+        int distance;
         bool sameArea;
-        bool hiddenByStealth;
+        bool disengaged;
 
         monster = &tasks->monsters[index];
         if (!MonsterCanAct(monster, tasks)) {
@@ -701,26 +603,38 @@ void TasksRuntime_UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *
         monster->moveTimer -= deltaTime;
         monster->attackTimer -= deltaTime;
         monster->recoverTimer -= deltaTime;
-        monster->weakPointTimer -= deltaTime;
         if (monster->recoverTimer < 0.0f) {
             monster->recoverTimer = 0.0f;
         }
-        if (monster->weakPointTimer < 0.0f) {
-            monster->weakPointTimer = 0.0f;
+
+        sameArea = monster->area == playerArea;
+        distance = TasksRuntime_GetDistanceToMonster(monster, player->gridX, player->gridY);
+        aggroRange = GetMonsterAggroRange(monster, tasks, player);
+        aggroRange *= Player_GetAggroMultiplier(player);
+        if (tasks->currentEvent == EVENT_CALM_BEASTS) {
+            aggroRange *= 0.5f;
+        }
+        if (tasks->currentEvent == EVENT_MONSTER_FRENZY) {
+            aggroRange *= 1.2f;
         }
 
-        if (monster->type == MONSTER_FINAL_BOSS && monster->health <= monster->maxHealth * 0.70f && !monster->phaseTriggered) {
-            monster->phaseTriggered = true;
-            TrySpawnBossGuards(tasks, map);
+        disengaged = !sameArea || (float)distance > aggroRange;
+        if (disengaged) {
+            UpdateMonsterDisengageRecovery(monster, true, deltaTime);
+            monster->attackTelegraph = 0.0f;
+            monster->currentAttack = BOSS_ATTACK_NONE;
+            monster->recoverTimer = 0.0f;
+            continue;
         }
+        UpdateMonsterDisengageRecovery(monster, false, deltaTime);
 
         if (monster->attackTelegraph > 0.0f) {
             monster->attackTelegraph -= deltaTime;
             if (monster->attackTelegraph <= 0.0f) {
                 if (monster->type == MONSTER_FINAL_BOSS) {
-                    ExecuteBossAttack(tasks, monster, player, map);
+                    ExecuteBossAttack(tasks, monster, player);
                 } else {
-                    if (TasksRuntime_GetDistanceToMonster(monster, player->gridX, player->gridY) == 1) {
+                    if (distance == 1) {
                         ApplyMonsterAttack(tasks, monster->type, player);
                     }
                     monster->recoverTimer = GetMonsterRecoverDuration(monster->type);
@@ -730,42 +644,12 @@ void TasksRuntime_UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *
             continue;
         }
 
-        sameArea = monster->area == playerArea;
-        hiddenByStealth = player->crouching
-            && playerArea == MAP_AREA_FOREST
-            && TasksRuntime_GetDistanceToMonster(monster, player->gridX, player->gridY) > 1;
-        if (!sameArea || hiddenByStealth) {
-            continue;
-        }
-
-        aggroRange = 4.0f;
-        if (monster->type == MONSTER_FINAL_BOSS) {
-            aggroRange = 8.0f;
-        } else if (monster->type == MONSTER_WING_BUG && tasks->phase == DAY_PHASE_DAY) {
-            aggroRange = 2.0f;
-        } else if (monster->type == MONSTER_SWAMP_STALKER && tasks->phase != DAY_PHASE_DAY) {
-            aggroRange = 5.0f;
-        }
-
-        aggroRange *= Player_GetAggroMultiplier(player);
-        if (tasks->currentEvent == EVENT_CALM_BEASTS) {
-            aggroRange *= 0.5f;
-        }
-        if (tasks->currentEvent == EVENT_MONSTER_FRENZY) {
-            aggroRange *= 1.2f;
-        }
-
-        if ((float)TasksRuntime_GetDistanceToMonster(monster, player->gridX, player->gridY) > aggroRange) {
-            continue;
-        }
-
-        if (TasksRuntime_GetDistanceToMonster(monster, player->gridX, player->gridY) == 1) {
+        if (distance == 1) {
             if (monster->attackTimer <= 0.0f) {
                 if (monster->type == MONSTER_FINAL_BOSS && monster->currentAttack == BOSS_ATTACK_NONE) {
-                    ChooseBossAttack(tasks, monster, player, map);
+                    ChooseBossAttack(tasks, monster, player);
                 } else if (monster->type == MONSTER_FINAL_BOSS) {
-                    ApplyMonsterAttack(tasks, monster->type, player);
-                    monster->attackTimer = GetMonsterAttackInterval(monster->type);
+                    ExecuteBossAttack(tasks, monster, player);
                 } else if (monster->recoverTimer <= 0.0f) {
                     StartNormalMonsterAttackTelegraph(monster);
                 }
@@ -776,9 +660,20 @@ void TasksRuntime_UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *
         if (monster->recoverTimer > 0.0f) {
             continue;
         }
+        if (monster->type == MONSTER_FINAL_BOSS
+            && GetBossPhase(monster) >= 2
+            && monster->attackTimer <= 0.0f
+            && monster->currentAttack == BOSS_ATTACK_NONE) {
+            ChooseBossAttack(tasks, monster, player);
+            if (monster->attackTelegraph > 0.0f) {
+                continue;
+            }
+        }
         if (monster->moveTimer <= 0.0f) {
             MoveMonsterToward(tasks, monster, map, player->gridX, player->gridY);
-            monster->moveTimer = monster->type == MONSTER_FINAL_BOSS ? GetBossMoveInterval(monster) : 0.70f;
+            monster->moveTimer = monster->type == MONSTER_FINAL_BOSS
+                ? GetBossMoveInterval(monster)
+                : GetMonsterMoveInterval(monster->type);
         }
     }
 }

@@ -126,19 +126,19 @@ const char *GetWestRouteArchiveNote(const TaskSystem *tasks) {
         return "";
     }
     if (tasks->westW5Completed) {
-        return Loc_PickLiteral("Last Camp testimony is archived. The full west investigation now supports your final ending choice.", "最后营地证词已归档，完整的西线调查如今会影响你最终的结局选择。");
+        return Loc_PickLiteral("Last Camp testimony is archived. The west route no longer ends in disappearance; it now closes as a full human record that will weigh directly on your final ending choice.", "最后营地证词已归档。西线不再只是失踪线索，而是完整闭合成了一段人的记录；它会直接压进你最终的结局判断里。");
     }
     if (tasks->westW5Started) {
-        return Loc_PickLiteral("The Last Camp testimony is within reach. Bring it back to base after the last west investigation so the record can be closed.", "最后营地证词已近在眼前。完成最后一段西线调查后把它带回基地，才能正式封存这条记录。");
+        return Loc_PickLiteral("The Last Camp testimony is within reach. Finish the last west investigation and bring it back to base so the missing crew's final argument can be closed into the record.", "最后营地证词已近在眼前。完成西线最后一段调查后把它带回基地，才能把失踪船员留下的最后争论正式封进档案。");
     }
     if (tasks->westW4Completed) {
-        return Loc_PickLiteral("Echo Basin findings are archived. The west route now points toward the final record at Last Camp.", "回声盆地记录已归档，西线路线现在指向最后营地的最终记录。");
+        return Loc_PickLiteral("Echo Basin findings are archived. What once sounded like absence now reads like successful relay work, and the west route now points toward the final record at Last Camp.", "回声盆地记录已归档。那些原本像空白的地方，如今已经被读成了一次成功接力；西线路线也因此开始明确指向最后营地的终局记录。");
     }
     if (tasks->westW4Started) {
-        return Loc_PickLiteral("Echo Basin reconstruction is underway. Return to base after finishing the basin investigation.", "回声盆地重建记录正在推进，完成盆地调查后请返回基地。");
+        return Loc_PickLiteral("Echo Basin reconstruction is underway. Finish the basin investigation, then return to base so Loxi can rebuild the west handoff into something readable.", "回声盆地重建记录正在推进。完成盆地调查后请返回基地，让洛希把西线交接重新拼成一段能读懂的来龙去脉。");
     }
     if (tasks->westW3Completed) {
-        return Loc_PickLiteral("Canopy Hollow is archived. The west trail now has enough evidence to connect people, route choice, and intent.", "林冠洼地已归档，西线如今已有足够证据串起人员、路线选择与背后意图。");
+        return Loc_PickLiteral("Canopy Hollow is archived. The west trail now has enough evidence to connect people, route choice, and intent instead of leaving the missing crew as empty names.", "林冠洼地已归档。西线如今终于有了足够证据，把人员、路线与判断串到一起，而不再只留下几串失踪名字。");
     }
     if (tasks->westW3Started) {
         return Loc_PickLiteral("Canopy Hollow evidence is active. Bring the handoff record back to base once the investigation is complete.", "林冠洼地的证据线正在展开，调查结束后请把交接记录带回基地。");
@@ -166,13 +166,13 @@ const char *GetSouthRouteArchiveNote(const TaskSystem *tasks) {
         return "";
     }
     if (tasks->southS5Completed) {
-        return Loc_PickLiteral("Root Vault findings are archived. The full south facility chain now supports your final ending choice.", "根脉核心记录已归档，完整的南方设施线如今也会影响你的最终结局选择。");
+        return Loc_PickLiteral("Root Vault findings are archived. The south route no longer reads like scattered machinery; it now closes into the truth of one damaged maintenance lattice, and that truth will weigh on your final ending choice.", "根脉核心记录已归档。南线不再像零散设施，而是闭合成了同一张受损维护格网的真相；这份真相会直接压进你最终的结局判断里。");
     }
     if (tasks->southS5Started) {
-        return Loc_PickLiteral("The Root Vault dossier is within reach. Bring it back to base after the last south investigation.", "根脉核心档案已近在眼前，完成最后一段南线调查后请把它带回基地。");
+        return Loc_PickLiteral("The Root Vault dossier is within reach. Finish the last south investigation and bring it back to base so the system-level truth can finally be named outright.", "根脉核心档案已近在眼前。完成南线最后一段调查后请把它带回基地，好让这套系统级真相终于被正式说出口。");
     }
     if (tasks->southS4Completed) {
-        return Loc_PickLiteral("Purifier Ring controls are archived. The south route now points toward the Root Vault core record.", "净化环控制记录已归档，南线如今指向根脉核心的关键档案。");
+        return Loc_PickLiteral("Purifier Ring controls are archived. The south route now points beyond raw hazard toward the Root Vault core record where the system can finally explain itself.", "净化环控制记录已归档。南线如今不再只是继续深入危险，而是开始明确指向根脉核心那份能够解释整套系统的关键档案。");
     }
     if (tasks->southS4Started) {
         return Loc_PickLiteral("Purifier Ring work is active. Return to base after stabilizing the ring controls.", "净化环调查正在进行，稳定控制环后请返回基地。");
@@ -225,13 +225,13 @@ const char *GetCrossRouteArchiveNote(const TaskSystem *tasks) {
         return "";
     }
     if (tasks->westW5Completed && tasks->southS5Completed) {
-        return Loc_PickLiteral("Both route conclusions are ready. Your ending choice now carries the full crew and facility context.", "两条路线的结论都已就位，你的结局选择如今拥有完整的船员与设施背景。");
+        return Loc_PickLiteral("Both route conclusions are ready. Crew handoffs and facility truth now sit in the same archive, so your ending choice finally carries the full human and system context together.", "两条路线的结论都已就位。船员接力与设施真相如今已经并进同一套档案，因此你的结局选择终于同时背着完整的人与系统背景。");
     }
     if (tasks->westW4Completed && tasks->southS4Completed) {
-        return Loc_PickLiteral("Loxi can now synthesize both investigations into a final strategy comparison for the endgame.", "洛希现在可以把两条调查线整合成终局策略对照。");
+        return Loc_PickLiteral("Loxi can now synthesize both investigations into a final strategy comparison. Rescue, stabilization, and settlement are starting to read like different answers to the same corrected truth.", "洛希现在可以把两条调查线整合成终局策略对照。救援、稳定与定居开始不再像分支按钮，而像对同一份纠偏真相的不同回答。");
     }
     if (tasks->westW3Completed && tasks->southS2Completed) {
-        return Loc_PickLiteral("Crew trails and facility records now form one chain. The truth is no longer split across regions.", "船员轨迹与设施记录已经连成一条链，真相不再分散在不同区域。");
+        return Loc_PickLiteral("Crew trails and facility records now form one chain. The truth is no longer split across regions, only waiting to be pushed far enough to close.", "船员轨迹与设施记录已经连成一条链。真相不再散落在不同区域，只差再往前推一些，就能真正闭合。");
     }
     if (tasks->westW3Completed || tasks->southS2Completed) {
         return Loc_PickLiteral("The shared truth is only partial. Push both west and south investigations a little farther.", "共通真相仍然只是片段，请继续推进西线与南线调查。");
@@ -303,9 +303,9 @@ void UI_DrawLogReader(const TaskSystem *tasks, int selectedLog, const AssetBundl
     UIRuntime_DrawText(assets, Loc_PickLiteral("Ship Log Archive", "飞船日志档案"), Vector2{panel.x + 30.0f * scale, panel.y + 22.0f * scale}, 33.0f * scale, WHITE);
     UIRuntime_DrawText(
         assets,
-        Loc_PickLiteral("Press ESC or L to close", "按 ESC 或 L 关闭"),
+        Loc_PickLiteral("Press ESC to close", "按 ESC 关闭"),
         Vector2{
-            panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("Press ESC or L to close", "按 ESC 或 L 关闭"), 17.5f * scale).x - 30.0f * scale,
+            panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("Press ESC to close", "按 ESC 关闭"), 17.5f * scale).x - 30.0f * scale,
             panel.y + 28.0f * scale,
         },
         17.5f * scale,

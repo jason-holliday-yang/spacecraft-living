@@ -65,7 +65,6 @@ typedef struct SaveSnapshot {
     float maxStaminaBonus;
     float attackBonus;
     int deathCount;
-    bool crouching;
     bool hasGlowStick;
     bool hasRope;
     bool hasLaserGun;

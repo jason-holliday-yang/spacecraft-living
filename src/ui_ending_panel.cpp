@@ -114,13 +114,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX3Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return Loc_Translate("After Loxi's final review, the full archive frames this as a deliberate high-cost rescue.");
+                return Loc_Translate("After Loxi's final review, the full archive frames this as an open-eyed rescue: get people home first, even if the damaged lattice leaves with one more scar.");
             case ENDING_PEACEFUL:
-                return Loc_Translate("After Loxi's final review, the full archive frames this as full-system stabilization through understanding.");
+                return Loc_Translate("After Loxi's final review, the full archive frames this as rescue through compatibility: not tearing the tower wider open, but teaching human systems to be read without deepening the wound.");
             case ENDING_SETTLEMENT:
-                return Loc_Translate("After Loxi's final review, the full archive frames settlement as deliberate long-term stewardship.");
+                return Loc_Translate("After Loxi's final review, settlement stops reading like surrender. It becomes deliberate stewardship: stay, stabilize what can be kept alive, and inherit the work no one else is returning to finish.");
             case ENDING_FAILURE:
-                return Loc_Translate("Even after Loxi's final review, the final attempt still collapsed under sustained pressure.");
+                return Loc_Translate("Even after Loxi's final review, air, pressure, and time still failed to hold. The truth was assembled, but the run broke before any final answer could live long enough to stand.");
             case ENDING_NONE:
             default:
                 return "";
@@ -130,13 +130,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX2Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return Loc_Translate("By the time Loxi confirmed it, the late findings had shown the tower, purifier ring, and monoliths were one damaged lattice.");
+                return Loc_Translate("By the time Loxi confirmed it, the late findings had already shown tower, purifier ring, and monoliths were one damaged lattice, which meant any forced rescue had to be chosen as a cost, not mistaken for clean victory.");
             case ENDING_PEACEFUL:
-                return Loc_Translate("By the time Loxi confirmed it, the late findings had shown the tower and purifier controls were one failing system.");
+                return Loc_Translate("By the time Loxi confirmed it, the late findings had already shown tower and purifier controls belonged to the same failing system, so stabilization demanded sequence, patience, and correct reading rather than brute force.");
             case ENDING_SETTLEMENT:
-                return Loc_Translate("By the time Loxi confirmed it, settlement meant inheriting the maintenance lattice instead of escaping it.");
+                return Loc_Translate("By the time Loxi confirmed it, settlement already meant inheriting the maintenance lattice instead of escaping it, along with every unfinished repair the earlier crew could not carry across the line.");
             case ENDING_FAILURE:
-                return Loc_Translate("Loxi could already see the late findings, but the damaged lattice still outlasted the run.");
+                return Loc_Translate("Loxi could already read the late findings, but the damaged lattice still outlasted the run. Understanding arrived, yet the body and the ship failed before it could be fully answered.");
             case ENDING_NONE:
             default:
                 return "";
@@ -146,13 +146,13 @@ static const char *GetEndingRouteContext(GameEnding ending, const TaskSystem *ta
     if (IsCrossX1Ready(tasks)) {
         switch (ending) {
             case ENDING_HEROIC:
-                return Loc_Translate("By the time Loxi confirmed it, west crew handoffs and south facility records had aligned into one survival timeline.");
+                return Loc_Translate("By the time Loxi confirmed it, west-route handoffs and south-route facility records had already aligned into one survival timeline, turning rescue into an inheritance of everyone who kept the chain alive.");
             case ENDING_PEACEFUL:
-                return Loc_Translate("By the time Loxi confirmed it, the archive had already shown that coordination mattered more than panic.");
+                return Loc_Translate("By the time Loxi confirmed it, the archive had already shown that coordination mattered more than panic: cleaner air, quieter signal windows, and shared timing all belonged to the same answer.");
             case ENDING_SETTLEMENT:
-                return Loc_Translate("By the time Loxi confirmed it, the archive had already shown that staying was deliberate, not surrender.");
+                return Loc_Translate("By the time Loxi confirmed it, the archive had already shown that staying was deliberate, not surrender. The earlier crew had already begun imagining a future that did not end with immediate escape.");
             case ENDING_FAILURE:
-                return Loc_Translate("By the time Loxi framed the choice, the shared trail was visible, but the run still collapsed before it held.");
+                return Loc_Translate("By the time Loxi framed the choice, the shared trail was finally visible, but the run still collapsed before that fragile line of meaning could be carried all the way through.");
             case ENDING_NONE:
             default:
                 return "";

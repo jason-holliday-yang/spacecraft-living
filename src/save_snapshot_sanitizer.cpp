@@ -67,7 +67,7 @@ void SaveInternal_SanitizeSnapshot(SaveSnapshot *snapshot) {
     snapshot->pressure = SanitizeFiniteFloat(snapshot->pressure, INITIAL_PRESSURE, 0.0f, MAX_PRESSURE);
     snapshot->oxygen = SanitizeFiniteFloat(snapshot->oxygen, INITIAL_OXYGEN, 0.0f, MAX_OXYGEN);
     snapshot->poison = SanitizeFiniteFloat(snapshot->poison, 0.0f, 0.0f, MAX_POISON);
-    snapshot->attackBonus = SanitizeFiniteFloat(snapshot->attackBonus, 0.0f, 0.0f, 100.0f);
+    snapshot->attackBonus = 0.0f;
     snapshot->cycleTimer = SanitizeFiniteFloat(snapshot->cycleTimer, 0.0f, 0.0f, FULL_CYCLE_SECONDS);
     snapshot->elapsedSeconds = SanitizeFiniteFloat(snapshot->elapsedSeconds, 0.0f, 0.0f, 100000000.0f);
     snapshot->deathCount = snapshot->deathCount < 0 ? 0 : snapshot->deathCount;

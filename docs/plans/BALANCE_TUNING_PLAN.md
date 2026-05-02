@@ -114,29 +114,30 @@
 
 明显成立的结论：
 
-- `Glow Stick / Rope / Laser Gun / Protection Suit / Field Camp` 的成本整体还在可控范围内
+- `Glow Stick / Rope / Recovery Ration / Laser Gun / Protection Suit / Field Camp` 的成本整体还在可控范围内
 - `Energy Core + Energy Crystal + Relic Fragment` 才是终局路线真正的预算敏感点
 
 当前最值得关注的经济问题是：
 
-- `Stage 6` 终端同步会直接消耗 `3 Relic Fragments`
-- `Signal Amplifier` 配方又额外要求 `1 Energy Core + 3 Relic Fragments`
+- `Stage 6` 终端同步读取 `3 Relic Fragments` 作为路线理解条件，但不消耗碎片
+- `Signal Amplifier` 配方当前要求 `3 Relic Fragments`
+- `Recovery Ration` 配方要求 `Plant Fruit + Shell Fruit + Special Fungus + Glow Moss + Calm Mushroom`，属于可重复外勤综合恢复消耗品，会和食材采集、解毒准备和氧气准备形成统一预算
 
 这意味着：
 
-- 和平路线当前的真实碎片预算，不是表面上第一次看到的 `3`
-- 它更接近“终端解锁一轮 + 制作一轮”的双层预算
+- 和平路线当前的真实碎片预算就是 `3 Relic Fragments`
+- 终局路线预算压力主要来自是否能完成碎片收集、是否提前准备好氧气补给，而不是双重消耗
 
-这并不一定是错误，但它目前存在两个明显问题：
+这并不一定是错误，但它目前仍有两个需要观察的问题：
 
-- 玩家很容易先从文本上理解成“只需要 3 个碎片”
-- 当前文档和测试还没有把这件事作为一个明确的经济护栏写清楚
+- 玩家是否能在进入终局前稳定拿到 `3 Relic Fragments`
+- 玩家是否会因为重复制作 `Recovery Ration` 而过度吃掉食材和 `Glow Moss` 余量
 
 ### 3.4 当前资源经济最值得优先修的地方
 
 优先级建议：
 
-1. 先明确 `Relic Fragment` 和 `Energy Core` 的终局预算口径
+1. 先明确 `Relic Fragment` 与 `Recovery Ration` 的终局准备预算口径
 2. 再决定刷新阈值是否要继续保留当前的 `95 / 135 / 240` 结构
 3. 最后再微调常规材料产量
 
@@ -337,22 +338,23 @@
 
 - 北线已经形成 `Ruins Approach -> Monolith Ring -> Signal Tower Plateau` 的三段结构
 - 英雄路线与和平路线的玩法差异也已经成立
-- 但和平路线当前存在明显的“实际预算大于表面理解”的问题
+- 和平路线当前不再存在碎片双重收费问题，但仍需要玩家理解 `Signal Amplifier` 与氧气准备的价值
 
 当前代码对应的真实预算是：
 
-- `Stage 6` 终端同步需要先交 `3 Relic Fragments`
-- `Signal Amplifier` 又需要 `1 Energy Core + 3 Relic Fragments`
+- `Stage 6` 终端同步需要读取 `3 Relic Fragments`，但不消耗它们
+- `Signal Amplifier` 需要 `3 Relic Fragments`
+- `Recovery Ration` 可用 `Plant Fruit + Shell Fruit + Special Fungus + Glow Moss + Calm Mushroom` 重复制作，用于补足最终路线的生命、解毒与氧气准备
 
-这意味着和平路线的真实门槛不是“拿到 3 个碎片”，而更接近：
+这意味着和平路线的真实门槛应理解为：
 
-- `6 Relic Fragments + 1 Energy Core`
+- `3 Relic Fragments + Signal Amplifier + 足够的外勤补氧准备`
 
 建议：
 
-- 必须把这个预算差异明确写进任务提示、通讯器提示和配方说明
-- 如果不想改资源数量，至少要改文案，避免玩家误解成被二次收费
-- 如果后续想继续压低和平路线挫败感，最先考虑的应是 `Signal Amplifier` 的碎片成本，而不是直接削平 Boss
+- 必须把 `Signal Amplifier` 和 `Recovery Ration` 的职责写进任务提示、通讯器提示和配方说明
+- 避免玩家误解成和平路线“不需要准备”，它只是低战斗，不是低风险
+- 如果后续想继续压低和平路线挫败感，优先检查氧气准备提示和碎片可达性，而不是直接削平 Boss
 
 ### 7.4 终局三路线应维持清晰分工
 

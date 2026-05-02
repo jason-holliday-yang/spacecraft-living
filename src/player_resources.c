@@ -64,6 +64,8 @@ const char *Player_GetResourceLabel(ResourceType resource) {
             return Loc_PickLiteral("Boss Scale", "守卫鳞片");
         case RESOURCE_ALIEN_SLIME:
             return Loc_PickLiteral("Alien Slime", "异星黏液");
+        case RESOURCE_RECOVERY_RATION:
+            return Loc_PickLiteral("Recovery Ration", "复苏口粮");
         case RESOURCE_COUNT:
         default:
             return Loc_PickLiteral("Unknown Resource", "未知资源");

@@ -68,11 +68,19 @@ static void UnloadOptionalMusicAsset(OptionalMusic *asset) {
 }
 
 static void StopAllMusic(AudioManager *audio) {
-    const std::array<OptionalMusic *, 14> tracks = {{
+    const std::array<OptionalMusic *, 24> tracks = {{
         &audio->menuLoop,
         &audio->menuLoopAlt,
         &audio->baseLoop,
         &audio->baseLoopAlt,
+        &audio->stage3WildLoop,
+        &audio->stage3WildLoopAlt,
+        &audio->stage4RiskLoop,
+        &audio->stage4RiskLoopAlt,
+        &audio->stage5PowerLoop,
+        &audio->stage5PowerLoopAlt,
+        &audio->stage7ChoiceLoop,
+        &audio->stage7ChoiceLoopAlt,
         &audio->forestLoop,
         &audio->forestRouteLoop,
         &audio->swampLoop,
@@ -81,6 +89,8 @@ static void StopAllMusic(AudioManager *audio) {
         &audio->ruinsFacilityLoop,
         &audio->bossLoop,
         &audio->bossArenaLoop,
+        &audio->settlementLoop,
+        &audio->settlementLoopAlt,
         &audio->endingLoop,
         &audio->endingLoopAlt
     }};
@@ -92,8 +102,35 @@ static void StopAllMusic(AudioManager *audio) {
     }
 }
 
-static void GetSceneMusicPair(AudioManager *audio,
-                              AudioScene scene,
+static AudioMusicStage MapSceneToMusicStage(AudioScene scene) {
+    switch (scene) {
+        case AUDIO_SCENE_MENU:
+            return AUDIO_MUSIC_MENU;
+        case AUDIO_SCENE_BASE:
+            return AUDIO_MUSIC_STAGE_1_WAKE;
+        case AUDIO_SCENE_FOREST:
+            return AUDIO_MUSIC_STAGE_3_WILD;
+        case AUDIO_SCENE_FOREST_ROUTE:
+            return AUDIO_MUSIC_STAGE_4_RISK;
+        case AUDIO_SCENE_SWAMP:
+        case AUDIO_SCENE_SWAMP_DEEP:
+            return AUDIO_MUSIC_STAGE_5_POWER;
+        case AUDIO_SCENE_RUINS:
+        case AUDIO_SCENE_RUINS_FACILITY:
+            return AUDIO_MUSIC_STAGE_6_RELICS;
+        case AUDIO_SCENE_BOSS:
+        case AUDIO_SCENE_BOSS_ARENA:
+            return AUDIO_MUSIC_BOSS;
+        case AUDIO_SCENE_ENDING:
+            return AUDIO_MUSIC_ENDING;
+        case AUDIO_SCENE_NONE:
+        default:
+            return AUDIO_MUSIC_NONE;
+    }
+}
+
+static void GetMusicStagePair(AudioManager *audio,
+                              AudioMusicStage stage,
                               OptionalMusic **primary,
                               OptionalMusic **secondary) {
     if (primary != NULL) {
@@ -103,8 +140,8 @@ static void GetSceneMusicPair(AudioManager *audio,
         *secondary = NULL;
     }
 
-    switch (scene) {
-        case AUDIO_SCENE_MENU:
+    switch (stage) {
+        case AUDIO_MUSIC_MENU:
             if (primary != NULL) {
                 *primary = &audio->menuLoop;
             }
@@ -112,34 +149,41 @@ static void GetSceneMusicPair(AudioManager *audio,
                 *secondary = &audio->menuLoopAlt;
             }
             return;
-        case AUDIO_SCENE_BASE:
+        case AUDIO_MUSIC_STAGE_1_WAKE:
             if (primary != NULL) {
                 *primary = &audio->baseLoop;
             }
-            if (secondary != NULL) {
-                *secondary = &audio->baseLoopAlt;
-            }
             return;
-        case AUDIO_SCENE_FOREST:
-        case AUDIO_SCENE_FOREST_ROUTE:
+        case AUDIO_MUSIC_STAGE_2_FIRST_STEPS:
             if (primary != NULL) {
-                *primary = &audio->forestLoop;
-            }
-            if (secondary != NULL) {
-                *secondary = &audio->forestRouteLoop;
+                *primary = &audio->baseLoopAlt;
             }
             return;
-        case AUDIO_SCENE_SWAMP:
-        case AUDIO_SCENE_SWAMP_DEEP:
+        case AUDIO_MUSIC_STAGE_3_WILD:
             if (primary != NULL) {
-                *primary = &audio->swampLoop;
+                *primary = &audio->stage3WildLoop;
             }
             if (secondary != NULL) {
-                *secondary = &audio->swampDeepLoop;
+                *secondary = &audio->stage3WildLoopAlt;
             }
             return;
-        case AUDIO_SCENE_RUINS:
-        case AUDIO_SCENE_RUINS_FACILITY:
+        case AUDIO_MUSIC_STAGE_4_RISK:
+            if (primary != NULL) {
+                *primary = &audio->stage4RiskLoop;
+            }
+            if (secondary != NULL) {
+                *secondary = &audio->stage4RiskLoopAlt;
+            }
+            return;
+        case AUDIO_MUSIC_STAGE_5_POWER:
+            if (primary != NULL) {
+                *primary = &audio->stage5PowerLoop;
+            }
+            if (secondary != NULL) {
+                *secondary = &audio->stage5PowerLoopAlt;
+            }
+            return;
+        case AUDIO_MUSIC_STAGE_6_RELICS:
             if (primary != NULL) {
                 *primary = &audio->ruinsLoop;
             }
@@ -147,8 +191,16 @@ static void GetSceneMusicPair(AudioManager *audio,
                 *secondary = &audio->ruinsFacilityLoop;
             }
             return;
-        case AUDIO_SCENE_BOSS:
-        case AUDIO_SCENE_BOSS_ARENA:
+        case AUDIO_MUSIC_STAGE_7_CHOICE:
+            if (primary != NULL) {
+                *primary = &audio->stage7ChoiceLoop;
+            }
+            if (secondary != NULL) {
+                *secondary = &audio->stage7ChoiceLoopAlt;
+            }
+            return;
+        case AUDIO_MUSIC_ROUTE_HERO:
+        case AUDIO_MUSIC_BOSS:
             if (primary != NULL) {
                 *primary = &audio->bossLoop;
             }
@@ -156,7 +208,20 @@ static void GetSceneMusicPair(AudioManager *audio,
                 *secondary = &audio->bossArenaLoop;
             }
             return;
-        case AUDIO_SCENE_ENDING:
+        case AUDIO_MUSIC_ROUTE_PEACEFUL:
+            if (primary != NULL) {
+                *primary = &audio->endingLoop;
+            }
+            return;
+        case AUDIO_MUSIC_ROUTE_SETTLEMENT:
+            if (primary != NULL) {
+                *primary = &audio->settlementLoop;
+            }
+            if (secondary != NULL) {
+                *secondary = &audio->settlementLoopAlt;
+            }
+            return;
+        case AUDIO_MUSIC_ENDING:
             if (primary != NULL) {
                 *primary = &audio->endingLoop;
             }
@@ -164,19 +229,19 @@ static void GetSceneMusicPair(AudioManager *audio,
                 *secondary = &audio->endingLoopAlt;
             }
             return;
-        case AUDIO_SCENE_NONE:
+        case AUDIO_MUSIC_NONE:
         default:
             return;
     }
 }
 
-static OptionalMusic *GetSceneMusic(AudioManager *audio, AudioScene scene, int variant) {
+static OptionalMusic *GetMusicStageTrack(AudioManager *audio, AudioMusicStage stage, int variant) {
     OptionalMusic *primary;
     OptionalMusic *secondary;
 
     primary = NULL;
     secondary = NULL;
-    GetSceneMusicPair(audio, scene, &primary, &secondary);
+    GetMusicStagePair(audio, stage, &primary, &secondary);
     if (variant == 1 && secondary != NULL && secondary->loaded) {
         return secondary;
     }
@@ -184,33 +249,17 @@ static OptionalMusic *GetSceneMusic(AudioManager *audio, AudioScene scene, int v
     return primary;
 }
 
-static int GetDefaultSceneVariant(AudioScene scene) {
-    switch (scene) {
-        case AUDIO_SCENE_FOREST_ROUTE:
-        case AUDIO_SCENE_SWAMP_DEEP:
-        case AUDIO_SCENE_RUINS_FACILITY:
-        case AUDIO_SCENE_BOSS_ARENA:
-            return 1;
-        case AUDIO_SCENE_NONE:
-        case AUDIO_SCENE_MENU:
-        case AUDIO_SCENE_BASE:
-        case AUDIO_SCENE_FOREST:
-        case AUDIO_SCENE_SWAMP:
-        case AUDIO_SCENE_RUINS:
-        case AUDIO_SCENE_BOSS:
-        case AUDIO_SCENE_ENDING:
-        default:
-            return 0;
-    }
+static int GetDefaultMusicStageVariant(AudioMusicStage) {
+    return 0;
 }
 
-static void StopSceneMusic(AudioManager *audio, AudioScene scene) {
+static void StopMusicStage(AudioManager *audio, AudioMusicStage stage) {
     OptionalMusic *primary;
     OptionalMusic *secondary;
 
     primary = NULL;
     secondary = NULL;
-    GetSceneMusicPair(audio, scene, &primary, &secondary);
+    GetMusicStagePair(audio, stage, &primary, &secondary);
     if (primary != NULL && primary->loaded) {
         StopMusicStream(primary->music);
     }
@@ -219,8 +268,8 @@ static void StopSceneMusic(AudioManager *audio, AudioScene scene) {
     }
 }
 
-static void PlaySceneMusic(AudioManager *audio, AudioScene scene, int variant, float volume) {
-    OptionalMusic *music = GetSceneMusic(audio, scene, variant);
+static void PlayMusicStage(AudioManager *audio, AudioMusicStage stage, int variant, float volume) {
+    OptionalMusic *music = GetMusicStageTrack(audio, stage, variant);
 
     if (music != NULL && music->loaded) {
         StopMusicStream(music->music);
@@ -229,8 +278,8 @@ static void PlaySceneMusic(AudioManager *audio, AudioScene scene, int variant, f
     }
 }
 
-static void SetSceneMusicVolume(AudioManager *audio, AudioScene scene, int variant, float volume) {
-    OptionalMusic *music = GetSceneMusic(audio, scene, variant);
+static void SetMusicStageVolume(AudioManager *audio, AudioMusicStage stage, int variant, float volume) {
+    OptionalMusic *music = GetMusicStageTrack(audio, stage, variant);
 
     if (music != NULL && music->loaded) {
         SetMusicVolume(music->music, volume);
@@ -250,8 +299,8 @@ static bool IsMusicNearEnd(const OptionalMusic *music) {
     return length > 0.2f && played >= length - 0.08f;
 }
 
-static void UpdateSceneMusic(AudioManager *audio,
-                             AudioScene scene,
+static void UpdateMusicStage(AudioManager *audio,
+                             AudioMusicStage stage,
                              int *variant,
                              float volume) {
     OptionalMusic *music;
@@ -261,7 +310,7 @@ static void UpdateSceneMusic(AudioManager *audio,
         return;
     }
 
-    music = GetSceneMusic(audio, scene, *variant);
+    music = GetMusicStageTrack(audio, stage, *variant);
     if (music == NULL || !music->loaded) {
         return;
     }
@@ -271,12 +320,12 @@ static void UpdateSceneMusic(AudioManager *audio,
         return;
     }
 
-    nextMusic = GetSceneMusic(audio, scene, (*variant + 1) % 2);
+    nextMusic = GetMusicStageTrack(audio, stage, (*variant + 1) % 2);
     StopMusicStream(music->music);
     if (nextMusic != NULL && nextMusic->loaded && nextMusic != music) {
         *variant = (*variant + 1) % 2;
     }
-    PlaySceneMusic(audio, scene, *variant, volume);
+    PlayMusicStage(audio, stage, *variant, volume);
 }
 
 void Audio_Init(AudioManager *audio) {
@@ -314,6 +363,14 @@ void Audio_Init(AudioManager *audio) {
     audio->menuLoopAlt = LoadOptionalMusicAsset("resources/audio/music/menu/bgm_menu_2.ogg");
     audio->baseLoop = LoadOptionalMusicAsset("resources/audio/music/base/bgm_base_1.ogg");
     audio->baseLoopAlt = LoadOptionalMusicAsset("resources/audio/music/base/bgm_base_2.ogg");
+    audio->stage3WildLoop = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage3_into_the_wild_1.ogg");
+    audio->stage3WildLoopAlt = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage3_into_the_wild_2.ogg");
+    audio->stage4RiskLoop = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage4_rising_risk_1.ogg");
+    audio->stage4RiskLoopAlt = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage4_rising_risk_2.ogg");
+    audio->stage5PowerLoop = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage5_power_mire_1.ogg");
+    audio->stage5PowerLoopAlt = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage5_power_mire_2.ogg");
+    audio->stage7ChoiceLoop = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage7_final_choice_1.ogg");
+    audio->stage7ChoiceLoopAlt = LoadOptionalMusicAsset("resources/audio/music/stages/bgm_stage7_final_choice_2.ogg");
     audio->forestLoop = LoadOptionalMusicAsset("resources/audio/music/forest/bgm_forest_1.ogg");
     audio->forestRouteLoop = LoadOptionalMusicAsset("resources/audio/music/forest/bgm_forest_2.ogg");
     audio->swampLoop = LoadOptionalMusicAsset("resources/audio/music/swamp/bgm_swamp_1.ogg");
@@ -322,6 +379,8 @@ void Audio_Init(AudioManager *audio) {
     audio->ruinsFacilityLoop = LoadOptionalMusicAsset("resources/audio/music/ruins/bgm_ruins_2.ogg");
     audio->bossLoop = LoadOptionalMusicAsset("resources/audio/music/boss/bgm_boss_1.ogg");
     audio->bossArenaLoop = LoadOptionalMusicAsset("resources/audio/music/boss/bgm_boss_2.ogg");
+    audio->settlementLoop = LoadOptionalMusicAsset("resources/audio/music/routes/bgm_route_settlement_1.ogg");
+    audio->settlementLoopAlt = LoadOptionalMusicAsset("resources/audio/music/routes/bgm_route_settlement_2.ogg");
     audio->endingLoop = LoadOptionalMusicAsset("resources/audio/music/endings/bgm_endings_1.ogg");
     audio->endingLoopAlt = LoadOptionalMusicAsset("resources/audio/music/endings/bgm_endings_2.ogg");
     audio->masterVolume = 1.0f;
@@ -330,9 +389,14 @@ void Audio_Init(AudioManager *audio) {
     audio->sfxEnabled = true;
     audio->activeSceneVariant = 0;
     audio->pendingSceneVariant = 0;
+    audio->activeMusicVariant = 0;
+    audio->pendingMusicVariant = 0;
     audio->activeScene = AUDIO_SCENE_NONE;
     audio->requestedScene = AUDIO_SCENE_NONE;
     audio->pendingScene = AUDIO_SCENE_NONE;
+    audio->activeMusicStage = AUDIO_MUSIC_NONE;
+    audio->requestedMusicStage = AUDIO_MUSIC_NONE;
+    audio->pendingMusicStage = AUDIO_MUSIC_NONE;
     SetMasterVolume(audio->masterVolume);
 }
 
@@ -365,6 +429,14 @@ void Audio_Shutdown(AudioManager *audio) {
     UnloadOptionalMusicAsset(&audio->menuLoopAlt);
     UnloadOptionalMusicAsset(&audio->baseLoop);
     UnloadOptionalMusicAsset(&audio->baseLoopAlt);
+    UnloadOptionalMusicAsset(&audio->stage3WildLoop);
+    UnloadOptionalMusicAsset(&audio->stage3WildLoopAlt);
+    UnloadOptionalMusicAsset(&audio->stage4RiskLoop);
+    UnloadOptionalMusicAsset(&audio->stage4RiskLoopAlt);
+    UnloadOptionalMusicAsset(&audio->stage5PowerLoop);
+    UnloadOptionalMusicAsset(&audio->stage5PowerLoopAlt);
+    UnloadOptionalMusicAsset(&audio->stage7ChoiceLoop);
+    UnloadOptionalMusicAsset(&audio->stage7ChoiceLoopAlt);
     UnloadOptionalMusicAsset(&audio->forestLoop);
     UnloadOptionalMusicAsset(&audio->forestRouteLoop);
     UnloadOptionalMusicAsset(&audio->swampLoop);
@@ -373,6 +445,8 @@ void Audio_Shutdown(AudioManager *audio) {
     UnloadOptionalMusicAsset(&audio->ruinsFacilityLoop);
     UnloadOptionalMusicAsset(&audio->bossLoop);
     UnloadOptionalMusicAsset(&audio->bossArenaLoop);
+    UnloadOptionalMusicAsset(&audio->settlementLoop);
+    UnloadOptionalMusicAsset(&audio->settlementLoopAlt);
     UnloadOptionalMusicAsset(&audio->endingLoop);
     UnloadOptionalMusicAsset(&audio->endingLoopAlt);
 
@@ -391,77 +465,77 @@ void Audio_Update(AudioManager *audio) {
         return;
     }
 
-    UpdateSceneMusic(audio, audio->activeScene, &audio->activeSceneVariant, GetTargetMusicVolume(audio));
-    if (audio->pendingScene != AUDIO_SCENE_NONE && audio->pendingScene != audio->activeScene) {
-        UpdateSceneMusic(audio, audio->pendingScene, &audio->pendingSceneVariant, 0.0f);
+    UpdateMusicStage(audio, audio->activeMusicStage, &audio->activeMusicVariant, GetTargetMusicVolume(audio));
+    if (audio->pendingMusicStage != AUDIO_MUSIC_NONE && audio->pendingMusicStage != audio->activeMusicStage) {
+        UpdateMusicStage(audio, audio->pendingMusicStage, &audio->pendingMusicVariant, 0.0f);
     }
-    activeMusic = GetSceneMusic(audio, audio->activeScene, audio->activeSceneVariant);
+    activeMusic = GetMusicStageTrack(audio, audio->activeMusicStage, audio->activeMusicVariant);
 
     if (!audio->sceneTransitionActive) {
-        if (audio->requestedScene == audio->activeScene) {
+        if (audio->requestedMusicStage == audio->activeMusicStage) {
             return;
         }
 
-        if (audio->activeScene == AUDIO_SCENE_NONE || activeMusic == NULL || !activeMusic->loaded) {
+        if (audio->activeMusicStage == AUDIO_MUSIC_NONE || activeMusic == NULL || !activeMusic->loaded) {
             StopAllMusic(audio);
-            audio->activeScene = audio->requestedScene;
-            audio->pendingScene = AUDIO_SCENE_NONE;
+            audio->activeMusicStage = audio->requestedMusicStage;
+            audio->pendingMusicStage = AUDIO_MUSIC_NONE;
             audio->activeSceneStopped = false;
-            audio->activeSceneVariant = GetDefaultSceneVariant(audio->activeScene);
-            audio->pendingSceneVariant = 0;
+            audio->activeMusicVariant = GetDefaultMusicStageVariant(audio->activeMusicStage);
+            audio->pendingMusicVariant = 0;
             audio->sceneTransitionTimer = 0.0f;
-            if (audio->activeScene != AUDIO_SCENE_NONE) {
-                PlaySceneMusic(audio, audio->activeScene, audio->activeSceneVariant, GetTargetMusicVolume(audio));
+            if (audio->activeMusicStage != AUDIO_MUSIC_NONE) {
+                PlayMusicStage(audio, audio->activeMusicStage, audio->activeMusicVariant, GetTargetMusicVolume(audio));
             }
             return;
         }
 
         audio->sceneTransitionActive = true;
         audio->activeSceneStopped = false;
-        audio->pendingScene = AUDIO_SCENE_NONE;
+        audio->pendingMusicStage = AUDIO_MUSIC_NONE;
         audio->sceneTransitionTimer = 0.0f;
     }
 
-    if (audio->requestedScene == audio->activeScene && !audio->activeSceneStopped) {
+    if (audio->requestedMusicStage == audio->activeMusicStage && !audio->activeSceneStopped) {
         audio->sceneTransitionActive = false;
-        audio->pendingScene = AUDIO_SCENE_NONE;
-        audio->pendingSceneVariant = 0;
+        audio->pendingMusicStage = AUDIO_MUSIC_NONE;
+        audio->pendingMusicVariant = 0;
         audio->sceneTransitionTimer = 0.0f;
-        SetSceneMusicVolume(audio, audio->activeScene, audio->activeSceneVariant, GetTargetMusicVolume(audio));
+        SetMusicStageVolume(audio, audio->activeMusicStage, audio->activeMusicVariant, GetTargetMusicVolume(audio));
         return;
     }
 
     audio->sceneTransitionTimer += deltaTime;
 
     if (!audio->activeSceneStopped) {
-        SetSceneMusicVolume(audio,
-                            audio->activeScene,
-                            audio->activeSceneVariant,
+        SetMusicStageVolume(audio,
+                            audio->activeMusicStage,
+                            audio->activeMusicVariant,
                             GetTargetMusicVolume(audio) * (1.0f - Clamp01(audio->sceneTransitionTimer / kSceneFadeDuration)));
         if (audio->sceneTransitionTimer >= kSceneFadeDuration) {
-            StopSceneMusic(audio, audio->activeScene);
+            StopMusicStage(audio, audio->activeMusicStage);
             audio->activeSceneStopped = true;
         }
     }
 
     if (audio->activeSceneStopped) {
-        if (audio->pendingScene != audio->requestedScene) {
-            if (audio->pendingScene != AUDIO_SCENE_NONE) {
-                StopSceneMusic(audio, audio->pendingScene);
+        if (audio->pendingMusicStage != audio->requestedMusicStage) {
+            if (audio->pendingMusicStage != AUDIO_MUSIC_NONE) {
+                StopMusicStage(audio, audio->pendingMusicStage);
             }
-            audio->pendingScene = AUDIO_SCENE_NONE;
-            audio->pendingSceneVariant = 0;
-            if (audio->requestedScene != AUDIO_SCENE_NONE) {
-                audio->pendingSceneVariant = GetDefaultSceneVariant(audio->requestedScene);
-                PlaySceneMusic(audio, audio->requestedScene, audio->pendingSceneVariant, 0.0f);
-                audio->pendingScene = audio->requestedScene;
+            audio->pendingMusicStage = AUDIO_MUSIC_NONE;
+            audio->pendingMusicVariant = 0;
+            if (audio->requestedMusicStage != AUDIO_MUSIC_NONE) {
+                audio->pendingMusicVariant = GetDefaultMusicStageVariant(audio->requestedMusicStage);
+                PlayMusicStage(audio, audio->requestedMusicStage, audio->pendingMusicVariant, 0.0f);
+                audio->pendingMusicStage = audio->requestedMusicStage;
             }
         }
 
-        if (audio->pendingScene != AUDIO_SCENE_NONE) {
-            SetSceneMusicVolume(audio,
-                                audio->pendingScene,
-                                audio->pendingSceneVariant,
+        if (audio->pendingMusicStage != AUDIO_MUSIC_NONE) {
+            SetMusicStageVolume(audio,
+                                audio->pendingMusicStage,
+                                audio->pendingMusicVariant,
                                 GetTargetMusicVolume(audio)
                                     * Clamp01((audio->sceneTransitionTimer - kSceneFadeDuration) / kSceneFadeDuration));
         }
@@ -471,13 +545,13 @@ void Audio_Update(AudioManager *audio) {
         audio->sceneTransitionActive = false;
         audio->activeSceneStopped = false;
         audio->sceneTransitionTimer = 0.0f;
-        audio->activeScene = audio->requestedScene;
-        audio->activeSceneVariant = audio->pendingSceneVariant;
-        if (audio->activeScene != AUDIO_SCENE_NONE) {
-            SetSceneMusicVolume(audio, audio->activeScene, audio->activeSceneVariant, GetTargetMusicVolume(audio));
+        audio->activeMusicStage = audio->requestedMusicStage;
+        audio->activeMusicVariant = audio->pendingMusicVariant;
+        if (audio->activeMusicStage != AUDIO_MUSIC_NONE) {
+            SetMusicStageVolume(audio, audio->activeMusicStage, audio->activeMusicVariant, GetTargetMusicVolume(audio));
         }
-        audio->pendingScene = AUDIO_SCENE_NONE;
-        audio->pendingSceneVariant = 0;
+        audio->pendingMusicStage = AUDIO_MUSIC_NONE;
+        audio->pendingMusicVariant = 0;
     }
 }
 
@@ -510,11 +584,11 @@ void Audio_SetMusicVolumeSetting(AudioManager *audio, float volume) {
     }
 
     audio->musicVolume = Clamp01(volume);
-    if (audio->activeScene != AUDIO_SCENE_NONE) {
-        SetSceneMusicVolume(audio, audio->activeScene, audio->activeSceneVariant, GetTargetMusicVolume(audio));
+    if (audio->activeMusicStage != AUDIO_MUSIC_NONE) {
+        SetMusicStageVolume(audio, audio->activeMusicStage, audio->activeMusicVariant, GetTargetMusicVolume(audio));
     }
-    if (audio->pendingScene != AUDIO_SCENE_NONE) {
-        SetSceneMusicVolume(audio, audio->pendingScene, audio->pendingSceneVariant, GetTargetMusicVolume(audio));
+    if (audio->pendingMusicStage != AUDIO_MUSIC_NONE) {
+        SetMusicStageVolume(audio, audio->pendingMusicStage, audio->pendingMusicVariant, GetTargetMusicVolume(audio));
     }
 }
 
@@ -530,11 +604,20 @@ void Audio_SetSfxEnabled(AudioManager *audio, bool enabled) {
     audio->sfxEnabled = enabled;
 }
 
+void Audio_SetMusicStage(AudioManager *audio, AudioMusicStage stage) {
+    if (!audio->ready) {
+        return;
+    }
+
+    audio->requestedMusicStage = stage;
+}
+
 void Audio_SetScene(AudioManager *audio, AudioScene scene) {
     if (!audio->ready) {
         return;
     }
 
+    Audio_SetMusicStage(audio, MapSceneToMusicStage(scene));
     audio->requestedScene = scene;
 }
 

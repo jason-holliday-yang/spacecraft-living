@@ -83,10 +83,15 @@ SAVE_CXX_SOURCES := \
 	src/persistence_platform.cpp
 
 SESSION_CXX_SOURCES := \
+	src/game_audio_scene.cpp \
+	src/game_messages.cpp \
+	src/game_route_runtime.cpp \
 	src/game_runtime.cpp \
 	src/game_save_flow.cpp \
 	src/game_save_runtime.cpp \
-	src/game_session.cpp
+	src/game_session.cpp \
+	src/game_state_sanitize.cpp \
+	src/game_transition.cpp
 
 OVERLAY_CXX_SOURCES := \
 	src/game_overlay.cpp \

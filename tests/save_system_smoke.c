@@ -91,7 +91,6 @@ static SaveSnapshot BuildSnapshot(void) {
     snapshot.maxStaminaBonus = 16.0f;
     snapshot.attackBonus = 5.0f;
     snapshot.deathCount = 2;
-    snapshot.crouching = true;
     snapshot.hasGlowStick = true;
     snapshot.hasRope = true;
     snapshot.hasLaserGun = true;
@@ -174,7 +173,7 @@ static void WriteLegacySettingsV2(float masterVolume, bool sfxEnabled) {
         (recordPtr)->maxStaminaBonus = snapshotLocal->maxStaminaBonus; \
         (recordPtr)->attackBonus = snapshotLocal->attackBonus; \
         (recordPtr)->deathCount = snapshotLocal->deathCount; \
-        (recordPtr)->crouching = snapshotLocal->crouching ? 1u : 0u; \
+        (recordPtr)->crouching = 0u; \
         (recordPtr)->hasGlowStick = snapshotLocal->hasGlowStick ? 1u : 0u; \
         (recordPtr)->hasRope = snapshotLocal->hasRope ? 1u : 0u; \
         (recordPtr)->hasLaserGun = snapshotLocal->hasLaserGun ? 1u : 0u; \
@@ -267,7 +266,7 @@ static void WriteLegacySaveV5(int slotIndex, const SaveSnapshot *snapshot) {
     WriteFloatToBuffer(buffer, sizeof(buffer), &offset, snapshot->maxStaminaBonus);
     WriteFloatToBuffer(buffer, sizeof(buffer), &offset, snapshot->attackBonus);
     WriteInt32ToBuffer(buffer, sizeof(buffer), &offset, snapshot->deathCount);
-    WriteUInt8ToBuffer(buffer, sizeof(buffer), &offset, snapshot->crouching ? 1u : 0u);
+    WriteUInt8ToBuffer(buffer, sizeof(buffer), &offset, 0u);
     WriteUInt8ToBuffer(buffer, sizeof(buffer), &offset, snapshot->hasGlowStick ? 1u : 0u);
     WriteUInt8ToBuffer(buffer, sizeof(buffer), &offset, snapshot->hasRope ? 1u : 0u);
     WriteUInt8ToBuffer(buffer, sizeof(buffer), &offset, snapshot->hasLaserGun ? 1u : 0u);

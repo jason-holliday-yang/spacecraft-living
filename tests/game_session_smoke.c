@@ -1,6 +1,7 @@
 #include "game_manager.h"
 #include "../src/game_manager_internal.h"
 #include "../src/game_play_internal.h"
+#include "../src/game_session_internal.h"
 #include "../src/task_runtime_internal.h"
 
 #include <stdbool.h>
@@ -75,6 +76,10 @@ int main(void) {
     memset(&game, 0, sizeof(game));
     Game_StartNewGame(&game);
     Require(game.state == GAME_STATE_OPENING, "start new game should enter the opening cutscene state");
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_MENU,
+            "opening state should always resolve to the menu audio scene");
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_1_WAKE,
+            "opening cutscene should switch to Stage 1 wake music immediately after starting a new game");
     Require(game.hudMessage.text[0] == '\0', "opening cutscene should not post the gameplay hint early");
     Require(game.tasks.ending == ENDING_NONE, "start new game should begin without an ending state");
     Require(game.tasks.objective[0] != '\0', "start new game should initialize the opening objective text");
@@ -86,79 +91,183 @@ int main(void) {
             "start new game should center the camera on the player");
     Require(!Map_IsLoxiRoomUnlocked(&game.map),
             "new game should keep the player sealed in the Loxi room until the first interaction");
-    Require(!game.pauseMenuOpen && !game.settingsOpen && !game.backpackOpen && !game.craftOpen
-                && !game.mapOpen && !game.communicatorOpen && !game.helpOpen && !game.logReaderOpen
+    Require(!game.pauseMenuOpen && !game.settingsOpen && !game.infoOverlayOpen && !game.craftOpen
+                && !game.helpOpen && !game.logReaderOpen
                 && !game.savePanelOpen && !game.showDeathPopup,
             "start new game should clear all overlays and popups");
+    {
+        Game historyGame;
+        int index;
+
+        memset(&historyGame, 0, sizeof(historyGame));
+        Game_ResetGameplayWorld(&historyGame);
+        historyGame.state = GAME_STATE_PLAYING;
+        for (index = 0; index < GAME_MESSAGE_HISTORY_LIMIT + 3; index++) {
+            Game_PostMessage(&historyGame, "history smoke message", 1.0f);
+        }
+        Require(historyGame.messageHistory.count == GAME_MESSAGE_HISTORY_LIMIT,
+                "message history linked list should retain only the recent bounded entries");
+        Require(historyGame.messageHistory.head != NULL
+                    && historyGame.messageHistory.tail != NULL
+                    && historyGame.messageHistory.tail->next == NULL,
+                "message history linked list should maintain valid head and tail links");
+        Require(strstr(historyGame.messageHistory.tail->text, "history smoke message") != NULL,
+                "message history linked list should preserve posted message text");
+        Game_ClearMessageHistory(&historyGame);
+        Require(historyGame.messageHistory.head == NULL
+                    && historyGame.messageHistory.tail == NULL
+                    && historyGame.messageHistory.count == 0,
+                "message history linked list should clear all allocated nodes");
+    }
 
     Game_CompleteOpeningCutscene(&game);
     Require(game.state == GAME_STATE_PLAYING, "completing the opening cutscene should enter playing state");
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BASE,
+            "fresh gameplay inside the ship should resolve to the base audio scene");
     Require(strstr(game.hudMessage.text, "Sync the uplink") != NULL
                 || strstr(game.hudMessage.text, "Wake in Loxi's cabin") != NULL
                 || strstr(game.hudMessage.text, "完成同步") != NULL,
             "entering gameplay should post the opening objective hint");
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BASE,
-            "ship cabin opening should use base music");
+    Require(game.messageHistory.count == 1
+                && game.messageHistory.head == game.messageHistory.tail
+                && (strstr(game.messageHistory.head->text, "Sync the uplink") != NULL
+                    || strstr(game.messageHistory.head->text, "Wake in Loxi's cabin") != NULL
+                    || strstr(game.messageHistory.head->text, "完成同步") != NULL),
+            "entering gameplay should append the opening hint to the message history linked list");
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_1_WAKE,
+            "ship cabin opening should use the Stage 1 wake music");
 
+    game.tasks.stage = 3;
     game.player.gridX = EXTERIOR_X(70);
     game.player.gridY = EXTERIOR_Y(74);
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST,
-            "general crash forest should keep the standard forest music");
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_3_WILD,
+            "stage 3 should use the wild-phase music in general crash forest");
 
     game.player.gridX = EXTERIOR_X(24);
     game.player.gridY = EXTERIOR_Y(72);
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST_ROUTE,
-            "west-route investigation shelves should use the alternate forest music");
-    if (game.audio.ready) {
-        Audio_SetScene(&game.audio, AUDIO_SCENE_FOREST_ROUTE);
-        Audio_Update(&game.audio);
-        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
-                "forest-route audio should start from the route-specific forest track instead of the generic forest loop");
-    }
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_3_WILD,
+            "stage 3 should keep the same BGM across west-route shelves instead of switching by location");
 
-    game.player.gridX = EXTERIOR_X(111);
-    game.player.gridY = EXTERIOR_Y(48);
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_SWAMP_DEEP,
-            "deep swamp objectives should use the deeper swamp music variant");
-    if (game.audio.ready) {
-        Audio_SetScene(&game.audio, AUDIO_SCENE_SWAMP_DEEP);
-        Audio_Update(&game.audio);
-        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
-                "deep-swamp audio should start from the deep-swamp track instead of the shallow-swamp loop");
-    }
-
+    game.tasks.stage = 4;
     game.player.gridX = EXTERIOR_X(80);
     game.player.gridY = EXTERIOR_Y(98);
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_FOREST_ROUTE,
-            "south-collapse entry shelf should keep the forest-route music while the terrain still reads as forest");
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_4_RISK,
+            "stage 4 should promote the route pressure music instead of depending on forest-route location tags");
 
+    game.tasks.stage = 5;
+    game.player.gridX = EXTERIOR_X(111);
+    game.player.gridY = EXTERIOR_Y(48);
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_5_POWER,
+            "stage 5 should use the power-breakthrough music even in deep swamp objectives");
+
+    game.tasks.stage = 6;
     game.player.gridX = EXTERIOR_X(92);
     game.player.gridY = EXTERIOR_Y(98);
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_6_RELICS,
+            "stage 6 should use the relic-preparation music across the southern facility route");
     Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_RUINS_FACILITY,
-            "southern facility route should no longer fall back to forest music");
+            "southern facility locations should use the dedicated ruins-facility audio scene");
+
+    game.tasks.stage = 7;
+    game.tasks.selectedEndingRoute = ENDING_NONE;
+    game.tasks.bossDefeated = false;
+    game.player.gridX = SIGNAL_TOWER_X;
+    game.player.gridY = SIGNAL_TOWER_Y + 4;
+    Require(strcmp(Map_GetLocationNameAt(game.player.gridX, game.player.gridY), "Signal Tower Plateau") == 0,
+            "tower smoke coordinate should still land on Signal Tower Plateau");
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_7_CHOICE,
+            "late tower plateau should keep stage-7 music until the player enters the actual boss arena or locks a route");
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_RUINS,
+            "tower plateau should stay on the normal ruins scene until the player enters the actual boss arena");
+
+    game.player.gridX = EXTERIOR_X(48);
+    game.player.gridY = EXTERIOR_Y(12);
+    Require(strcmp(Map_GetLocationNameAt(game.player.gridX, game.player.gridY), "Monolith Ring") == 0,
+            "upper ruins smoke coordinate should still land in Monolith Ring");
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_RUINS,
+            "Monolith Ring should stay on the standard ruins scene even near the tower-height band");
+
+    game.player.gridX = BOSS_ARENA_BOSS_X;
+    game.player.gridY = BOSS_ARENA_BOSS_Y;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_BOSS,
+            "boss arena should continue to force boss music regardless of the surrounding stage");
+    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BOSS_ARENA,
+            "only the actual boss arena should resolve to the boss-arena audio scene");
+
+    game.player.gridX = EXTERIOR_X(70);
+    game.player.gridY = EXTERIOR_Y(74);
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_7_CHOICE,
+            "stage 7 without a locked route should use the final-choice music away from boss spaces");
+
+    game.tasks.selectedEndingRoute = ENDING_HEROIC;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_7_CHOICE,
+            "heroic route selection should not override stage-7 music away from the real tower plateau");
+
+    game.player.gridX = SIGNAL_TOWER_X;
+    game.player.gridY = SIGNAL_TOWER_Y + 4;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_ROUTE_HERO,
+            "heroic route selection should override the generic stage-7 music on the real tower plateau");
+
+    game.tasks.selectedEndingRoute = ENDING_PEACEFUL;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_ROUTE_PEACEFUL,
+            "peaceful route selection should switch to the peaceful-route music stage on the real tower plateau");
+
+    game.tasks.selectedEndingRoute = ENDING_SETTLEMENT;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_STAGE_7_CHOICE,
+            "settlement route selection should not override stage-7 music away from the base");
+
+    game.player.gridX = SHIP_CORRIDOR_X + 1;
+    game.player.gridY = SHIP_CORRIDOR_Y + 1;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_ROUTE_SETTLEMENT,
+            "settlement route selection should switch to the settlement-route music stage inside the base");
+
+    game.tasks.ending = ENDING_SETTLEMENT;
+    Require(Game_SelectMusicStage(&game) == AUDIO_MUSIC_ENDING,
+            "completed endings should override route and stage music with ending music");
+    game.tasks.ending = ENDING_NONE;
+
     if (game.audio.ready) {
-        Audio_SetScene(&game.audio, AUDIO_SCENE_RUINS_FACILITY);
+        Audio_SetMusicStage(&game.audio, AUDIO_MUSIC_STAGE_4_RISK);
         Audio_Update(&game.audio);
-        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
-                "southern facility audio should start from the facility track instead of the surface ruins loop");
+        Require(game.audio.activeMusicStage == AUDIO_MUSIC_STAGE_4_RISK,
+                "audio manager should immediately activate the requested stage music when no prior track is playing");
+        Require(game.audio.activeMusicVariant == 0,
+                "stage-driven music should start from the primary variant before any end-of-track rotation");
+
+        Audio_SetMusicStage(&game.audio, AUDIO_MUSIC_ROUTE_SETTLEMENT);
+        Audio_Update(&game.audio);
+        Require(game.audio.requestedMusicStage == AUDIO_MUSIC_ROUTE_SETTLEMENT,
+                "route music requests should be stored on the dedicated music-stage channel");
     }
 
+    game.tasks.selectedEndingRoute = ENDING_NONE;
     game.tasks.stage = 7;
     game.tasks.bossDefeated = false;
     game.player.gridX = SIGNAL_TOWER_X;
     game.player.gridY = SIGNAL_TOWER_Y + 4;
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BOSS,
-            "late tower plateau should use the pre-boss tension track");
+    Player_UpdateWorldPosition(&game.player);
 
-    game.player.gridX = BOSS_ARENA_BOSS_X;
-    game.player.gridY = BOSS_ARENA_BOSS_Y;
-    Require(Game_SelectAudioScene(&game) == AUDIO_SCENE_BOSS_ARENA,
-            "Northwest Ruins guardian fight should use the dedicated boss music variant");
-    if (game.audio.ready) {
-        Audio_SetScene(&game.audio, AUDIO_SCENE_BOSS_ARENA);
-        Audio_Update(&game.audio);
-        Require(game.audio.pendingSceneVariant == 1 || game.audio.activeSceneVariant == 1,
-                "guardian-fight audio should start from the boss track instead of the tower pre-boss loop");
+    {
+        SaveSnapshot snapshot;
+        Game loadedGame;
+        int bossIndex;
+
+        bossIndex = -1;
+        for (int index = 0; index < game.tasks.monsterCount; index++) {
+            if (game.tasks.monsters[index].type == MONSTER_FINAL_BOSS) {
+                bossIndex = index;
+                break;
+            }
+        }
+        Require(bossIndex >= 0, "session smoke should find the final boss for legacy health migration");
+        Game_BuildSaveSnapshot(&game, &snapshot);
+        snapshot.monsters[bossIndex].active = true;
+        snapshot.monsters[bossIndex].health = 220.0f;
+        memset(&loadedGame, 0, sizeof(loadedGame));
+        Require(Game_LoadSnapshotIntoSession(&loadedGame, &snapshot),
+                "loading a legacy full-health boss snapshot should succeed");
+        Require(loadedGame.tasks.monsters[bossIndex].health == loadedGame.tasks.monsters[bossIndex].maxHealth,
+                "legacy full-health boss saves should migrate to the current full health instead of showing a half bar");
     }
 
     {
@@ -390,15 +499,15 @@ int main(void) {
     Require(strstr(game.hudMessage.text, "Saved progress loaded.") != NULL, "load flow should publish success feedback");
 
     game.pauseMenuOpen = true;
-    game.backpackOpen = true;
-    game.communicatorOpen = true;
+    game.infoOverlayOpen = true;
+    game.infoOverlayTab = INFO_OVERLAY_TAB_LOXI;
     game.showDeathPopup = true;
     game.settings.masterVolume = 0.42f;
     game.settings.sfxEnabled = false;
     game.settingsDirty = true;
     Game_ReturnToMenu(&game);
     Require(game.state == GAME_STATE_INTRO, "return to menu should switch back to intro state");
-    Require(!game.pauseMenuOpen && !game.backpackOpen && !game.communicatorOpen, "return to menu should close active overlays");
+    Require(!game.pauseMenuOpen && !game.infoOverlayOpen, "return to menu should close active overlays");
     Require(!game.showDeathPopup, "return to menu should clear the death popup");
     Require(!game.settingsDirty, "return to menu should save pending settings when possible");
     Require(SaveSystem_LoadSettings(&loadedSettings), "return to menu should persist settings");
@@ -430,7 +539,6 @@ int main(void) {
     game.player.gridY = PLAYER_START_Y - 8;
     game.player.health = 28.0f;
     game.player.oxygen = 0.0f;
-    game.player.pressure = 64.0f;
     game.player.poison = 50.0f;
     Player_UpdateWorldPosition(&game.player);
 
@@ -451,9 +559,7 @@ int main(void) {
     Require(game.player.gridX == PLAYER_RESPAWN_X && game.player.gridY == PLAYER_RESPAWN_Y,
             "restart after death should place the player back in Loxi's room");
     Require(game.player.health == INITIAL_HEALTH, "restart after death should reset player health");
-    Require(game.player.stamina == INITIAL_STAMINA, "restart after death should reset player stamina");
     Require(game.player.oxygen == INITIAL_OXYGEN, "restart after death should reset player oxygen");
-    Require(game.player.pressure == INITIAL_PRESSURE, "restart after death should reset pressure");
     Require(game.player.poison == 0.0f, "restart after death should clear poison");
     Require(game.camera.zoom > 0.0f
                 && game.camera.target.x == game.player.worldPos.x
@@ -467,7 +573,6 @@ int main(void) {
     game.tasks.stage = 4;
     game.player.gridX = PLAYER_START_X + 9;
     game.player.gridY = PLAYER_START_Y + 3;
-    game.player.pressure = 45.0f;
     game.player.oxygen = 0.0f;
     Player_UpdateWorldPosition(&game.player);
 

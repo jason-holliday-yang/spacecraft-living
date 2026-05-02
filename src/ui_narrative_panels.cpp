@@ -55,36 +55,36 @@ static const IntroSlideDef kIntroSlideDefs[INTRO_CUTSCENE_SLIDE_COUNT] = {
 };
 
 static const IntroSlideDef kStoryMainDefs[STORY_MAIN_SCENE_COUNT] = {
-    {LT("Main Story 01", "主线剧情 01"), LT("Air For One More Day", "再撑一天的空气"), LT("The wreck is still leaking smoke and your lungs still burn. This first repair is not salvation, only enough air to keep tonight from becoming the end.", "残骸还在冒烟，你的肺也还在发烫。这次修复不是得救，只是先争到今晚不至于死去的一口气。"), Color{124, 225, 255, 255}, Color{10, 34, 54, 255}, Color{4, 10, 18, 255}},
-    {LT("Main Story 02", "主线剧情 02"), LT("Oxygen Cycle Restored", "第一轮氧气恢复"), LT("The lower decks finally breathe in rhythm again. Survival stops feeling like a countdown and starts becoming something you might be able to plan.", "下层甲板终于重新恢复呼吸节律。生存不再只是倒计时，而开始像一件还能筹划的事。"), Color{166, 255, 226, 255}, Color{14, 38, 58, 255}, Color{5, 10, 19, 255}},
-    {LT("Main Story 03", "主线剧情 03"), LT("Loxi Full Sync", "洛希完整上线"), LT("The upper terminal stabilizes and Loxi returns as more than a warning routine. In the dead ship, one calm intelligence is finally speaking with you again.", "上层终端稳定下来，洛希不再只是告警残片。在这艘死船里，终于又有一个冷静的意识在与你并肩说话。"), Color{123, 225, 255, 255}, Color{16, 34, 62, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 04", "主线剧情 04"), LT("Airlock Opening", "气闸开启"), LT("The blast door yields with a long shudder. Beyond it is breathable air, thin fog, and a world that feels less discovered than waiting.", "防爆门在漫长的震颤中打开。门外有可呼吸的空气、稀薄的雾，以及一颗像在等你走出来的星球。"), Color{255, 214, 154, 255}, Color{34, 34, 46, 255}, Color{8, 10, 16, 255}},
-    {LT("Main Story 05", "主线剧情 05"), LT("Signal Answers Back", "信号回应了"), LT("The repaired relay does not recover a plea for help. It recovers something older, calmer, and far less willing to accept refusal.", "修好的中继带回来的不是求救，而是某种更古老、更冷静、也更不打算接受拒绝的回应。"), Color{110, 233, 255, 255}, Color{14, 36, 56, 255}, Color{5, 10, 18, 255}},
-    {LT("Main Story 06", "主线剧情 06"), LT("Crash Not Accident", "坠毁并非意外"), LT("Burn scars and drag marks refuse the official cockpit story. The ship was not merely lost in weather; it was pulled into a system already in motion.", "灼痕与拖拽轨迹否定了驾驶舱里的官方说法。飞船并不是单纯栽进风暴，而是被卷进一套早已运转中的系统。"), Color{255, 186, 145, 255}, Color{56, 24, 24, 255}, Color{18, 8, 12, 255}},
-    {LT("Main Story 07", "主线剧情 07"), LT("Deep Scan Online", "深层扫描上线"), LT("Power returns and the ship wakes farther than before. For the first time, scattered anomalies begin to look like one connected map.", "动力回来了，飞船的感知范围也跟着苏醒。那些零散异常第一次开始显出同一张版图。"), Color{166, 255, 226, 255}, Color{18, 40, 62, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 08", "主线剧情 08"), LT("Relic Pattern Decode", "遗物模式解码"), LT("The fragment set yields part of the signal grammar. The tower is not only something to force open; it is also something that might be understood.", "整套碎片终于吐露出信号语法的一部分。塔楼不只是能被强行打开的目标，它也可能被真正理解。"), Color{174, 226, 255, 255}, Color{22, 36, 66, 255}, Color{6, 10, 20, 255}},
-    {LT("Main Story 09", "主线剧情 09"), LT("East Wreck Confirmation", "东线残骸回证"), LT("The eastern residue locks the crash into the same regional lattice traced elsewhere. Accident, fog, and signal stop reading like separate mysteries.", "东线残留把坠毁与那张区域格网彻底锁到了一起。事故、毒雾与信号，不再像彼此无关的谜题。"), Color{166, 214, 255, 255}, Color{18, 34, 58, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 10", "主线剧情 10"), LT("Basin Access Qualification", "深潭资格确认"), LT("Recovering the energy core does not feel like a prize. It feels like permission to go deeper into a system that has finally decided you qualify to proceed.", "找回能源核心的感觉不像领奖，更像是被允许继续深入。那套系统终于承认你有资格往前走了。"), Color{190, 234, 255, 255}, Color{18, 34, 60, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 11", "主线剧情 11"), LT("West Route Confirmed", "西线正式确认"), LT("The western signal is no longer rumor or background noise. Someone from your own ship went this way and tried to leave a path for whoever came after.", "西线信号不再只是传闻或底噪。你们船上的确有人走过这里，并试图给后来者留下路。"), Color{161, 236, 255, 255}, Color{18, 42, 58, 255}, Color{6, 12, 20, 255}},
-    {LT("Main Story 12", "主线剧情 12"), LT("Survey Break Relay", "勘测断崖接力"), LT("Anchor lines and reverse markers make the truth plain: they were not fleeing. They were building a relay chain for the next person to keep going.", "锚点与反向标记把真相说得很清楚：他们不是在溃逃，而是在给下一个人搭好继续前进的接力线。"), Color{255, 214, 154, 255}, Color{40, 30, 22, 255}, Color{10, 8, 14, 255}},
-    {LT("Main Story 13", "主线剧情 13"), LT("Canopy Handoff", "林冠交接"), LT("The hidden canopy post still feels organized, not abandoned. Someone held the line here long enough to hand responsibility to whoever survived next.", "这处林冠观察点仍然保留着秩序，而不是纯粹的荒废。有人曾在这里守得足够久，把责任交给下一个活下来的人。"), Color{166, 255, 226, 255}, Color{16, 44, 40, 255}, Color{6, 12, 18, 255}},
-    {LT("Main Story 14", "主线剧情 14"), LT("Echo Basin Reconstruction", "回声盆地重建"), LT("Broken pings finally resolve into a route map. What once looked like disappearance now reads like a successful handoff toward the south.", "破碎脉冲终于被重建成路线图。曾经像“失踪”的空白，如今更像一次把关键东西成功转向南侧的交接。"), Color{166, 235, 255, 255}, Color{18, 38, 58, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 15", "主线剧情 15"), LT("Last Camp Positions", "最后营地三立场"), LT("The last camp keeps three futures side by side: leave, repair, or stay. Your eventual ending stops feeling invented and starts feeling inherited.", "最后营地把离开、修复与留下三种未来并排放着。你的终局不再像临时起意，而更像继承了他们的判断。"), Color{255, 216, 174, 255}, Color{40, 28, 22, 255}, Color{12, 8, 14, 255}},
-    {LT("Main Story 16", "主线剧情 16"), LT("South Facility Wakes", "南侧设施苏醒"), LT("The southern route reveals itself as machinery, not geology. Damaged, dangerous, and still repairable, it changes the way this whole world reads.", "南线终于显露出它是设施，而不是地貌。它残破、危险，却仍可被接手，也因此改写了整颗星球的读法。"), Color{182, 240, 214, 255}, Color{18, 44, 42, 255}, Color{6, 12, 18, 255}},
-    {LT("Main Story 17", "主线剧情 17"), LT("Vent Network Calibrated", "通风网络校准"), LT("As the vent chain comes back online, the world answers in kind. The fog pressure eases just enough to prove the environment can still be changed.", "通风链路重新上线后，环境也开始作出回应。毒雾压力第一次真实回落，证明这颗星球仍会被修复所影响。"), Color{166, 255, 226, 255}, Color{18, 42, 42, 255}, Color{6, 12, 18, 255}},
-    {LT("Main Story 18", "主线剧情 18"), LT("Service Shaft Backbone", "维护井主干连通"), LT("The service shaft lights up like exposed anatomy. Separate regions stop feeling separate once the same backbone is visible beneath them all.", "维护井像被剥开的机体骨架一样亮了起来。当地底那条共同主干显形后，各个区域也不再像彼此孤立。"), Color{204, 222, 255, 255}, Color{22, 34, 62, 255}, Color{8, 10, 20, 255}},
-    {LT("Main Story 19", "主线剧情 19"), LT("Purifier Ring Sequence", "净化环恢复次序"), LT("The ring does not wake all at once; it wakes correctly. Filtration, sealing, and oxygen return in sequence, proving method matters as much as power.", "净化环并不是一下子亮起，而是按正确次序醒来。净化、密封与供氧依次回归，也证明方法和力量同样重要。"), Color{182, 240, 214, 255}, Color{18, 44, 42, 255}, Color{6, 12, 18, 255}},
-    {LT("Main Story 20", "主线剧情 20"), LT("Root Vault Truth", "根脉核心真相"), LT("Deep in the vault, the tower, monoliths, purifier ring, fog, and crash all collapse into one maintenance lattice. The world stops being chaotic and starts being legible.", "在根脉密库深处，塔楼、石碑、净化环、毒雾与坠毁终于被讲成同一张维护格网。世界不再只是混乱，而开始变得可读。"), Color{204, 222, 255, 255}, Color{20, 32, 62, 255}, Color{8, 10, 20, 255}},
-    {LT("Main Story 21", "主线剧情 21"), LT("West South Correlation", "西南证据对齐"), LT("West handoff notes and south maintenance records finally share one timeline. The story stops scattering and starts closing into history.", "西线交接记录与南线维护文书终于进入同一条时间线。故事不再四散，而开始真正闭合成历史。"), Color{166, 235, 255, 255}, Color{18, 38, 58, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 22", "主线剧情 22"), LT("Loxi Conclusion Rewrite", "洛希结论重写"), LT("Loxi revises its own earlier reading and becomes more trustworthy for it. The world is no longer a pile of unrelated threats, but one burden explained clearly.", "洛希主动修正了自己先前的判断，也因此变得更值得信任。这个世界不再是一堆彼此无关的威胁，而是一份被逐渐讲清楚的重担。"), Color{174, 226, 255, 255}, Color{18, 34, 64, 255}, Color{6, 10, 20, 255}},
-    {LT("Main Story 23", "主线剧情 23"), LT("Monolith True Role", "石碑真正职责"), LT("The monoliths were never the source of the danger. They were dampers, tired guardians buying time for a broken system that was still trying to hold together.", "石碑从来不是危险源头。它们是阻尼器，是一群疲惫的守卫，在替一套仍想维持运转的破损系统继续拖时间。"), Color{174, 226, 255, 255}, Color{18, 34, 64, 255}, Color{6, 10, 20, 255}},
-    {LT("Main Story 24", "主线剧情 24"), LT("North Route Commitment", "北线路线承诺"), LT("The path toward the tower narrows the story into responsibility. You are no longer only investigating what happened here, but approaching what must be decided here.", "通往高塔的道路让整个故事开始收束为责任。你不再只是调查发生过什么，而是在走向必须由你决定的地方。"), Color{255, 214, 154, 255}, Color{42, 26, 20, 255}, Color{10, 8, 12, 255}},
-    {LT("Main Story 25", "主线剧情 25"), LT("Tower Not Button", "塔楼不是按钮"), LT("The terminal does not present a simple switch. It presents a declaration point, a place where every ending must first be acknowledged as a consequence.", "塔前终端并不是一个普通开关。它更像一个提交窗口，要求你先承认每种终局都意味着后果。"), Color{255, 214, 154, 255}, Color{42, 26, 20, 255}, Color{10, 8, 12, 255}},
-    {LT("Main Story 26", "主线剧情 26"), LT("Three Costs Revealed", "三种代价浮出"), LT("Rescue, peaceful stabilization, and settlement stop reading like menu choices. Each one now carries a different answer to the same truth and a different cost to live with.", "求援、和平接入与留下定居，不再像菜单选项。它们都成了对同一真相的不同回答，也都带着必须承担的代价。"), Color{255, 216, 174, 255}, Color{40, 28, 22, 255}, Color{12, 8, 14, 255}},
-    {LT("Main Story 27", "主线剧情 27"), LT("Action Declaration", "行动宣言"), LT("The choice leaves the realm of private thought and enters the record. What happens next will not be an accident, but your name placed beside a decision.", "选择离开了内心独白，正式进入记录。从这一刻起，接下来发生的一切都不再是偶然，而是你的名字与决定写在了一起。"), Color{166, 235, 255, 255}, Color{18, 38, 58, 255}, Color{6, 10, 18, 255}},
-    {LT("Main Story 28", "主线剧情 28"), LT("Heroic Route Commitment", "英雄路线前章"), LT("To force the beacon alive is to put survival first even now. It is not a clean victory, only a hard human answer chosen with full knowledge of the damage.", "强行点亮信标，意味着此刻仍把“先把人送出去”放在最前。这不是干净的胜利，而是在明知代价后仍作出的强硬人类回答。"), Color{255, 214, 154, 255}, Color{44, 28, 20, 255}, Color{12, 8, 12, 255}},
-    {LT("Main Story 29", "主线剧情 29"), LT("Peaceful Route Commitment", "和平路线前章"), LT("The lattice can be approached without tearing it wider apart. This route asks for restraint, compatibility, and the patience to let understanding do the lifting.", "这张格网并不一定只能被撕开。和平路线要求克制、兼容，以及让“理解”真正承担起重量的耐心。"), Color{166, 255, 226, 255}, Color{18, 44, 44, 255}, Color{6, 12, 18, 255}},
-    {LT("Main Story 30", "主线剧情 30"), LT("Settlement Route Commitment", "定居路线前章"), LT("Leaving is no longer the only honest future. To stay is to clear the last rogue guardian, inherit unfinished maintenance, and accept a long duty instead of a clean escape.", "离开不再是唯一诚实的未来。选择留下，不只是继承那些未完成的维护工作，也意味着先清掉最后一道失控守卫，并接受一份漫长责任，而不是一场干净撤离。"), Color{255, 216, 174, 255}, Color{36, 28, 26, 255}, Color{10, 8, 14, 255}}
+    {LT("Main Story 01", "主线剧情 01"), LT("Air For One More Day", "再撑一天的空气"), LT("The wreck is still venting smoke and your lungs still ache. This first repair is not rescue, only a little more breathable time stolen back from the night.", "残骸还在冒烟，你的肺也还在发烫。修好的这第一段氧气模块不是拯救，只是替今晚多抢回来一点能呼吸的时间。开拓者号还站着，但它现在更像一具勉强没断气的躯体。"), Color{124, 225, 255, 255}, Color{10, 34, 54, 255}, Color{4, 10, 18, 255}},
+    {LT("Main Story 02", "主线剧情 02"), LT("Oxygen Cycle Restored", "第一轮氧气恢复"), LT("When the oxygen loop finally finds a rhythm, the ship stops sounding like it is dying room by room. You are not safe, only finally able to prepare for tomorrow.", "当氧气循环终于重新连成节律，开拓者号第一次不像一间一间慢慢死去。你并没有脱险，只是终于争到了一点能为明天做准备的余地。"), Color{166, 255, 226, 255}, Color{14, 38, 58, 255}, Color{5, 10, 19, 255}},
+    {LT("Main Story 03", "主线剧情 03"), LT("Loxi Full Sync", "洛希完整上线"), LT("The upper terminal stabilizes and Loxi speaks in full again. In the dead ship, one more mind is finally thinking alongside you.", "上层终端稳定下来以后，洛希不再只是残缺告警。它重新以完整的声音开口，把事实一条条摆在你面前。死船里终于又有一个意识，仍在和你一起思考。"), Color{123, 225, 255, 255}, Color{16, 34, 62, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 04", "主线剧情 04"), LT("Airlock Opening", "气闸开启"), LT("The airlock does not open cleanly. It is dragged apart into thin air, wet fog, and the outline of a world that feels larger than escape.", "气闸不是轻松地打开，而是在漫长震颤里被硬生生拖开。门外有可呼吸的空气，也有薄雾、湿冷和陌生结构的轮廓。你不是从船里走向自由，而是走向一个更大的未知。"), Color{255, 214, 154, 255}, Color{34, 34, 46, 255}, Color{8, 10, 16, 255}},
+    {LT("Main Story 05", "主线剧情 05"), LT("Signal Answers Back", "信号回应了"), LT("The repaired relay does not recover a human plea. It recovers a quieter answer, one that sounds older than rescue and less willing to accept refusal.", "修好的通讯中继带回来的不是人类求救，而是一段更古老、更安静、也更不愿意接受拒绝的回应。你开始怀疑，坠毁也许不是故事的起点，而只是某个更早过程被你撞上的结果。"), Color{110, 233, 255, 255}, Color{14, 36, 56, 255}, Color{5, 10, 18, 255}},
+    {LT("Main Story 06", "主线剧情 06"), LT("Crash Not Accident", "坠毁并非意外"), LT("Burn scars and drag marks refuse the weather story. The ship was not simply lost in a storm; it was forced into a system already in motion.", "烧蚀痕迹和拖拽残留否定了“风暴事故”的解释。开拓者号并不是单纯失控坠落，它更像是在进入大气层后，被某种仍在运行的结构强行拖进了地表。"), Color{255, 186, 145, 255}, Color{56, 24, 24, 255}, Color{18, 8, 12, 255}},
+    {LT("Main Story 07", "主线剧情 07"), LT("Deep Scan Online", "深层扫描上线"), LT("Power returns and the ship sees farther than before. Scattered anomalies begin to read like one unfinished map instead of random danger.", "动力恢复以后，飞船的感知范围也跟着醒了过来。零散的异常点、遗迹读数和设施轮廓第一次开始显出同一张版图。这个世界不再像随机荒野，而像一套你还没看懂的结构。"), Color{166, 255, 226, 255}, Color{18, 40, 62, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 08", "主线剧情 08"), LT("Relic Pattern Decode", "遗物模式解码"), LT("The relic fragments yield part of the signal grammar. The tower no longer looks like something that must only be forced open.", "整套遗物碎片终于吐露出信号语法的一部分。那座塔楼不再只是一个要被强行启动的目标，它也开始像某种可以被读懂、被接入、甚至被正确对话的结构。"), Color{174, 226, 255, 255}, Color{22, 36, 66, 255}, Color{6, 10, 20, 255}},
+    {LT("Main Story 09", "主线剧情 09"), LT("East Wreck Confirmation", "东线残骸回证"), LT("The eastern residue locks the crash to the same lattice traced elsewhere. Accident, fog, and signal no longer read like separate mysteries.", "东线残骸中的残留记录，终于把飞船坠毁与区域格网彻底锁到了一起。事故、毒雾和异常信号，从这里开始不再像三件彼此无关的怪事。"), Color{166, 214, 255, 255}, Color{18, 34, 58, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 10", "主线剧情 10"), LT("Basin Access Qualification", "深潭资格确认"), LT("Recovering the energy core feels less like a prize than permission. You are no longer only surviving the outskirts; you are qualified to go deeper.", "找回能源核心的感觉不像拿到奖励，更像终于被允许继续深入。你从一个还在外围挣扎求生的幸存者，变成了真正有资格碰触更深层真相的人。"), Color{190, 234, 255, 255}, Color{18, 34, 60, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 11", "主线剧情 11"), LT("West Route Confirmed", "西线正式确认"), LT("The western signal is no longer rumor. Someone from your own ship came this way and tried to leave direction behind for whoever followed.", "西线信号不再只是传闻或底噪。你们船上的确有人走过这里，还在离开前尽力给后来者留下了方向。西侧从这一刻起，不再是边界，而是一条正式的调查路线。"), Color{161, 236, 255, 255}, Color{18, 42, 58, 255}, Color{6, 12, 20, 255}},
+    {LT("Main Story 12", "主线剧情 12"), LT("Survey Break Relay", "勘测断崖接力"), LT("Survey Break's anchors and reversed arrows make the truth plain: this was not flight, but a relay built for the next exhausted person to keep going.", "勘测断崖上的锚点与反向路标，把真相说得很清楚：他们不是在溃逃，而是在替后来者搭一条还能继续往前的接力链。西线第一次从“有人走过”升级成“有人有意留下了办法”。"), Color{255, 214, 154, 255}, Color{40, 30, 22, 255}, Color{10, 8, 14, 255}},
+    {LT("Main Story 13", "主线剧情 13"), LT("Canopy Handoff", "林冠交接"), LT("The canopy perch preserves more than equipment. Someone held the line here long enough to hand the next person a living responsibility.", "林冠观察点保留下来的，不只是设备和记号，还有生活过的秩序。有人曾在这里轮值、配给、等待、交接，一直撑到能把责任郑重地交给下一个活下来的人。"), Color{166, 255, 226, 255}, Color{16, 44, 40, 255}, Color{6, 12, 18, 255}},
+    {LT("Main Story 14", "主线剧情 14"), LT("Echo Basin Reconstruction", "回声盆地重建"), LT("Broken pings finally resolve into a route map. What looked like disappearance now reads like a successful handoff toward the south.", "破碎回声终于被重建成路线拓扑。曾经像“失踪”的空白，如今更像一次成功的交接：西线带回来的关键数据并没有断在路上，而是被送进了更深的系统里。"), Color{166, 235, 255, 255}, Color{18, 38, 58, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 15", "主线剧情 15"), LT("Last Camp Positions", "最后营地三立场"), LT("The last camp does not leave one answer behind. It leaves three futures side by side: leave, stabilize, or stay and inherit.", "最后营地留下来的，不是唯一答案，而是三种并排摆着的未来：立即求援、先稳定环境、尝试长期定居。你的终局从这一刻起，不再像临时起意，而像接过了他们来不及做完的判断。"), Color{255, 216, 174, 255}, Color{40, 28, 22, 255}, Color{12, 8, 14, 255}},
+    {LT("Main Story 16", "主线剧情 16"), LT("South Facility Wakes", "南侧设施苏醒"), LT("The south route reveals itself as damaged infrastructure, not raw geology. The world begins to look less like terrain and more like something that can still be taken over.", "南侧一路显露出来的，不是普通地下地形，而是一套受损却仍在运行的工程结构。这个世界第一次不再只像威胁，而像某种还能被理解、甚至还能被接手的系统。"), Color{182, 240, 214, 255}, Color{18, 44, 42, 255}, Color{6, 12, 18, 255}},
+    {LT("Main Story 17", "主线剧情 17"), LT("Vent Network Calibrated", "通风网络校准"), LT("As the vent chain comes back online, the fog truly loosens. The environment answers just enough to prove that danger here is not fixed.", "通风链路重新上线以后，毒雾第一次真实地退开了一点。世界并不是一成不变地敌对着你，它也会对正确的修复与校准作出回应。"), Color{166, 255, 226, 255}, Color{18, 42, 42, 255}, Color{6, 12, 18, 255}},
+    {LT("Main Story 18", "主线剧情 18"), LT("Service Shaft Backbone", "维护井主干连通"), LT("Once the service shaft backbone lights up, ship systems, purifier controls, and tower routing stop feeling like separate problems.", "维护井主干一旦连通，很多原本彼此分开的东西都露出了同一条骨架。飞船、净化设施和更深处的塔楼格网，不再像三个问题，而开始像同一台机器的不同入口。"), Color{204, 222, 255, 255}, Color{22, 34, 62, 255}, Color{8, 10, 20, 255}},
+    {LT("Main Story 19", "主线剧情 19"), LT("Purifier Ring Sequence", "净化环恢复次序"), LT("The ring does not restore all at once. Filtration, sealing, and oxygen return in order, proving that sequence matters as much as power.", "净化环并不是一口气全部亮起，而是按正确顺序一点点恢复。净化、密封、供氧依次回归，像在提醒你：这套系统不只需要力量，更需要被正确地理解。"), Color{182, 240, 214, 255}, Color{18, 44, 42, 255}, Color{6, 12, 18, 255}},
+    {LT("Main Story 20", "主线剧情 20"), LT("Root Vault Truth", "根脉核心真相"), LT("In the Root Vault, tower, monoliths, purifier ring, fog, and crash all resolve into one damaged maintenance lattice. The planet did not choose you; it misread you.", "在根脉密库深处，所有线索终于被接回同一张受损的世界维护格网。塔楼、石碑、净化环、毒雾和坠毁并不是不同谜题，而是同一故障系统的不同表征。而最沉重的纠偏也在这里出现：它从未有意召唤你们，只是把开拓者号误判成了一次还能兼容的维修响应。"), Color{204, 222, 255, 255}, Color{20, 32, 62, 255}, Color{8, 10, 20, 255}},
+    {LT("Main Story 21", "主线剧情 21"), LT("West South Correlation", "西南证据对齐"), LT("West handoff notes and south maintenance records finally lock into one timeline. The scattered story closes into history.", "西线交接记录和南线维护文书终于进入了同一条时间线。那些原本像分散事故和失踪空白的东西，从这里开始真正闭合成一段历史：他们不是各自挣扎，而是在同一场崩坏里彼此替对方争时间。"), Color{166, 235, 255, 255}, Color{18, 38, 58, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 22", "主线剧情 22"), LT("Loxi Conclusion Rewrite", "洛希结论重写"), LT("Loxi openly rewrites its own earlier reading. The world is no longer a pile of unrelated threats, but one burden explained more honestly.", "洛希重新整理了自己的全部判断。它第一次明确承认，自己先前把这个世界读得太像一堆彼此无关的威胁。也正因为它愿意这样修正，后面它给出的每一句结论才变得更值得相信。"), Color{174, 226, 255, 255}, Color{18, 34, 64, 255}, Color{6, 10, 20, 255}},
+    {LT("Main Story 23", "主线剧情 23"), LT("Monolith True Role", "石碑真正职责"), LT("The monoliths were never the source of danger. They were dampers, holding a larger instability back for longer than anyone remained to help them.", "石碑从来不是危险的源头。它们是阻尼器，是在更大的失稳面前替这颗世界硬撑时间的控制端。最像敌人的东西，原来也一直在拖着崩坏不要来得更快。"), Color{174, 226, 255, 255}, Color{18, 34, 64, 255}, Color{6, 10, 20, 255}},
+    {LT("Main Story 24", "主线剧情 24"), LT("North Route Commitment", "北线路线承诺"), LT("The north route narrows investigation into responsibility. You are no longer only studying what happened here, but walking toward what must be decided here.", "北线真正打开以后，故事开始明显收束。你不再只是去调查一处更深的遗迹，而是在走向一个必须由你来承担后果的地点。理解在这里不再只是知识，它开始要求你表态。"), Color{255, 214, 154, 255}, Color{42, 26, 20, 255}, Color{10, 8, 12, 255}},
+    {LT("Main Story 25", "主线剧情 25"), LT("Tower Not Button", "塔楼不是按钮"), LT("The tower terminal is not a switch waiting to be pressed. It is a declaration point that asks you to admit the consequence before you proceed.", "塔前终端并不是一个等你按下去的开关。它更像一个提交窗口，要求你先承认每种结果都会带来的后果，然后才允许你继续。你抵达这里，不代表你已经正确，只代表你终于不能再躲在惯性后面。"), Color{255, 214, 154, 255}, Color{42, 26, 20, 255}, Color{10, 8, 12, 255}},
+    {LT("Main Story 26", "主线剧情 26"), LT("Three Costs Revealed", "三种代价浮出"), LT("Rescue, stabilization, and settlement no longer read like menu choices. They are three different answers to the same truth, each with its own cost.", "到了这里，求援、和平接入与留下定居终于不再像菜单选项。它们都成了对同一真相的不同回答：先把人送回去、先把系统稳住，或承认自己要把这份工作接下来。每条路都能救下一部分东西，也都会让另一部分留下伤痕。"), Color{255, 216, 174, 255}, Color{40, 28, 22, 255}, Color{12, 8, 14, 255}},
+    {LT("Main Story 27", "主线剧情 27"), LT("Action Declaration", "行动宣言"), LT("Once the declaration is entered, the choice stops living only in thought. From here onward, what happens next carries your name beside it.", "一旦行动宣言被写进记录，选择就不再只属于你心里的犹豫。从这一刻起，之后发生的一切都将不再能被轻易归进偶然。你不是碰到了某个结果，而是在签下你愿意承担的方向。"), Color{166, 235, 255, 255}, Color{18, 38, 58, 255}, Color{6, 10, 18, 255}},
+    {LT("Main Story 28", "主线剧情 28"), LT("Heroic Route Commitment", "英雄路线前章"), LT("To force the beacon alive is to keep putting getting people home first, even after learning what the damage truly means.", "强行点亮信标，意味着此刻仍把“先把人送回去”排在最前。你已经知道高塔和格网属于一套受损维护系统，也知道再一次强行介入会留下更深伤痕；可你仍决定这么做。它不光荣，只是一个带着代价也仍然诚实的人类答案。"), Color{255, 214, 154, 255}, Color{44, 28, 20, 255}, Color{12, 8, 12, 255}},
+    {LT("Main Story 29", "主线剧情 29"), LT("Peaceful Route Commitment", "和平路线前章"), LT("This route does not tear the lattice wider apart. It asks for accuracy, compatibility, and the patience to let understanding do the harder work.", "和平路线并不轻松，它只是把勇敢换了一种形状。你不再试图撕开格网，而是试着让人类系统被它正确读取。这里真正的代价不是火力，而是耐心，是让理解一遍遍承担本该由冲动替你完成的重量。"), Color{166, 255, 226, 255}, Color{18, 44, 44, 255}, Color{6, 12, 18, 255}},
+    {LT("Main Story 30", "主线剧情 30"), LT("Settlement Route Commitment", "定居路线前章"), LT("Leaving is no longer the only honest future. To stay is to clear what remains unstable, inherit unfinished maintenance, and accept a longer duty.", "离开不再是唯一诚实的未来。你已经知道这颗世界仍可被维护，知道飞船还能被改造成真正的居所，也知道最后那部分失控必须先被清掉。选择定居，不是拒绝求生，而是承认自己愿意把别人没做完的工作接下来。"), Color{255, 216, 174, 255}, Color{36, 28, 26, 255}, Color{10, 8, 14, 255}}
 };
 
 static const LocalizedText kStoryMainDetailTexts[STORY_MAIN_SCENE_COUNT] = {
@@ -124,8 +124,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Ship Log 01", "飞船日志 01"),
         LT("Impact Protocol", "撞击应对"),
-        LT("The first recovered entry confirms the crew survived impact long enough to define the new rule of survival: secure air, accept the crash, and delay fear until the ship can keep someone breathing.",
-           "第一份回收记录证实，船员们在撞击后活得足够久，足以定下一条新的生存法则：先保住空气，接受坠毁，把恐惧延后到飞船还能让人继续呼吸之后。"),
+        LT("Day 1. Impact did not kill us first. The air almost did. The ship only stayed alive because someone chose breath before comfort.",
+           "第一天。撞击没有立刻杀死我们，差点要命的是空气。主船腹着地以后，三段氧气管线在不到两分钟内连续裂开，洛希把剩余电力全压进中央走廊。我们活下来，不是因为准备充分，而是因为有人先决定：先保住呼吸，再保住体面。"),
         Color{123, 225, 255, 255},
         Color{14, 34, 58, 255},
         Color{4, 10, 18, 255}
@@ -133,8 +133,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Ship Log 02", "飞船日志 02"),
         LT("Split Roster", "分组名单"),
-        LT("The second log reframes the missing crew as a deliberate split. Different teams pushed west, east, and ship-side maintenance so at least one route could carry answers home.",
-           "第二份日志把“失踪船员”重新定义为一次主动分组。不同小队分别推进西线、东线和飞船维护，只为确保至少有一条路线能把答案带回去。"),
+        LT("Day 3. We stopped calling it a search party. It became a split: hold the ship, push west, and confirm the east-south line before all three chances died together.",
+           "第三天。我们不再把它叫作搜寻队，而叫分流。一组守船保空气，一组带着天线部件向西追信号，一组沿东南线确认石构和残骸异常。我们不是在散开，只是在把活下去和查清真相的概率拆成几份继续往前送。"),
         Color{255, 214, 154, 255},
         Color{42, 30, 24, 255},
         Color{10, 8, 14, 255}
@@ -142,8 +142,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Ship Log 03", "飞船日志 03"),
         LT("Pattern, Not Wilderness", "这里是模式，不是荒野"),
-        LT("The third log suggests the planet is engineered rather than wild. Monoliths, purifier rhythms, and tower signal all belong to one unfinished system that still reacts to every intrusion.",
-           "第三份日志暗示，这颗星球并非天然荒野，而是被建造出来的系统。石碑、净化节律和塔楼信号都属于同一套尚未完成、却仍会对每次入侵作出反应的装置。"),
+        LT("Day 7. Fog pulses, stone resonance, and signal returns repeat on the same windows. This is not wilderness in the human sense. It is a system still following rules after its keepers vanished.",
+           "第七天。雾潮、石碑回响、信号返回和设施残留开始在同一组时间窗口里重复。这里不像荒野，更像一套运行得不完整、却仍会对闯入作出反应的系统。我们可能不是坠毁在自然里，而是掉进了一台坏掉的世界机器。"),
         Color{166, 255, 226, 255},
         Color{18, 42, 40, 255},
         Color{6, 12, 18, 255}
@@ -151,8 +151,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Field Record 04", "现场记录 04"),
         LT("West Signal Fragment 01", "西线信号碎片 01"),
-        LT("The west scouts did not chase noise at random. They were already tracing a repeated fragment that matched the ship's distress distortion, suggesting the signal had structure from the start.",
-           "西线侦察员并不是在盲追杂音。他们早就抓到了一段会重复出现的碎片信号，它和飞船遇到的失真源相呼应，说明这道召唤从一开始就有结构。"),
+        LT("The first west fragment is not static. It matches the same broken structure that distorted the ship on descent. This route was never salvage. It was a pursuit.",
+           "西线第一段碎片不是随机噪音。它和坠毁前干扰我们导航的失真源有同样的重复结构，只是更短、更弱，也更像有人故意替后来者留住的一点抓手。我们不是往西碰碰运气，我们是在追一个问题。"),
         Color{158, 232, 255, 255},
         Color{18, 38, 58, 255},
         Color{6, 10, 18, 255}
@@ -160,8 +160,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Field Record 05", "现场记录 05"),
         LT("Survey Break Anchor Notes", "勘测断崖锚点笔记"),
-        LT("Anchor placements across Survey Break read less like a retreat and more like deliberate relay work. The west team was building a stable chain to pass people and evidence deeper inland.",
-           "勘测断崖一带的锚点布置看起来不像撤退，更像一次有计划的接力。西线队伍是在搭一条能把人和证据继续往内陆传下去的稳定链路。"),
+        LT("Survey Break's anchors were never retreat markers. They were relay work: rope, direction, and silence arranged so the next exhausted person would not have to learn the same mistake by dying from it.",
+           "勘测断崖上的锚点布置不像撤退，更像接力。路线、绳位、反向箭头和藏起来的备用节点都指向同一个目的：我们未必能回来，但后来者至少不该再从头犯一遍同样的错误。"),
         Color{255, 214, 154, 255},
         Color{40, 30, 22, 255},
         Color{10, 8, 14, 255}
@@ -169,8 +169,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Field Record 06", "现场记录 06"),
         LT("Canopy Handoff Record", "林冠交接记录"),
-        LT("A quiet exchange under the canopy confirms the missing crew split roles on purpose. One branch moved information, another kept routes usable, and both expected the south side to matter later.",
-           "林冠下的一次安静交接证明，失踪船员是有意分工的。一组负责转运信息，一组负责维持路线可用，而双方都预料到南侧设施迟早会变得关键。"),
+        LT("Under the canopy, the split stops looking like disappearance and starts looking like duty. One branch kept the watch. Another carried the notes south. Neither assumed they would both return.", 
+           "林冠下的这份交接记录，把“失踪”彻底改写成了分工。一组继续往西追信号与地形，一组把整理过的数据和窗口判断转给南侧设施线。没有人以为自己一定回得来，所以他们先把责任传下去。"),
         Color{166, 255, 226, 255},
         Color{16, 44, 40, 255},
         Color{6, 12, 18, 255}
@@ -178,8 +178,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Field Record 07", "现场记录 07"),
         LT("Echo Basin Topology Sketch", "回声盆地拓扑草图"),
-        LT("The basin sketch turns broken pings into a topology map. What looked like disappearances now reads like routing: one trail bending west, one trail pointing south, both converging on the same hidden system.",
-           "回声盆地的草图把破碎脉冲整理成了拓扑图。原本像是失踪的空白，如今更像一次路由：一条线偏向西侧，一条线通往南侧，而两者最终都指向同一套隐藏系统。"),
+        LT("The Echo Basin sketch turns static into proof. What looked like absence now reads like routing: the packet really did make it south.", 
+           "回声盆地的草图把破碎脉冲整理成了路线图。曾经像失踪与空白的地方，从这里开始都更像一次成功的转包：西进组带回来的关键判断没有断在半路，而是被送向了南侧入口与更深的系统。"),
         Color{166, 235, 255, 255},
         Color{18, 38, 58, 255},
         Color{6, 10, 18, 255}
@@ -187,8 +187,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Field Record 08", "现场记录 08"),
         LT("Last Camp Testament", "最后营地遗言"),
-        LT("The final camp refuses a single heroic answer. The surviving crew weighed rescue, repair, and settlement as three honest futures, making your eventual choice feel less like improvisation and more like an inheritance.",
-           "最后营地并不拥护唯一的英雄答案。留守者把求援、修复和定居并列成三种诚实的未来，也让你最后的选择不再像临时起意，而更像继承了他们留下来的判断。"),
+        LT("The final camp leaves no single command behind. It leaves three futures: rescue, stabilization, and settlement. None is written as pure. All are written as real.", 
+           "最后营地没有留下一条统一遗命，而是留下了三种并排摆开的未来：尽快求援、先稳定环境、尝试长期留下。它们不是抽象理念，而是饥饿、坏空气和越来越少的人手里，仍被认真看作诚实答案的三种选择。"),
         Color{255, 216, 174, 255},
         Color{42, 28, 22, 255},
         Color{12, 8, 14, 255}
@@ -196,8 +196,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Crash Record 09", "坠毁记录 09"),
         LT("Black Box Residue", "黑匣残留"),
-        LT("Recovered residue shows the eastern wreck tried to steer away from the same lattice later mapped from the west. The crash was already entangled with a region-wide control failure.",
-           "恢复出来的残留记录显示，东侧残骸最后尝试避开的，正是后来在西线被描出的那片格网。坠毁从一开始就与整片区域的控制失效缠在一起。"),
+        LT("The black box residue proves the ship tried to steer away from the same lattice later mapped from the west. The crash was never separate from the system failure around it.",
+           "黑匣残留显示，开拓者号在坠毁前曾试图规避一片异常区域格网。那不是普通风暴，也不是单点障碍，而是一张会影响导航、会误读信号、会把接近者拖进错误流程里的结构。事故从一开始就和这颗世界的系统失稳缠在一起。"),
         Color{204, 222, 255, 255},
         Color{22, 34, 62, 255},
         Color{8, 10, 20, 255}
@@ -205,8 +205,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Facility Record 10", "设施记录 10"),
         LT("Purifier Outage Memo", "净化器停摆备忘"),
-        LT("The purifier memo reframes the toxic fog as maintenance collapse rather than pure hostility. The region became harsher because the system lost caretakers, not because the world suddenly changed its mind.",
-           "净化器备忘把毒雾重新定义成维护链断裂后的后果，而不是纯粹敌意。区域会变得更凶险，是因为系统失去了看护者，而不是世界突然起了杀心。"),
+        LT("The purifier outage memo renames the fog. It is not pure hostility. It is maintenance failure pushed back up to the surface after the chain lost its keepers.", 
+           "净化器停摆备忘把毒雾重新定义成维护失败，而不是纯粹敌意。区域会变得更凶险，不是因为世界突然起了杀心，而是因为原本压住失稳的净化链断开了，环境开始把没人照看的代价直接吐在地表上。"),
         Color{182, 240, 214, 255},
         Color{18, 44, 40, 255},
         Color{6, 12, 18, 255}
@@ -214,8 +214,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Facility Record 11", "设施记录 11"),
         LT("Vent Calibration Handover", "通风校准交接"),
-        LT("The vent handover proves west and south teams were buying each other time. Cleaner air and quieter signal windows were part of the same collaborative survival plan.",
-           "通风校准交接证明，西线和南线队伍当时是在互相争取时间。更干净的空气和更安静的信号窗口，本来就是同一套协作求生计划。"),
+        LT("The vent handover proves west and south were buying each other minutes, not just sharing data. Cleaner air and quieter signal windows were the same work seen from two ends.", 
+           "通风校准交接证明，西线与南线并不是各自挣扎。更干净的空气窗口和更安静的回声时段，本来就是同一套计划的一部分：一边替另一边争几分钟，一边替另一边多留一条还能走的路。"),
         Color{166, 255, 226, 255},
         Color{18, 42, 42, 255},
         Color{6, 12, 18, 255}
@@ -223,8 +223,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Facility Record 12", "设施记录 12"),
         LT("Service Shaft Sync Record", "维护井道同步记录"),
-        LT("The shaft record makes the infrastructure link explicit: ship systems, purifier controls, and the buried tower lattice all share one backbone. Restoring access means entering the same machine from different doors.",
-           "井道同步记录把基础设施关系写得很直接：飞船系统、净化控制和埋藏的塔楼格网共享同一条主干。重新打通它们，等于从不同入口进入同一台机器。"),
+        LT("The service shaft sync record makes the worst truth plain: ship systems, purifier controls, and tower routing all share one backbone. You have been inside the same machine the whole time.", 
+           "维护井道同步记录把最难承认的事实写得很直接：飞船系统、净化控制和埋藏的塔楼格网共享同一条维护主干。你不是在几个区域之间来回解决不同问题，你一直都在从不同入口走进同一台坏掉的机器里。"),
         Color{204, 222, 255, 255},
         Color{22, 34, 62, 255},
         Color{8, 10, 20, 255}
@@ -232,8 +232,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Facility Record 13", "设施记录 13"),
         LT("Purifier Ring Control Brief", "净化环控制简报"),
-        LT("The ring brief reveals the monoliths were never the source of the danger. They were dampers. Once that is clear, the tower stops reading as a weapon and starts reading as a responsibility.",
-           "净化环控制简报揭示，石碑从来不是危险源，而是阻尼器。一旦这一点成立，塔楼看起来就不再像武器，而更像一份必须承担的职责。"),
+        LT("The purifier ring brief changes everything with one buried note: the monolith endpoints are not the danger source. They are field controls holding back something larger.", 
+           "净化环控制简报最重要的一句，不是恢复顺序，而是页角那条几乎像怕人看不见的附注：石碑终端不是危险源，它们是场域控制器，是把更大失稳按在边界里的手。一旦明白这一点，高塔看起来就不再像武器，而更像一份职责。"),
         Color{174, 226, 255, 255},
         Color{18, 34, 64, 255},
         Color{6, 10, 20, 255}
@@ -241,8 +241,8 @@ static const IntroSlideDef kStoryLogDefs[STORY_LOG_SCENE_COUNT] = {
     {
         LT("Facility Record 14", "设施记录 14"),
         LT("Root Vault Core Dossier", "根脉核心档案"),
-        LT("The core dossier joins every thread together: tower signal, purifier ring, monolith resonance, and the crash all belong to one damaged world-maintenance lattice. The endgame becomes a question of stewardship.",
-           "根脉核心档案把所有线索真正接成了一体：塔楼信号、净化环、石碑共振与坠毁本身，都属于同一张受损的世界维护格网。终局因此变成了如何承担的问题。"),
+        LT("The Root Vault dossier joins every thread together. The planet did not summon your ship. Its damaged maintenance lattice misread the Ark as a compatible repair response, and every ending is changed by that correction.", 
+           "根脉核心档案把塔楼、石碑、净化环、毒雾和坠毁真正接成了一体。开拓者号并不是被某种意志故意召唤，而是被这张失稳维护格网误判成了一次可兼容的紧急维修响应。也正因为这句纠偏成立，强行救援、和平接入和长期定居三条路线，才都会变成诚实却带伤的答案。"),
         Color{204, 222, 255, 255},
         Color{20, 32, 62, 255},
         Color{8, 10, 20, 255}

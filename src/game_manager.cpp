@@ -21,18 +21,6 @@ static float SanitizeDeltaTime(float deltaTime) {
     return ClampFloat(deltaTime, 0.0f, 0.1f);
 }
 
-static constexpr float kNarrativeFadeDuration = 0.22f;
-static constexpr float kScreenFadeDuration = 0.34f;
-static constexpr float kSleepFadeDuration = 0.56f;
-
-static float GetScreenTransitionDuration(const Game *game) {
-    if (game != nullptr && game->screenTransitionAction == SCREEN_TRANSITION_SLEEP_REST) {
-        return kSleepFadeDuration;
-    }
-
-    return kScreenFadeDuration;
-}
-
 static void ResolveNarrativeTransition(Game *game) {
     NarrativeTransitionAction action;
 
@@ -122,7 +110,7 @@ static void UpdateNarrativePresentation(Game *game, float deltaTime) {
 
     if (game->narrativeTransitionActive) {
         game->narrativeTransitionElapsed += deltaTime;
-        if (game->narrativeTransitionElapsed >= kNarrativeFadeDuration) {
+        if (game->narrativeTransitionElapsed >= Game_GetNarrativeTransitionDuration()) {
             ResolveNarrativeTransition(game);
         }
         return;
@@ -136,7 +124,7 @@ static void UpdateNarrativePresentation(Game *game, float deltaTime) {
 }
 
 static void UpdateScreenTransition(Game *game, float deltaTime) {
-    const float totalDuration = GetScreenTransitionDuration(game);
+    const float totalDuration = Game_GetScreenTransitionDuration(game);
     const float halfDuration = totalDuration * 0.5f;
 
     if (game == nullptr || !game->screenTransitionActive) {
@@ -178,6 +166,7 @@ void Game_Init(Game *game) {
     std::snprintf(game->authUsername, sizeof(game->authUsername), "%s", game->settings.lastUsername);
     Game_RefreshSaveSlots(game);
     Audio_SetScene(&game->audio, AUDIO_SCENE_MENU);
+    Audio_SetMusicStage(&game->audio, AUDIO_MUSIC_MENU);
     game->screenTransitionSlotIndex = -1;
     game->pendingLanguage = game->settings.language;
 }
@@ -207,6 +196,7 @@ void Game_Update(Game *game, float deltaTime) {
 
     UpdateNarrativePresentation(game, deltaTime);
     UpdateScreenTransition(game, deltaTime);
+    Game_SanitizeGameplayState(game, GetScreenWidth(), GetScreenHeight());
 
     if (game->screenTransitionActive) {
         return;
@@ -217,9 +207,11 @@ void Game_Update(Game *game, float deltaTime) {
     }
 
     Game_UpdatePlayingState(game, deltaTime);
+    Game_SanitizeGameplayState(game, GetScreenWidth(), GetScreenHeight());
 }
 
 void Game_Shutdown(Game *game) {
+    Game_ClearMessageHistory(game);
     SaveSystem_SaveSettings(&game->settings);
     Assets_Unload(&game->assets);
     Audio_Shutdown(&game->audio);

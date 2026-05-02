@@ -111,6 +111,7 @@
 | Relic Fragment | 遗迹碎片 |
 | Boss Scale | 守卫鳞片 |
 | Alien Slime | 异星黏液 |
+| Recovery Ration | 复苏口粮 |
 
 ## 6. 装备与制作
 
@@ -118,7 +119,8 @@
 | --- | --- |
 | Glow Stick | 荧光棒 |
 | Simple Rope | 简易绳索 |
-| Reinforced Metal | 强化金属 |
+| Weapon Calibration | 武器校准 |
+| Reinforced Metal | 强化金属（旧称；当前配方展示名为 Weapon Calibration） |
 | Laser Gun | 激光枪 |
 | Protection Suit | 防护服 |
 | Signal Amplifier | 信号放大器 |

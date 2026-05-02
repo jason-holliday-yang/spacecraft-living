@@ -393,11 +393,6 @@ const char *Tasks_GetLogStoryText(const ShipLog *log) {
     return Loc_PickLiteral(log->storyTextEn, log->storyTextZh);
 }
 
-const char *Tasks_GetLogRewardDescription(const ShipLog *log) {
-    (void)log;
-    return "";
-}
-
 const char *Tasks_GetLogDetailText(const ShipLog *log) {
     if (log == NULL) {
         return "";

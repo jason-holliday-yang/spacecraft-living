@@ -99,7 +99,7 @@ int main(void) {
     Tasks_UpdateObjective(&tasks, &player);
     Require(Tasks_IsEndingBranchReady(&tasks),
             "mainline archive completion should be enough to open the ending branch");
-    Require(strcmp(tasks.objective, "Return to Loxi and review the assembled archive before choosing the final route.") == 0,
+    Require(strcmp(tasks.objective, "Return to Loxi and review the assembled archive before choosing the final route. The story is finally whole enough to judge what your answer should cost.") == 0,
             "mainline archive completion should now require a final ship-side archive review before route selection");
     Require(!Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),
             "route selection should stay locked until the archive review step is completed");
@@ -112,8 +112,9 @@ int main(void) {
     Require(strstr(message, "Archive review complete") != NULL || strstr(message, "档案复核完成") != NULL,
             "archive review interaction should explicitly explain that the truth review step has completed");
     Tasks_UpdateObjective(&tasks, &player);
-    Require(strstr(tasks.objective, "Canopy Handoff") != NULL
-                || strstr(tasks.objective, "林冠交接") != NULL,
+    Require((strstr(tasks.objective, "Canopy Handoff") != NULL
+                || strstr(tasks.objective, "林冠交接") != NULL)
+                && strstr(tasks.objective, "Loxi") != NULL,
             "after the archive review, the objective should point to the next missing route unlock when no ending is unlocked yet");
 
     CollectSupplementalLog(&tasks, 7);
@@ -126,7 +127,7 @@ int main(void) {
             "settlement-only evidence should not auto-unlock heroic rescue");
     Require(!Tasks_IsEndingAvailable(&tasks, ENDING_PEACEFUL),
             "settlement-only evidence should not auto-unlock peaceful rescue");
-    Require(strcmp(tasks.objective, "Recover the Canopy Handoff record, then return to Loxi to confirm heroic rescue.") == 0,
+    Require(strcmp(tasks.objective, "Recover the Canopy Handoff record, then return to Loxi. Heroic rescue should be chosen with the west crew's relay effort fully in view.") == 0,
             "without the guardian kill, the objective should still stay focused on the next missing route unlock");
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
@@ -141,7 +142,7 @@ int main(void) {
             "adding peaceful-route evidence should still not unlock peaceful rescue before the Signal Amplifier is crafted");
     Require(!Tasks_IsEndingAvailable(&tasks, ENDING_PEACEFUL),
             "south maintenance control evidence should not unlock peaceful rescue without the Signal Amplifier");
-    Require(strcmp(tasks.objective, "Recover 3 Relic Fragments, craft the Signal Amplifier at the workshop, then return to Loxi for peaceful rescue.") == 0,
+    Require(strcmp(tasks.objective, "Recover 3 Relic Fragments, craft the Signal Amplifier at the workshop, then return to Loxi so peaceful rescue can be argued from evidence instead of hope alone.") == 0,
             "without the Signal Amplifier, the objective should redirect the player to peaceful-route preparation instead of route confirmation");
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
@@ -157,7 +158,7 @@ int main(void) {
             "before the guardian dies, the only unlocked ending should become peaceful rescue once the amplifier exists");
     Require(Tasks_IsEndingAvailable(&tasks, ENDING_PEACEFUL),
             "south maintenance control evidence plus the Signal Amplifier should unlock peaceful rescue");
-    Require(strcmp(tasks.objective, "Return to Loxi and confirm the only unlocked ending: Peaceful Rescue.") == 0,
+    Require(strcmp(tasks.objective, "Return to Loxi and confirm the only unlocked ending the archive still supports: Peaceful Rescue.") == 0,
             "once the Signal Amplifier exists, the objective should shift to single-ending confirmation");
 
     PrepareEndingBranch(&tasks);

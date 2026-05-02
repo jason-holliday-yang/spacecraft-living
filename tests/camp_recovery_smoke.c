@@ -39,8 +39,6 @@ int main(void) {
     player.gridY = map.campY;
     player.health = 40.0f;
     player.oxygen = 20.0f;
-    player.stamina = 18.0f;
-    player.pressure = 75.0f;
     player.poison = 34.0f;
     Player_SetStatus(&player, PLAYER_STATUS_OXYGEN_LEAK, 2, 24.0f, 1.1f);
 
@@ -53,8 +51,8 @@ int main(void) {
             "field camp should restore only part of health");
     Require(player.oxygen > 20.0f && player.oxygen < MAX_OXYGEN,
             "field camp should restore only part of oxygen");
-    Require(player.poison < 34.0f,
-            "field camp should partially reduce poison");
+    Require(player.poison == 34.0f,
+            "field camp should no longer detox poison directly");
     Require(Player_HasStatus(&player, PLAYER_STATUS_CAMP_RECOVERY),
             "field camp should grant camp recovery status");
 
@@ -69,15 +67,13 @@ int main(void) {
             "camp recovery should continue restoring some health after leaving camp");
     Require(player.oxygen > oxygenAfterCamp,
             "camp recovery should continue restoring some oxygen after leaving camp");
-    Require(player.poison <= poisonAfterCamp,
-            "camp recovery should continue stabilizing poison after leaving camp");
+    Require(player.poison == poisonAfterCamp,
+            "camp recovery should no longer stabilize poison after leaving camp");
 
     player.gridX = OXYGEN_CONSOLE_X - 1;
     player.gridY = OXYGEN_CONSOLE_Y;
     player.health = 22.0f;
     player.oxygen = 6.0f;
-    player.stamina = 12.0f;
-    player.pressure = 66.0f;
     player.poison = 48.0f;
     Player_SetStatus(&player, PLAYER_STATUS_POISONED, 2, 20.0f, 48.0f);
     Player_SetStatus(&player, PLAYER_STATUS_LOW_OXYGEN, 2, 8.0f, 6.0f);
@@ -85,11 +81,9 @@ int main(void) {
     memset(message, 0, sizeof(message));
     Require(Tasks_HandleInteraction(&tasks, &map, &player, message, sizeof(message)),
             "base oxygen console should remain usable");
-    Require(player.oxygen == MAX_OXYGEN && player.pressure == 0.0f,
-            "base oxygen console should now focus on oxygen refill and pressure stabilization");
-    Require(player.health == 22.0f
-                && player.stamina == 12.0f
-                && player.poison == 48.0f,
+    Require(player.oxygen == MAX_OXYGEN,
+            "base oxygen console should now focus on oxygen refill");
+    Require(player.health == 22.0f && player.poison == 48.0f,
             "base oxygen console should no longer replace rest or medical recovery");
     Require(Player_HasStatus(&player, PLAYER_STATUS_POISONED)
                 && !Player_HasStatus(&player, PLAYER_STATUS_LOW_OXYGEN)

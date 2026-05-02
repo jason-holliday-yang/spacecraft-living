@@ -1,5 +1,7 @@
 #include "task_runtime_internal.h"
 
+#include <string.h>
+
 static int AbsIntLocal(int value) {
     return value < 0 ? -value : value;
 }
@@ -21,13 +23,25 @@ bool TasksRuntime_IsDeepSwampCore(const Player *player) {
 }
 
 bool TasksRuntime_IsTowerPlateau(const Player *player) {
-    return player != NULL && player->gridY <= SIGNAL_TOWER_Y + 6;
+    const char *locationName;
+
+    if (player == NULL) {
+        return false;
+    }
+
+    locationName = Map_GetLocationNameAt(player->gridX, player->gridY);
+    return locationName != NULL && strcmp(locationName, "Signal Tower Plateau") == 0;
 }
 
 bool TasksRuntime_IsMonolithRing(const Player *player) {
-    return player != NULL
-        && player->gridY >= EXTERIOR_Y(11)
-        && player->gridY < EXTERIOR_Y(21);
+    const char *locationName;
+
+    if (player == NULL) {
+        return false;
+    }
+
+    locationName = Map_GetLocationNameAt(player->gridX, player->gridY);
+    return locationName != NULL && strcmp(locationName, "Monolith Ring") == 0;
 }
 
 bool TasksRuntime_IsInSafeRecoveryZone(const GameMap *map, const Player *player, MapArea area) {

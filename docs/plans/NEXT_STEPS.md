@@ -13,6 +13,7 @@
 - 西线补完
 - 南线补完
 - 主线整合
+- 音频沉浸感与阶段化 BGM
 - 平衡调整
 - 兼容清理
 - 文档与测试护栏
@@ -100,7 +101,7 @@
 
 - 固定普通怪物的“区域唯一威胁”定位，避免重新膨胀回刷怪型地图压力
 - 微调中后期怪物与 Boss 的目标击杀轮次带
-- 校对 `防护服（Protection Suit）`、`野外营地（Field Camp）`、补氧道具和过滤类资源的实际收益
+- 校对 `防护服（Protection Suit）`、`野外营地（Field Camp）`、`复苏口粮（Recovery Ration）` 和过滤类资源的实际收益
 - 避免任何区域同时叠加过高直伤、过高耗氧、过高状态压力和过长跑路
 
 ### 任务 6：结局与菜单收尾
@@ -153,6 +154,22 @@
 - 为关键资源预算、刷新规则和典型战斗曲线补 smoke 护栏
 - 同步更新活动文档与资源文档
 - 让测试与文档都围绕“最终定版内容”而不是“扩展方向”写
+
+### 任务 10：阶段化 BGM 播放改造
+
+目标：
+
+- 把主 BGM 从“按地图位置切换”改为“按主线阶段 / 关键剧情状态切换”
+- 接入 `resources/audio/music/stages/` 与 `resources/audio/music/routes/` 下的 `10` 首新音乐
+- 解决同一阶段内跨区域移动导致音乐刚进入高潮就被切走的问题
+
+本轮至少要完成：
+
+- 按 [`STAGE_MUSIC_PLAYBACK_PLAN.md`](/Users/jason/Documents/SpaceCraftLivng/docs/plans/STAGE_MUSIC_PLAYBACK_PLAN.md) 增加 `AudioMusicStage` 与 `Audio_SetMusicStage()`
+- 新增 `Game_SelectMusicStage()`，选择优先级固定为 `Ending > Boss > 已选路线 > 主线阶段 > Menu`
+- `Stage 3 / Stage 4 / Stage 5 / Stage 7 / Settlement route` 接入新 BGM 双版本
+- 普通地图位置不再直接抢主 BGM；Boss 和 Ending 仍允许强制切换
+- 补 smoke 覆盖阶段到音乐状态的选择结果，并手动验证同阶段跨区域不再切主音乐
 
 ## 推荐开发顺序表
 

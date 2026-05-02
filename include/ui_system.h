@@ -13,10 +13,10 @@
 
 SCL_EXTERN_C_BEGIN
 
-#define BACKPACK_ENTRY_COUNT 22
+#define BACKPACK_ENTRY_COUNT 23
 #define UI_BACKPACK_SLOT_COLUMNS 4
 #define UI_CRAFT_SLOT_COLUMNS 2
-#define HUD_SHORTCUT_COUNT 2
+#define HUD_SHORTCUT_COUNT 4
 
 typedef struct HudMessage {
     char text[256];
@@ -72,6 +72,14 @@ typedef enum SavePanelMode {
     SAVE_PANEL_MODE_LOAD = 0,
     SAVE_PANEL_MODE_SAVE
 } SavePanelMode;
+
+typedef enum InfoOverlayTab {
+    INFO_OVERLAY_TAB_MAP = 0,
+    INFO_OVERLAY_TAB_BACKPACK,
+    INFO_OVERLAY_TAB_LOXI,
+    INFO_OVERLAY_TAB_SETTINGS,
+    INFO_OVERLAY_TAB_COUNT
+} InfoOverlayTab;
 
 typedef enum SettlementConfirmButton {
     SETTLEMENT_CONFIRM_BUTTON_HEROIC = 0,
@@ -151,6 +159,7 @@ Rectangle UI_GetCraftSlotRect(int screenWidth, int screenHeight, int itemIndex);
 Rectangle UI_GetCraftActionButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorOverlayRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorTabRect(int screenWidth, int screenHeight, int tabIndex);
+Rectangle UI_GetInfoOverlayTabRect(int screenWidth, int screenHeight, int tabIndex);
 Rectangle UI_GetCommunicatorLogListRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorLogContentRect(int screenWidth, int screenHeight);
 Rectangle UI_GetCommunicatorLogImagePanelRect(int screenWidth, int screenHeight);
@@ -205,6 +214,25 @@ void UI_DrawSettingsOverlay(const AssetBundle *assets,
                             bool accountActionsEnabled,
                             int screenWidth,
                             int screenHeight);
+void UI_DrawInfoOverlay(const AssetBundle *assets,
+                        InfoOverlayTab selectedTab,
+                        const GameSettings *settings,
+                        const MiniMap *minimap,
+                        const Player *player,
+                        const TaskSystem *tasks,
+                        const GameMap *map,
+                        const bool *storySceneShown,
+                        int saveCount,
+                        int selectedBackpackItem,
+                        int communicatorTab,
+                        int selectedLog,
+                        int firstVisibleLog,
+                        int selectedStoryScene,
+                        int firstVisibleStoryScene,
+                        float detailVisibility,
+                        float detailScroll,
+                        int screenWidth,
+                        int screenHeight);
 void UI_DrawBackpackOverlay(const AssetBundle *assets, const Player *player, int selectedItem, int screenWidth, int screenHeight);
 void UI_DrawCraftOverlay(const AssetBundle *assets, const TaskSystem *tasks, const Player *player, int selectedRecipe, int screenWidth, int screenHeight);
 void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
@@ -216,6 +244,7 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
                                 int selectedStoryScene,
                                 int firstVisibleStoryScene,
                                 float detailVisibility,
+                                float detailScroll,
                                 int screenWidth,
                                 int screenHeight);
 void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHeight);
