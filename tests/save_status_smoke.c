@@ -209,7 +209,7 @@ int main(void) {
     Require(SaveSystem_LoadGame(1, &loaded), "legacy v5 status load should succeed");
     Require(loaded.health == 22.0f, "legacy v5 should map stamina to health");
     Require(loaded.maxHealthBonus == 14.0f, "legacy v5 should map stamina bonus to max health bonus");
-    Require(loaded.pressure == INITIAL_PRESSURE, "legacy v5 should discard old pressure into the new default");
+    Require(loaded.pressure == LEGACY_INITIAL_PRESSURE, "legacy v5 should discard old pressure into the new default");
     Require(loaded.statuses[PLAYER_STATUS_POISONED].active
                 && loaded.statuses[PLAYER_STATUS_POISONED].level == 3,
             "legacy v5 should derive poisoned status from old poison");

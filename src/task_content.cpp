@@ -461,11 +461,11 @@ const char *TasksContent_GetStageObjective(const TaskSystem *tasks, const Player
         }
     }
     if (tasks->stage == 7) {
+        if (Tasks_IsEndingPreCheckReady(tasks) && !tasks->endingArchiveReviewed && tasks->selectedEndingRoute == ENDING_NONE) {
+            return Loc_PickLiteral("Return to Loxi and review the assembled archive before choosing the final route. The story is finally whole enough to judge what your answer should cost.",
+                                   "返回洛希处，先复核已经拼完整的档案，再选择最终路线。故事已经完整到足以判断，你的回答究竟该付出什么代价。");
+        }
         if (Tasks_IsEndingBranchReady(tasks) && tasks->selectedEndingRoute == ENDING_NONE) {
-            if (!tasks->endingArchiveReviewed) {
-                return Loc_PickLiteral("Return to Loxi and review the assembled archive before choosing the final route. The story is finally whole enough to judge what your answer should cost.",
-                                       "返回洛希处，先复核已经拼完整的档案，再选择最终路线。故事已经完整到足以判断，你的回答究竟该付出什么代价。");
-            }
             return GetStage7EndingChoiceObjective(tasks, player);
         }
         if (tasks->selectedEndingRoute == ENDING_HEROIC) {
@@ -546,243 +546,323 @@ const char *TasksContent_GetStageGuidance(const TaskSystem *tasks, const Player 
     locationName = player != NULL ? Map_GetLocationNameAt(player->gridX, player->gridY) : Loc_Translate("Unknown Area");
     if (std::strcmp(locationName, "West Frontier") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return Loc_Translate("West Frontier is still sealed. Restore the comm relay before the western signal can become a real route.");
+            return Loc_PickLiteral("West Frontier is still sealed. Restore the comm relay before the western signal can become a real route.",
+                                   "西部前线仍处于封锁状态。先修复通讯中继，然后西线信号才能成为真正的路线。");
         }
         if (tasks->westW5Completed) {
-            return Loc_Translate("The west archive trail is complete. The missing crew's relay now stands as a closed record.");
+            return Loc_PickLiteral("The west archive trail is complete. The missing crew's relay now stands as a closed record.",
+                                   "西线档案路线已完整。失踪船员的中继如今已成为一份已结案的记录。");
         }
         if (tasks->westW5Started) {
-            return Loc_Translate("Finish the Last Camp investigation, then return to base with the final west-side argument.");
+            return Loc_PickLiteral("Finish the Last Camp investigation, then return to base with the final west-side argument.",
+                                   "完成最后营地调查，然后带着最终的西线论点返回基地。");
         }
         if (tasks->westW4Completed) {
-            return Loc_Translate("Echo Basin is archived. Move on to Last Camp, where the west trail stops being route work and becomes a final position.");
+            return Loc_PickLiteral("Echo Basin is archived. Move on to Last Camp, where the west trail stops being route work and becomes a final position.",
+                                   "回声盆地已归档。继续前往最后营地，在那里西线不再只是路线工作，而是变成了最终立场。");
         }
         if (tasks->westW4Started) {
-            return Loc_Translate("Finish the Echo Basin investigation, then return to base so the relay can be rebuilt into readable history.");
+            return Loc_PickLiteral("Finish the Echo Basin investigation, then return to base so the relay can be rebuilt into readable history.",
+                                   "完成回声盆地调查，然后返回基地，让中继能被重建为可读的历史。");
         }
         if (tasks->westW3Completed) {
-            return Loc_Translate("Canopy Hollow is archived. Move on to Echo Basin, where disappearance starts turning into proof of successful handoff.");
+            return Loc_PickLiteral("Canopy Hollow is archived. Move on to Echo Basin, where disappearance starts turning into proof of successful handoff.",
+                                   "林中空地已归档。继续前往回声盆地，在那里失踪开始转变为成功交接的证据。");
         }
         if (tasks->westW3Started) {
-            return Loc_Translate("Finish the Canopy Hollow investigation, then return to base with the handoff record intact.");
+            return Loc_PickLiteral("Finish the Canopy Hollow investigation, then return to base with the handoff record intact.",
+                                   "完成林中空地调查，然后带着完整的交接记录返回基地。");
         }
         if (tasks->westW2Completed) {
-            return Loc_Translate("Survey Break is archived. Move on to Canopy Hollow, where the route starts speaking in people instead of markers.");
+            return Loc_PickLiteral("Survey Break is archived. Move on to Canopy Hollow, where the route starts speaking in people instead of markers.",
+                                   "勘探断点已归档。继续前往林中空地，在那里路线开始由人而非标记来讲述。");
         }
         if (tasks->westW2Started) {
-            return Loc_Translate("Finish the Survey Break investigation, then return to base with the anchor chain restored.");
+            return Loc_PickLiteral("Finish the Survey Break investigation, then return to base with the anchor chain restored.",
+                                   "完成勘探断点调查，然后带着已修复的锚链返回基地。");
         }
         if (tasks->westW1Completed) {
-            return Loc_Translate("West Frontier is archived. Move on to Survey Break and follow the route the scouts meant to leave behind.");
+            return Loc_PickLiteral("West Frontier is archived. Move on to Survey Break and follow the route the scouts meant to leave behind.",
+                                   "西部前线已归档。继续前往勘探断点，跟随侦察员本想留下的路线前进。");
         }
         if (tasks->westW1Started) {
-            return Loc_Translate("Finish the West Frontier investigation, then return to base with the first signal fragment.");
+            return Loc_PickLiteral("Finish the West Frontier investigation, then return to base with the first signal fragment.",
+                                   "完成西部前线调查，然后带着第一块信号碎片返回基地。");
         }
-        return Loc_Translate("The west trail is open. Recover the first fragment and bring it back so Loxi can prove this signal was never random noise.");
+        return Loc_PickLiteral("The west trail is open. Recover the first fragment and bring it back so Loxi can prove this signal was never random noise.",
+                               "西线已开启。回收第一块碎片并带回来，让洛希能证明这个信号从来就不是随机噪音。");
     }
     if (std::strcmp(locationName, "Survey Break") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return Loc_Translate("Survey Break is still sealed. Restore the comm relay before the west relay chain can continue.");
+            return Loc_PickLiteral("Survey Break is still sealed. Restore the comm relay before the west relay chain can continue.",
+                                   "勘探断点仍处于封锁状态。先修复通讯中继，然后西线中继链才能继续。");
         }
         if (tasks->westW3Completed) {
-            return Loc_Translate("The west trail has already been carried past Echo Basin. Survey Break now stands as part of a longer relay, not a dead end.");
+            return Loc_PickLiteral("The west trail has already been carried past Echo Basin. Survey Break now stands as part of a longer relay, not a dead end.",
+                                   "西线路线已经推进过了回声盆地。勘探断点如今成为更长中继链的一部分，而不是死路。");
         }
         if (tasks->westW3Started) {
-            return Loc_Translate("The Canopy Hollow investigation is already active farther ahead. Survey Break has done its part in keeping that chain alive.");
+            return Loc_PickLiteral("The Canopy Hollow investigation is already active farther ahead. Survey Break has done its part in keeping that chain alive.",
+                                   "林中空地调查已在更前方进行中。勘探断点已经为保持这条链的运作做出了贡献。");
         }
         if (tasks->westW2Completed) {
-            return Loc_Translate("Survey Break is archived. Continue to Canopy Hollow and follow the route into its first true handoff point.");
+            return Loc_PickLiteral("Survey Break is archived. Continue to Canopy Hollow and follow the route into its first true handoff point.",
+                                   "勘探断点已归档。继续前往林中空地，跟随路线进入第一个真正的交接点。");
         }
         if (tasks->westW2Started) {
-            return Loc_Translate("Finish the Survey Break objectives, then return to base. The anchors only matter if the record survives the walk back.");
+            return Loc_PickLiteral("Finish the Survey Break objectives, then return to base. The anchors only matter if the record survives the walk back.",
+                                   "完成勘探断点目标，然后返回基地。锚点只有在记录能活着带回去的情况下才有意义。");
         }
         if (tasks->westW1Completed) {
-            return Loc_Translate("The Survey Break investigation is active here. Restore the relay work, then return to base before pushing deeper.");
+            return Loc_PickLiteral("The Survey Break investigation is active here. Restore the relay work, then return to base before pushing deeper.",
+                                   "勘探断点调查已在此处开始。修复中继工作，然后在深入之前返回基地。");
         }
-        return Loc_Translate("Complete the West Frontier investigation first. Survey Break only matters once the first signal fragment is archived.");
+        return Loc_PickLiteral("Complete the West Frontier investigation first. Survey Break only matters once the first signal fragment is archived.",
+                               "先完成西部前线调查。只有在第一块信号碎片归档后，勘探断点才有意义。");
     }
     if (std::strcmp(locationName, "Canopy Hollow") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return Loc_Translate("Canopy Hollow is still sealed. Restore the comm relay before the west trail can rise into its first watch post.");
+            return Loc_PickLiteral("Canopy Hollow is still sealed. Restore the comm relay before the west trail can rise into its first watch post.",
+                                   "林中空地仍处于封锁状态。先修复通讯中继，然后西线才能升到它的第一个瞭望点。");
         }
         if (tasks->westW5Completed) {
-            return Loc_Translate("The west trail is fully archived. Canopy Hollow now reads as part of a complete human relay line.");
+            return Loc_PickLiteral("The west trail is fully archived. Canopy Hollow now reads as part of a complete human relay line.",
+                                   "西线已完全归档。林中空地如今读起来像是一条完整的人类中继线的一部分。");
         }
         if (tasks->westW5Started) {
-            return Loc_Translate("The Last Camp investigation is active. Canopy Hollow has already passed its burden forward.");
+            return Loc_PickLiteral("The Last Camp investigation is active. Canopy Hollow has already passed its burden forward.",
+                                   "最后营地调查正在进行中。林中空地已经把它的担子递交给了前方。");
         }
         if (tasks->westW4Completed) {
-            return Loc_Translate("Echo Basin is archived. Continue to Last Camp, where the west trail's final judgment was left behind.");
+            return Loc_PickLiteral("Echo Basin is archived. Continue to Last Camp, where the west trail's final judgment was left behind.",
+                                   "回声盆地已归档。继续前往最后营地，在那里留下了西线路线的最终判断。");
         }
         if (tasks->westW4Started) {
-            return Loc_Translate("The Echo Basin investigation is active. Canopy Hollow has already handed the route onward.");
+            return Loc_PickLiteral("The Echo Basin investigation is active. Canopy Hollow has already handed the route onward.",
+                                   "回声盆地调查正在进行中。林中空地已经把路线递交给了前方。");
         }
         if (tasks->westW3Completed) {
-            return Loc_Translate("Canopy Hollow is archived. Continue to Echo Basin, where the broken pings finally start reading like proof.");
+            return Loc_PickLiteral("Canopy Hollow is archived. Continue to Echo Basin, where the broken pings finally start reading like proof.",
+                                   "林中空地已归档。继续前往回声盆地，在那里破碎的信号终于开始读起来像是证据。");
         }
         if (tasks->westW3Started) {
-            return Loc_Translate("Finish the Canopy Hollow investigation here, then return to base with the record that turns absence into duty.");
+            return Loc_PickLiteral("Finish the Canopy Hollow investigation here, then return to base with the record that turns absence into duty.",
+                                   "在这里完成林中空地调查，然后带着那份把缺席转化为责任的记录返回基地。");
         }
         if (tasks->westW2Completed) {
-            return Loc_Translate("The Canopy Hollow investigation is active here. Hold the perch long enough to recover the handoff, then return.");
+            return Loc_PickLiteral("The Canopy Hollow investigation is active here. Hold the perch long enough to recover the handoff, then return.",
+                                   "林中空地调查已在此处开始。在制高点停留足够长时间来恢复交接，然后返回。");
         }
-        return Loc_Translate("Complete the Survey Break investigation first. The climb to Canopy Hollow only matters once the relay markers are restored.");
+        return Loc_PickLiteral("Complete the Survey Break investigation first. The climb to Canopy Hollow only matters once the relay markers are restored.",
+                               "先完成勘探断点调查。只有在中继标记被修复后，攀登到林中空地才有意义。");
     }
     if (std::strcmp(locationName, "Echo Basin") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return Loc_Translate("Echo Basin is still sealed. Restore the comm relay before the west fragments can be rebuilt into route truth.");
+            return Loc_PickLiteral("Echo Basin is still sealed. Restore the comm relay before the west fragments can be rebuilt into route truth.",
+                                   "回声盆地仍处于封锁状态。先修复通讯中继，然后西线碎片才能被重建为路线真相。");
         }
         if (tasks->westW5Completed) {
-            return Loc_Translate("The west trail is fully archived. Echo Basin now stands as proof that the handoff really reached the south.");
+            return Loc_PickLiteral("The west trail is fully archived. Echo Basin now stands as proof that the handoff really reached the south.",
+                                   "西线路线已完全归档。回声盆地如今成为交接确实到达南线的证据。");
         }
         if (tasks->westW5Started) {
-            return Loc_Translate("The Last Camp investigation is active. Echo Basin has already done its work of turning static into proof.");
+            return Loc_PickLiteral("The Last Camp investigation is active. Echo Basin has already done its work of turning static into proof.",
+                                   "最后营地调查正在进行中。回声盆地已经完成了把静态转化为证据的工作。");
         }
         if (tasks->westW4Completed) {
-            return Loc_Translate("Echo Basin is archived. Continue to Last Camp and recover the argument left at the end of the relay.");
+            return Loc_PickLiteral("Echo Basin is archived. Continue to Last Camp and recover the argument left at the end of the relay.",
+                                   "回声盆地已归档。继续前往最后营地，回收中继尽头留下的论点。");
         }
         if (tasks->westW4Started) {
-            return Loc_Translate("Finish the Echo Basin investigation here, then return to base so Loxi can reconstruct the crossing properly.");
+            return Loc_PickLiteral("Finish the Echo Basin investigation here, then return to base so Loxi can reconstruct the crossing properly.",
+                                   "在这里完成回声盆地调查，然后返回基地，让洛希能正确重建那次穿越。");
         }
         if (tasks->westW3Completed) {
-            return Loc_Translate("The Echo Basin investigation is active here. Recover the topology proof, then return before the route loses coherence again.");
+            return Loc_PickLiteral("The Echo Basin investigation is active here. Recover the topology proof, then return before the route loses coherence again.",
+                                   "回声盆地调查已在此处开始。回收拓扑证明，然后在路线再次失去连贯性之前返回。");
         }
-        return Loc_Translate("Complete the Canopy Hollow investigation first. Echo Basin only closes once the handoff above it is understood.");
+        return Loc_PickLiteral("Complete the Canopy Hollow investigation first. Echo Basin only closes once the handoff above it is understood.",
+                               "先完成林中空地调查。只有在上方的交接被理解后，回声盆地才算结束。");
     }
     if (std::strcmp(locationName, "Last Camp") == 0) {
         if (!IsWestRouteAvailable(tasks)) {
-            return Loc_Translate("Last Camp is still sealed. Restore the comm relay before the west trail can reach its final testimony.");
+            return Loc_PickLiteral("Last Camp is still sealed. Restore the comm relay before the west trail can reach its final testimony.",
+                                   "最后营地仍处于封锁状态。先修复通讯中继，然后西线路线才能到达它的最终证词。");
         }
         if (tasks->westW5Completed) {
-            return Loc_Translate("Last Camp is archived. The west route now ends in argument and intention, not disappearance.");
+            return Loc_PickLiteral("Last Camp is archived. The west route now ends in argument and intention, not disappearance.",
+                                   "最后营地已归档。西线路线如今以论点和意图而非失踪告终。");
         }
         if (tasks->westW5Started) {
-            return Loc_Translate("Finish the Last Camp investigation here, then return to base with the final west-side testament.");
+            return Loc_PickLiteral("Finish the Last Camp investigation here, then return to base with the final west-side testament.",
+                                   "在这里完成最后营地调查，然后带着最终的西线证词返回基地。");
         }
         if (tasks->westW4Completed) {
-            return Loc_Translate("The Last Camp investigation is active here. Recover the final notebooks, then return before this answer is lost with the camp.");
+            return Loc_PickLiteral("The Last Camp investigation is active here. Recover the final notebooks, then return before this answer is lost with the camp.",
+                                   "最后营地调查已在此处开始。回收最终笔记本，然后在这个答案随营地消失前返回。");
         }
-        return Loc_Translate("Complete the Echo Basin investigation first. The last camp only makes sense once the relay that reached it is proven.");
+        return Loc_PickLiteral("Complete the Echo Basin investigation first. The last camp only makes sense once the relay that reached it is proven.",
+                               "先完成回声盆地调查。只有在到达它的中继被证明后，最后营地才有意义。");
     }
     if (std::strcmp(locationName, "South Collapse") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("South Collapse is still sealed. Restore the Power Bay before the facility side of the story can reopen.");
+            return Loc_PickLiteral("South Collapse is still sealed. Restore the Power Bay before the facility side of the story can reopen.",
+                                   "南部塌陷仍处于封锁状态。先恢复动力舱，然后设施方面的故事才能重新开始。");
         }
         if (tasks->southS5Completed) {
-            return Loc_Translate("The south archive trail is complete. The facility chain now closes as one damaged maintenance history.");
+            return Loc_PickLiteral("The south archive trail is complete. The facility chain now closes as one damaged maintenance history.",
+                                   "南线档案路线已完整。设施链如今以一份受损的维护历史告终。");
         }
         if (tasks->southS5Started) {
-            return Loc_Translate("Finish the Root Vault investigation, then return to base with the system-level truth intact.");
+            return Loc_PickLiteral("Finish the Root Vault investigation, then return to base with the system-level truth intact.",
+                                   "完成根脉核心调查，然后带着完整的系统级真相返回基地。");
         }
         if (tasks->southS4Completed) {
-            return Loc_Translate("Purifier Ring is archived. Move on to Root Vault, where the system finally explains what all of this has been.");
+            return Loc_PickLiteral("Purifier Ring is archived. Move on to Root Vault, where the system finally explains what all of this has been.",
+                                   "净化环区已归档。继续前往根脉核心，在那里系统终于会解释这一切到底是什么。");
         }
         if (tasks->southS4Started) {
-            return Loc_Translate("Finish the Purifier Ring investigation, then return to base with the control sequence preserved.");
+            return Loc_PickLiteral("Finish the Purifier Ring investigation, then return to base with the control sequence preserved.",
+                                   "完成净化环区调查，然后带着保存好的控制序列返回基地。");
         }
         if (tasks->southS3Completed) {
-            return Loc_Translate("Service Shafts are archived. Move on to Purifier Ring, where the machine stops feeling buried and starts answering back.");
+            return Loc_PickLiteral("Service Shafts are archived. Move on to Purifier Ring, where the machine stops feeling buried and starts answering back.",
+                                   "竖井区已归档。继续前往净化环区，在那里机器不再感觉像是被掩埋的，而是开始给予回应。");
         }
         if (tasks->southS3Started) {
-            return Loc_Translate("Finish the Service Shaft investigation, then return to base with the backbone record.");
+            return Loc_PickLiteral("Finish the Service Shaft investigation, then return to base with the backbone record.",
+                                   "完成竖井区调查，然后带着骨干记录返回基地。");
         }
         if (tasks->southS2Completed) {
-            return Loc_Translate("Vent Galleries are archived. Move on to Service Shafts, where ship and facility begin reading as one machine.");
+            return Loc_PickLiteral("Vent Galleries are archived. Move on to Service Shafts, where ship and facility begin reading as one machine.",
+                                   "通风廊道已归档。继续前往竖井区，在那里飞船和设施开始读起来像是同一台机器。");
         }
         if (tasks->southS2Started) {
-            return Loc_Translate("Finish the Vent Galleries investigation, then return to base with the handover that bought everyone cleaner minutes.");
+            return Loc_PickLiteral("Finish the Vent Galleries investigation, then return to base with the handover that bought everyone cleaner minutes.",
+                                   "完成通风廊道调查，然后带着那份为所有人买来了干净空气时间的交接返回基地。");
         }
         if (tasks->southS1Completed) {
-            return Loc_Translate("South Collapse is archived. Move on to Vent Galleries and keep following the trail from hazard into infrastructure.");
+            return Loc_PickLiteral("South Collapse is archived. Move on to Vent Galleries and keep following the trail from hazard into infrastructure.",
+                                   "南部塌陷已归档。继续前往通风廊道，继续沿着从危险到基础设施的轨迹前进。");
         }
         if (tasks->southS1Started) {
-            return Loc_Translate("Finish the South Collapse investigation, then return to base with the outage memo that renames the fog.");
+            return Loc_PickLiteral("Finish the South Collapse investigation, then return to base with the outage memo that renames the fog.",
+                                   "完成南部塌陷调查，然后带着那份重新定义了迷雾的停机备忘录返回基地。");
         }
-        return Loc_Translate("The south trail is open. Recover the first outage record and bring it back so the fog can stop reading like pure hostility.");
+        return Loc_PickLiteral("The south trail is open. Recover the first outage record and bring it back so the fog can stop reading like pure hostility.",
+                               "南线已开启。回收第一份停机记录并带回来，让迷雾不再读起来像是纯粹的敌意。");
     }
     if (std::strcmp(locationName, "Vent Galleries") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("Vent Galleries are still sealed. Restore the Power Bay before the south route can begin breathing properly again.");
+            return Loc_PickLiteral("Vent Galleries are still sealed. Restore the Power Bay before the south route can begin breathing properly again.",
+                                   "通风廊道仍处于封锁状态。在南线能再次正常呼吸之前，先恢复动力舱。");
         }
         if (tasks->southS3Completed) {
-            return Loc_Translate("The south trail has already been carried through the Service Shafts. Vent Galleries now stand as the first point where the system answered back.");
+            return Loc_PickLiteral("The south trail has already been carried through the Service Shafts. Vent Galleries now stand as the first point where the system answered back.",
+                                   "南线已经通过竖井区继续推进。通风廊道现在是系统首次作出回应的第一点。");
         }
         if (tasks->southS3Started) {
-            return Loc_Translate("The Service Shafts investigation is already active deeper in. Vent Galleries have already handed the route onward.");
+            return Loc_PickLiteral("The Service Shafts investigation is already active deeper in. Vent Galleries have already handed the route onward.",
+                                   "竖井区调查已在更深处进行。通风廊道已经把路线递交给前方了。");
         }
         if (tasks->southS2Completed) {
-            return Loc_Translate("Vent Galleries are archived. Continue to Service Shafts and follow the route down into the backbone.");
+            return Loc_PickLiteral("Vent Galleries are archived. Continue to Service Shafts and follow the route down into the backbone.",
+                                   "通风廊道已归档。继续前往竖井区，沿着路线深入到骨干。");
         }
         if (tasks->southS2Started) {
-            return Loc_Translate("Finish the Vent Galleries investigation here, then return to base with the calibration handover intact.");
+            return Loc_PickLiteral("Finish the Vent Galleries investigation here, then return to base with the calibration handover intact.",
+                                   "在此完成通风廊道调查，然后带着完好的校准交接返回基地。");
         }
         if (tasks->southS1Completed) {
-            return Loc_Translate("The Vent Galleries investigation is active here. Restore the handover, then return before the cleaner window closes.");
+            return Loc_PickLiteral("The Vent Galleries investigation is active here. Restore the handover, then return before the cleaner window closes.",
+                                   "通风廊道调查已在此进行。恢复交接，然后在清洁窗口关闭前返回。");
         }
-        return Loc_Translate("Complete the South Collapse investigation first. The vents only matter once the outage memo is archived.");
+        return Loc_PickLiteral("Complete the South Collapse investigation first. The vents only matter once the outage memo is archived.",
+                               "先完成南部塌陷调查。只有在停机备忘录归档后，通风廊道才有意义。");
     }
     if (std::strcmp(locationName, "Service Shafts") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("Service Shafts are still sealed. Restore the Power Bay before the south route can enter the buried backbone.");
+            return Loc_PickLiteral("Service Shafts are still sealed. Restore the Power Bay before the south route can enter the buried backbone.",
+                                   "竖井区仍处于封锁状态。在南线能进入埋藏的骨干之前，先恢复动力舱。");
         }
         if (tasks->southS5Completed) {
-            return Loc_Translate("The south trail is fully archived. Service Shafts now read as one doorway into the same machine that caught the ship.");
+            return Loc_PickLiteral("The south trail is fully archived. Service Shafts now read as one doorway into the same machine that caught the ship.",
+                                   "南线已完全归档。竖井区现在读起来像是通往捕获飞船的同一台机器的一道门。");
         }
         if (tasks->southS5Started) {
-            return Loc_Translate("The Root Vault investigation is active. The shaft backbone has already done its work of carrying you there.");
+            return Loc_PickLiteral("The Root Vault investigation is active. The shaft backbone has already done its work of carrying you there.",
+                                   "根脉核心调查正在进行中。竖井骨干已经完成了把你带到那里的工作。");
         }
         if (tasks->southS4Completed) {
-            return Loc_Translate("Purifier Ring is archived. Continue to Root Vault and pull the full system truth into the open.");
+            return Loc_PickLiteral("Purifier Ring is archived. Continue to Root Vault and pull the full system truth into the open.",
+                                   "净化环区已归档。继续前往根脉核心，把完整的系统真相拉出来。");
         }
         if (tasks->southS4Started) {
-            return Loc_Translate("The Purifier Ring investigation is active. Service Shafts have already handed the route forward.");
+            return Loc_PickLiteral("The Purifier Ring investigation is active. Service Shafts have already handed the route forward.",
+                                   "净化环区调查正在进行中。竖井区已经把路线递交给前方了。");
         }
         if (tasks->southS3Completed) {
-            return Loc_Translate("Service Shafts are archived. Continue to Purifier Ring, where sequence starts mattering more than force.");
+            return Loc_PickLiteral("Service Shafts are archived. Continue to Purifier Ring, where sequence starts mattering more than force.",
+                                   "竖井区已归档。继续前往净化环区，在那里序列开始比武力更重要。");
         }
         if (tasks->southS3Started) {
-            return Loc_Translate("Finish the Service Shafts investigation here, then return to base with the sync record that proves ship and facility share one backbone.");
+            return Loc_PickLiteral("Finish the Service Shafts investigation here, then return to base with the sync record that proves ship and facility share one backbone.",
+                                   "在此完成竖井区调查，然后带着证明飞船和设施共用一个骨干的同步记录返回基地。");
         }
         if (tasks->southS2Completed) {
-            return Loc_Translate("The Service Shafts investigation is active here. Recover the sync record, then return before the route buries the pattern again.");
+            return Loc_PickLiteral("The Service Shafts investigation is active here. Recover the sync record, then return before the route buries the pattern again.",
+                                   "竖井区调查已在此进行。恢复同步记录，然后在路线再次埋藏模式之前返回。");
         }
-        return Loc_Translate("Complete the Vent Galleries investigation first. The shafts only make sense once the vent handover is archived.");
+        return Loc_PickLiteral("Complete the Vent Galleries investigation first. The shafts only make sense once the vent handover is archived.",
+                               "先完成通风廊道调查。只有在通风交接归档后，竖井区才有意义。");
     }
     if (std::strcmp(locationName, "Purifier Ring") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("Purifier Ring is still sealed. Restore the Power Bay first.");
+            return Loc_PickLiteral("Purifier Ring is still sealed. Restore the Power Bay first.",
+                                   "净化环区仍处于封锁状态。先恢复动力舱。");
         }
         if (tasks->southS5Completed) {
-            return Loc_Translate("The south trail is fully archived.");
+            return Loc_PickLiteral("The south trail is fully archived. Purifier Ring now stands as the place where danger was finally re-read as control.",
+                                   "南线档案路线已完整。净化环区如今代表着那个危险终于被重新解读为控制系统的地方。");
         }
         if (tasks->southS5Started) {
-            return Loc_Translate("The Root Vault investigation is active. Finish it, then return.");
+            return Loc_PickLiteral("The Root Vault investigation is active. Purifier Ring has already handed the route toward the final explanation.",
+                                   "根脉核心调查正在进行中。净化环区已经把路线递交给了最终的答案。");
         }
         if (tasks->southS4Completed) {
-            return Loc_Translate("Purifier Ring is archived. Continue to Root Vault.");
+            return Loc_PickLiteral("Purifier Ring is archived. Continue to Root Vault, where the system finally explains what all of this has been.",
+                                   "净化环区已归档。继续前往根脉核心，在那里系统终于会解释这一切到底是什么。");
         }
         if (tasks->southS4Started) {
-            return Loc_Translate("Finish the Purifier Ring investigation here, then return to base.");
+            return Loc_PickLiteral("Finish the Purifier Ring investigation here. Recover the control brief that changes what the monoliths mean, then return to base.",
+                                   "在这里完成净化环区调查。回收那份改变了石碑含义的控制简报，然后返回基地。");
         }
         if (tasks->southS3Completed) {
-            return Loc_Translate("The Purifier Ring investigation is active here. Finish it, then return.");
+            return Loc_PickLiteral("The Purifier Ring investigation is active here now that Service Shafts are archived. Recover the brief that turns the system from threat into responsibility.",
+                                   "净化环区调查已在此处开始，因为竖井区已归档。回收那份把系统从威胁转变为责任的简报。");
         }
-        return Loc_Translate("Complete the Service Shaft investigation first.");
+        return Loc_PickLiteral("Complete the Service Shaft investigation first. The ring only speaks clearly once the backbone record is in hand.",
+                               "先完成竖井区调查。只有拿到骨干记录后，环区才会真正开始说话。");
     }
     if (std::strcmp(locationName, "Root Vault") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("Root Vault is still sealed. Restore the Power Bay first.");
+            return Loc_PickLiteral("Root Vault stays sealed until the Power Bay is restored and the south route can reach its final archive.",
+                                   "根脉核心保持封锁，直到动力舱恢复且南线能到达最终归档处。");
         }
         if (tasks->southS5Completed) {
-            return Loc_Translate("Root Vault is archived.");
+            return Loc_PickLiteral("Root Vault is archived. The tower, fog, purifier chain, monoliths, and crash now all sit inside one corrected record.",
+                                   "根脉核心已归档。塔楼、迷雾、净化链、石碑和坠机现在都已纳入同一套纠正后的记录中。");
         }
         if (tasks->southS5Started) {
-            return Loc_Translate("Finish the Root Vault investigation here, then return to base.");
+            return Loc_PickLiteral("Root Vault investigation in progress. Recover the core dossier that finally tells the same story as every other clue.",
+                                   "根脉核心调查进行中。回收那份终于能和其他所有线索讲述同一个故事的核心档案。");
         }
         if (tasks->southS4Completed) {
-            return Loc_Translate("The Root Vault investigation is active here. Finish it, then return.");
+            return Loc_PickLiteral("The Root Vault investigation is active here now that Purifier Ring is archived. Pull the final dossier out before the whole system sinks back into fragments.",
+                                   "根脉核心调查已在此处开始，因为净化环区已归档。在整个系统再次碎裂前，把最终档案取出来。");
         }
-        return Loc_Translate("Complete the Purifier Ring investigation first.");
+        return Loc_PickLiteral("Complete the Purifier Ring investigation first. Root Vault only matters once the control layer has been understood.",
+                               "先完成净化环区调查。只有理解了控制层，根脉核心才会有意义。");
     }
 
     switch (tasks->stage) {
@@ -1257,39 +1337,51 @@ const char *TasksContent_GetFieldNote(const TaskSystem *tasks, const Player *pla
     }
     if (std::strcmp(locationName, "Purifier Ring") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("Purifier Ring stays sealed until the Power Bay is restored and the south route can reach the control layer.");
+            return Loc_PickLiteral("Purifier Ring stays sealed until the Power Bay is restored and the south route can reach the control layer.",
+                                   "净化环区保持封锁，直到动力舱恢复且南线能到达控制层。");
         }
         if (tasks->southS5Completed) {
-            return Loc_Translate("The south trail is fully archived. Purifier Ring now stands as the place where danger was finally re-read as control.");
+            return Loc_PickLiteral("The south trail is fully archived. Purifier Ring now stands as the place where danger was finally re-read as control.",
+                                   "南线已完全归档。净化环区现在代表着那个危险终于被重新解读为控制的地方。");
         }
         if (tasks->southS5Started) {
-            return Loc_Translate("The Root Vault investigation is active. Purifier Ring has already handed the route toward the final explanation.");
+            return Loc_PickLiteral("The Root Vault investigation is active. Purifier Ring has already handed the route toward the final explanation.",
+                                   "根脉核心调查正在进行中。净化环区已经把路线递交给了最终解释。");
         }
         if (tasks->southS4Completed) {
-            return Loc_Translate("Purifier Ring is archived. Proceed to Root Vault, where the whole lattice can finally be named.");
+            return Loc_PickLiteral("Purifier Ring is archived. Proceed to Root Vault, where the whole lattice can finally be named.",
+                                   "净化环区已归档。继续前往根脉核心，在那里整个网络终于能被命名。");
         }
         if (tasks->southS4Started) {
-            return Loc_Translate("Purifier Ring investigation in progress. Recover the control brief that changes what the monoliths mean.");
+            return Loc_PickLiteral("Purifier Ring investigation in progress. Recover the control brief that changes what the monoliths mean.",
+                                   "净化环区调查进行中。恢复那份改变了石碑含义的控制简报。");
         }
         if (tasks->southS3Completed) {
-            return Loc_Translate("The Purifier Ring investigation is active here now that Service Shafts are archived. Recover the brief that turns the system from threat into responsibility.");
+            return Loc_PickLiteral("The Purifier Ring investigation is active here now that Service Shafts are archived. Recover the brief that turns the system from threat into responsibility.",
+                                   "净化环区调查已在此进行，因为竖井区已归档。恢复那份把系统从威胁转变为责任的简报。");
         }
-        return Loc_Translate("Complete the Service Shaft investigation first. The ring only speaks clearly once the backbone record is in hand.");
+        return Loc_PickLiteral("Complete the Service Shaft investigation first. The ring only speaks clearly once the backbone record is in hand.",
+                               "先完成竖井区调查。只有拿到骨干记录后，环区才会清楚说话。");
     }
     if (std::strcmp(locationName, "Root Vault") == 0) {
         if (!IsSouthRouteAvailable(tasks)) {
-            return Loc_Translate("Root Vault stays sealed until the Power Bay is restored and the south route can reach its final archive.");
+            return Loc_PickLiteral("Root Vault stays sealed until the Power Bay is restored and the south route can reach its final archive.",
+                                   "根脉核心保持封锁，直到动力舱恢复且南线能到达它的最终归档。");
         }
         if (tasks->southS5Completed) {
-            return Loc_Translate("Root Vault is archived. The tower, fog, purifier chain, monoliths, and crash now all sit inside one corrected record.");
+            return Loc_PickLiteral("Root Vault is archived. The tower, fog, purifier chain, monoliths, and crash now all sit inside one corrected record.",
+                                   "根脉核心已归档。塔楼、迷雾、净化链、石碑和坠毁现在都安放在一份纠正后的记录中。");
         }
         if (tasks->southS5Started) {
-            return Loc_Translate("Root Vault investigation in progress. Recover the core dossier that finally tells the same story as every other clue.");
+            return Loc_PickLiteral("Root Vault investigation in progress. Recover the core dossier that finally tells the same story as every other clue.",
+                                   "根脉核心调查进行中。恢复那份终于能和所有其他线索讲同一个故事的核心档案。");
         }
         if (tasks->southS4Completed) {
-            return Loc_Translate("The Root Vault investigation is active here now that Purifier Ring is archived. Pull the final dossier out before the whole system sinks back into fragments.");
+            return Loc_PickLiteral("The Root Vault investigation is active here now that Purifier Ring is archived. Pull the final dossier out before the whole system sinks back into fragments.",
+                                   "根脉核心调查已在此进行，因为净化环区已归档。在整个系统再次碎裂之前，把最终档案拉出来。");
         }
-        return Loc_Translate("Complete the Purifier Ring investigation first. Root Vault only matters once the control layer has been understood.");
+        return Loc_PickLiteral("Complete the Purifier Ring investigation first. Root Vault only matters once the control layer has been understood.",
+                               "先完成净化环区调查。只有在控制层被理解后，根脉核心才有意义。");
     }
 
     switch (area) {

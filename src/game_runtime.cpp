@@ -31,6 +31,7 @@ void Game_EnterEndingState(Game *game) {
     }
 
     game->state = GAME_STATE_ENDING;
+    game->endingMenuSelection = 0;
     Audio_SetScene(&game->audio, AUDIO_SCENE_ENDING);
     Audio_SetMusicStage(&game->audio, AUDIO_MUSIC_ENDING);
     Audio_PlayCue(&game->audio, GetEndingCue(game->tasks.ending));

@@ -180,6 +180,8 @@ Rectangle UI_GetSettingsAccountButtonRect(int screenWidth, int screenHeight, int
 Rectangle UI_GetHudShortcutRect(int screenWidth, int screenHeight, int shortcutIndex);
 Rectangle UI_GetSettlementConfirmPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex, int buttonCount);
+Rectangle UI_GetEndingRouteConfirmPanelRect(int screenWidth, int screenHeight);
+Rectangle UI_GetEndingRouteConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex, int buttonCount);
 Rectangle UI_GetAccountDeleteConfirmPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAccountDeleteConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 void UI_DrawHud(const Player *player, const TaskSystem *tasks, const HudMessage *message, const AssetBundle *assets, int screenWidth, int screenHeight);
@@ -248,7 +250,7 @@ void UI_DrawCommunicatorOverlay(const AssetBundle *assets,
                                 int screenWidth,
                                 int screenHeight);
 void UI_DrawHelpOverlay(const AssetBundle *assets, int screenWidth, int screenHeight);
-void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds);
+void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds, int menuSelection);
 void UI_DrawDeathPopup(const Player *player, bool hasSave, const AssetBundle *assets, int screenWidth, int screenHeight, int selectedButton);
 void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
                                    const Player *player,
@@ -257,6 +259,11 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
                                    int screenHeight,
                                    int buttonCount,
                                    int selectedButton);
+void UI_DrawEndingRouteConfirmPopup(const AssetBundle *assets,
+                                    GameEnding pendingEnding,
+                                    int screenWidth,
+                                    int screenHeight,
+                                    int selectedButton);
 void UI_DrawAccountDeleteConfirmPopup(const AssetBundle *assets,
                                       const char *accountName,
                                       int screenWidth,

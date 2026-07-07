@@ -65,9 +65,8 @@ static bool AreFinalArchiveTasksComplete(const TaskSystem *tasks) {
 }
 
 static bool IsEndingRouteSelectionReady(const TaskSystem *tasks) {
-    return Tasks_IsEndingBranchReady(tasks)
-        && tasks != NULL
-        && tasks->endingArchiveReviewed;
+    return tasks != NULL
+        && Tasks_IsEndingBranchReady(tasks);
 }
 
 static bool IsCollectedLogIndex(const TaskSystem *tasks, int logIndex) {
@@ -580,11 +579,16 @@ const char *Tasks_GetCommunicatorHint(const TaskSystem *tasks) {
     return tasks->communicator;
 }
 
-bool Tasks_IsEndingBranchReady(const TaskSystem *tasks) {
-    return AreFinalArchiveTasksComplete(tasks)
-        && tasks != NULL
+bool Tasks_IsEndingPreCheckReady(const TaskSystem *tasks) {
+    return tasks != NULL
+        && AreFinalArchiveTasksComplete(tasks)
         && CountCollectedLogsForCategory(tasks, SHIP_LOG_MAINLINE)
             >= CountTotalLogsForCategory(tasks, SHIP_LOG_MAINLINE);
+}
+
+bool Tasks_IsEndingBranchReady(const TaskSystem *tasks) {
+    return Tasks_IsEndingPreCheckReady(tasks)
+        && tasks->endingArchiveReviewed;
 }
 
 GameEnding Tasks_GetSelectedEndingRoute(const TaskSystem *tasks) {

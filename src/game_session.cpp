@@ -132,6 +132,9 @@ void Game_CloseTransientOverlays(Game *game) {
     game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
     game->settlementConfirmOpen = false;
     game->settlementConfirmSelection = SETTLEMENT_CONFIRM_BUTTON_HEROIC;
+    game->endingRouteDoubleConfirmOpen = false;
+    game->endingRouteDoubleConfirmSelection = 0;
+    game->endingRoutePendingConfirm = ENDING_NONE;
     game->accountDeleteConfirmOpen = false;
     game->accountDeleteConfirmSelection = ACCOUNT_DELETE_CONFIRM_BUTTON_CANCEL;
     game->accountDeleteFromAuth = false;
@@ -277,6 +280,8 @@ void Game_HandlePlayerDeath(Game *game) {
     game->player.oxygen = ClampFloat(game->player.oxygen, 0.0f, MAX_OXYGEN);
     game->showDeathPopup = true;
     game->deathPopupSelection = DEATH_POPUP_BUTTON_RESTART;
+    game->screenTransitionActive = false;
+    game->screenTransitionAction = SCREEN_TRANSITION_NONE;
     Game_ResetTransientGameplayState(game);
     Game_RecordActiveAccountScore(game);
     Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);

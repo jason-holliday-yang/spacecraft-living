@@ -722,6 +722,50 @@ void UI_DrawSettlementConfirmPopup(const AssetBundle *assets,
     }
 }
 
+void UI_DrawEndingRouteConfirmPopup(const AssetBundle *assets,
+                                    GameEnding pendingEnding,
+                                    int screenWidth,
+                                    int screenHeight,
+                                    int selectedButton) {
+    float scale;
+    Rectangle panel;
+    Rectangle bodyRect;
+    const char *titleText;
+    char bodyTextBuffer[320];
+    const char *endingTitle;
+    const char *buttonLabels[2];
+    int buttonIndex;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetEndingRouteConfirmPanelRect(screenWidth, screenHeight);
+    bodyRect = Rectangle{panel.x + 34.0f * scale, panel.y + 68.0f * scale, panel.width - 68.0f * scale, 64.0f * scale};
+    endingTitle = Tasks_GetEndingTitle(pendingEnding);
+    titleText = Loc_PickLiteral("Confirm Your Choice", "确认你的选择");
+    std::snprintf(bodyTextBuffer,
+                  sizeof(bodyTextBuffer),
+                  Loc_PickLiteral("Are you sure you want to commit to %s? Once locked in, winding paths collapse into a single ending, and you cannot change it for the remainder of this run.",
+                                  "你确定要锁定 %s 路线吗？一旦确认，所有支路将收敛为唯一的结局走向，本轮剩余时间里不可再更改。"),
+                  endingTitle);
+    buttonLabels[0] = Loc_PickLiteral("Lock In", "确定锁定");
+    buttonLabels[1] = Loc_PickLiteral("Cancel", "取消");
+
+    DrawRectangle(0, 0, screenWidth, screenHeight, Color{6, 10, 18, 200});
+    UIRuntime_DrawPanel(panel, Color{16, 22, 30, 245}, Color{255, 214, 154, 80});
+    UIRuntime_DrawText(assets, titleText, Vector2{panel.x + 34.0f * scale, panel.y + 28.0f * scale}, 28.0f * scale, WHITE);
+    UIRuntime_DrawText(assets, Loc_PickLiteral("ESC cancels", "按 ESC 取消"), Vector2{panel.x + panel.width - UIRuntime_MeasureText(assets, Loc_PickLiteral("ESC cancels", "按 ESC 取消"), 16.0f * scale).x - 30.0f * scale, panel.y + 32.0f * scale}, 16.0f * scale, Color{182, 199, 214, 255});
+    UIRuntime_DrawWrappedText(assets, bodyTextBuffer, bodyRect, 17.0f * scale, 20.0f * scale, Color{226, 235, 244, 255});
+
+    for (buttonIndex = 0; buttonIndex < 2; buttonIndex++) {
+        Rectangle buttonRect;
+
+        buttonRect = UI_GetEndingRouteConfirmButtonRect(screenWidth, screenHeight, buttonIndex, 2);
+        UIRuntime_DrawButton(assets, buttonRect, buttonLabels[buttonIndex], true);
+        if (buttonIndex == selectedButton) {
+            DrawRectangleRoundedLinesEx(buttonRect, 0.16f, 8, 2.0f, Color{255, 214, 154, 220});
+        }
+    }
+}
+
 void UI_DrawAccountDeleteConfirmPopup(const AssetBundle *assets,
                                       const char *accountName,
                                       int screenWidth,

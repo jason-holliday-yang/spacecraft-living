@@ -292,14 +292,12 @@ static bool TryUseLoxiTerminal(TaskSystem *tasks, GameMap *map, Player *player, 
     }
 
     if (tasks->stage == 7) {
-        if (Tasks_IsEndingBranchReady(tasks) && selectedRoute == ENDING_NONE) {
-            if (!tasks->endingArchiveReviewed) {
-                tasks->endingArchiveReviewed = true;
-                Tasks_UpdateObjective(tasks, player);
-                TasksRuntime_WriteMessage(message, messageSize, GetStage7ArchiveReviewMessage(tasks));
-            } else {
-                TasksRuntime_WriteMessage(message, messageSize, GetStage7RouteChoiceMessage(tasks));
-            }
+        if (Tasks_IsEndingPreCheckReady(tasks) && !tasks->endingArchiveReviewed && selectedRoute == ENDING_NONE) {
+            tasks->endingArchiveReviewed = true;
+            Tasks_UpdateObjective(tasks, player);
+            TasksRuntime_WriteMessage(message, messageSize, GetStage7ArchiveReviewMessage(tasks));
+        } else if (Tasks_IsEndingBranchReady(tasks) && selectedRoute == ENDING_NONE) {
+            TasksRuntime_WriteMessage(message, messageSize, GetStage7RouteChoiceMessage(tasks));
         } else if (selectedRoute == ENDING_SETTLEMENT) {
             if (!tasks->bossDefeated) {
                 TasksRuntime_WriteMessage(message,

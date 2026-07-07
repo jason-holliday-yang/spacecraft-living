@@ -336,6 +336,32 @@ void MapInternal_SeedWorldLayout(GameMap *map) {
     MapInternal_SetPropTile(map, ROPE_BARRIER_B_X, ROPE_BARRIER_B_Y, TILE_BARRIER_SWAMP);
     MapInternal_SetPropTile(map, ROPE_BARRIER_C_X, ROPE_BARRIER_C_Y, TILE_BARRIER_SWAMP);
 
+    {
+        static const ExteriorPropSeed kDeepBarrierSeeds[] = {
+            {112, 28, TILE_BARRIER_DEEP},
+            {111, 38, TILE_BARRIER_DEEP},
+            {113, 48, TILE_BARRIER_DEEP}
+        };
+
+        SetExteriorSeedGroup(map,
+                             kDeepBarrierSeeds,
+                             sizeof(kDeepBarrierSeeds) / sizeof(kDeepBarrierSeeds[0]),
+                             false);
+    }
+
+    {
+        static const ExteriorPropSeed kRuinsBarrierSeeds[] = {
+            {52, 15, TILE_BARRIER_RUINS},
+            {53, 15, TILE_BARRIER_RUINS},
+            {68, 16, TILE_BARRIER_RUINS}
+        };
+
+        SetExteriorSeedGroup(map,
+                             kRuinsBarrierSeeds,
+                             sizeof(kRuinsBarrierSeeds) / sizeof(kRuinsBarrierSeeds[0]),
+                             false);
+    }
+
     MapInternal_FillPropRect(map, COMM_RELAY_X, COMM_RELAY_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, TILE_COMM_RELAY);
     MapInternal_FillPropRect(map, CRASH_CLUE_X, CRASH_CLUE_Y, CRASH_CLUE_FOOTPRINT_SIZE, CRASH_CLUE_FOOTPRINT_SIZE, TILE_CRASH_CLUE);
     MapInternal_FillPropRect(map, SIGNAL_TOWER_X, SIGNAL_TOWER_Y, WORLD_INTERACTIVE_FOOTPRINT_SIZE, WORLD_INTERACTIVE_FOOTPRINT_SIZE, TILE_SIGNAL_TOWER);

@@ -62,9 +62,9 @@ void SaveInternal_SanitizeSnapshot(SaveSnapshot *snapshot) {
     maxHealth = BASE_MAX_HEALTH + snapshot->maxHealthBonus;
     snapshot->health = SanitizeFiniteFloat(snapshot->health, INITIAL_HEALTH, 0.0f, maxHealth);
     snapshot->maxStaminaBonus = SanitizeFiniteFloat(snapshot->maxStaminaBonus, 0.0f, 0.0f, 200.0f);
-    maxStamina = BASE_MAX_STAMINA + snapshot->maxStaminaBonus;
-    snapshot->stamina = SanitizeFiniteFloat(snapshot->stamina, INITIAL_STAMINA, 0.0f, maxStamina);
-    snapshot->pressure = SanitizeFiniteFloat(snapshot->pressure, INITIAL_PRESSURE, 0.0f, MAX_PRESSURE);
+    maxStamina = LEGACY_BASE_MAX_STAMINA + snapshot->maxStaminaBonus;
+    snapshot->stamina = SanitizeFiniteFloat(snapshot->stamina, LEGACY_INITIAL_STAMINA, 0.0f, maxStamina);
+    snapshot->pressure = SanitizeFiniteFloat(snapshot->pressure, LEGACY_INITIAL_PRESSURE, 0.0f, LEGACY_MAX_PRESSURE);
     snapshot->oxygen = SanitizeFiniteFloat(snapshot->oxygen, INITIAL_OXYGEN, 0.0f, MAX_OXYGEN);
     snapshot->poison = SanitizeFiniteFloat(snapshot->poison, 0.0f, 0.0f, MAX_POISON);
     snapshot->attackBonus = 0.0f;

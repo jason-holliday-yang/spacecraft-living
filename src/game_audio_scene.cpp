@@ -46,7 +46,7 @@ AudioMusicStage Game_SelectMusicStage(const Game *game) {
 
     area = Map_GetAreaAt(game->player.gridX, game->player.gridY);
     locationName = Map_GetLocationNameAt(game->player.gridX, game->player.gridY);
-    if (area == MAP_AREA_BOSS_ARENA) {
+    if (area == MAP_AREA_BOSS_ARENA && !game->tasks.bossDefeated) {
         return AUDIO_MUSIC_BOSS;
     }
 
@@ -94,7 +94,7 @@ AudioScene Game_SelectAudioScene(const Game *game) {
     area = Map_GetAreaAt(game->player.gridX, game->player.gridY);
     locationName = Map_GetLocationNameAt(game->player.gridX, game->player.gridY);
 
-    if (area == MAP_AREA_BOSS_ARENA) {
+    if (area == MAP_AREA_BOSS_ARENA && !game->tasks.bossDefeated) {
         return AUDIO_SCENE_BOSS_ARENA;
     }
 

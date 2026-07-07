@@ -45,7 +45,11 @@ const std::array<LocalizedText, LOC_TEXT_COUNT> kTextTable = {{
     {"Close", "关闭"},
     {"Press ESC to close.", "按 ESC 关闭。"},
     {"Press ESC to return", "按 ESC 返回"},
-    {"Language", "语言"}
+    {"Language", "语言"},
+    {"Return to Menu", "返回菜单"},
+    {"New Game", "新游戏"},
+    {"Load Save", "读取存档"},
+    {"Exit Game", "退出游戏"}
 }};
 
 const std::array<NamedTranslation, 7> kAreaNameTranslations = {{

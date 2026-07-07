@@ -481,7 +481,7 @@ int main(void) {
     Require(SaveSystem_LoadGame(1, &loaded), "legacy v2 load should succeed");
     Require(loaded.stage == legacySource.stage, "legacy v2 should preserve stage");
     Require(loaded.health == legacySource.stamina, "legacy v2 should map stamina to health");
-    Require(loaded.pressure == INITIAL_PRESSURE, "legacy v2 should discard old pressure into the new default recovery strategy");
+    Require(loaded.pressure == LEGACY_INITIAL_PRESSURE, "legacy v2 should discard old pressure into the new default recovery strategy");
     Require(loaded.statuses[PLAYER_STATUS_POISONED].active && loaded.statuses[PLAYER_STATUS_POISONED].level == 2,
             "legacy v2 should translate old poison into poisoned status");
     Require(loaded.statuses[PLAYER_STATUS_LOW_OXYGEN].active && loaded.statuses[PLAYER_STATUS_LOW_OXYGEN].level == 2,
@@ -500,7 +500,7 @@ int main(void) {
     Require(loaded.clearedDynamicTileCount == legacySource.clearedDynamicTileCount, "legacy v4 dynamic tile count should round-trip");
     Require(loaded.clearedDynamicTileX[0] == legacySource.clearedDynamicTileX[0], "legacy v4 dynamic tile x should round-trip");
     Require(loaded.health == legacySource.stamina, "legacy v4 should map stamina to health");
-    Require(loaded.pressure == INITIAL_PRESSURE, "legacy v4 should discard old pressure into the default state");
+    Require(loaded.pressure == LEGACY_INITIAL_PRESSURE, "legacy v4 should discard old pressure into the default state");
     Require(loaded.statuses[PLAYER_STATUS_POISONED].active && loaded.statuses[PLAYER_STATUS_POISONED].level == 1,
             "legacy v4 should translate old poison into poisoned status");
     Require(loaded.statuses[PLAYER_STATUS_SUFFOCATING].active,
@@ -515,7 +515,7 @@ int main(void) {
     Require(SaveSystem_LoadGame(4, &loaded), "legacy v5 load should succeed");
     Require(loaded.health == legacySource.stamina, "legacy v5 should map stamina to health");
     Require(loaded.maxHealthBonus == legacySource.maxStaminaBonus, "legacy v5 should map stamina bonus to max health bonus");
-    Require(loaded.pressure == INITIAL_PRESSURE, "legacy v5 should discard old pressure into the default state");
+    Require(loaded.pressure == LEGACY_INITIAL_PRESSURE, "legacy v5 should discard old pressure into the default state");
     Require(loaded.statuses[PLAYER_STATUS_LOW_OXYGEN].active && loaded.statuses[PLAYER_STATUS_LOW_OXYGEN].level == 1,
             "legacy v5 should derive low oxygen warning from the stored oxygen value");
 

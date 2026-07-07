@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.18)
 project(SpaceCraftLiving LANGUAGES C CXX)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type (Debug or Release)" FORCE)
+endif()
+
+set(CMAKE_C_FLAGS_DEBUG   "-g -O0")
+set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG   "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)

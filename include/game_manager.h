@@ -144,6 +144,10 @@ typedef struct Game {
     int deathPopupSelection;
     bool settlementConfirmOpen;
     int settlementConfirmSelection;
+    bool endingRouteDoubleConfirmOpen;
+    int endingRouteDoubleConfirmSelection;
+    GameEnding endingRoutePendingConfirm;
+    int endingMenuSelection;
     bool accountDeleteConfirmOpen;
     int accountDeleteConfirmSelection;
     bool accountDeleteFromAuth;

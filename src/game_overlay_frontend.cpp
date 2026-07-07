@@ -1004,7 +1004,72 @@ static void UpdateSettlementConfirm(Game *game) {
         return;
     }
 
-    ConfirmEndingChoice(game, Tasks_GetAvailableEndingAt(&game->tasks, game->settlementConfirmSelection));
+    game->endingRoutePendingConfirm = Tasks_GetAvailableEndingAt(&game->tasks, game->settlementConfirmSelection);
+    game->endingRouteDoubleConfirmOpen = true;
+    game->endingRouteDoubleConfirmSelection = 0;
+    game->settlementConfirmOpen = false;
+    Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+}
+
+static void UpdateEndingRouteDoubleConfirm(Game *game) {
+    Vector2 mouse;
+    int buttonIndex;
+
+    if (game == NULL) {
+        return;
+    }
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        game->endingRouteDoubleConfirmOpen = false;
+        game->settlementConfirmOpen = true;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        return;
+    }
+
+    if (GameOverlay_IsBackwardNavigationPressed()) {
+        game->endingRouteDoubleConfirmSelection = (game->endingRouteDoubleConfirmSelection + 2 - 1) % 2;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+    }
+
+    if (GameOverlay_IsForwardNavigationPressed()) {
+        game->endingRouteDoubleConfirmSelection = (game->endingRouteDoubleConfirmSelection + 1) % 2;
+        Audio_PlayCue(&game->audio, AUDIO_CUE_OPEN);
+    }
+
+    if (GameOverlay_TryGetPrimaryClickPosition(&mouse)) {
+        buttonIndex = -1;
+        for (int index = 0; index < 2; index++) {
+            if (CheckCollisionPointRec(mouse,
+                                       UI_GetEndingRouteConfirmButtonRect(GetScreenWidth(),
+                                                                          GetScreenHeight(),
+                                                                          index,
+                                                                          2))) {
+                buttonIndex = index;
+                break;
+            }
+        }
+        if (buttonIndex >= 0) {
+            game->endingRouteDoubleConfirmSelection = buttonIndex;
+            if (buttonIndex == 0) {
+                ConfirmEndingChoice(game, game->endingRoutePendingConfirm);
+                game->endingRouteDoubleConfirmOpen = false;
+            } else {
+                game->endingRouteDoubleConfirmOpen = false;
+                game->settlementConfirmOpen = true;
+                Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+            }
+            return;
+        }
+    }
+
+    if (GameOverlay_IsConfirmPressed()) {
+        if (game->endingRouteDoubleConfirmSelection == 0) {
+            ConfirmEndingChoice(game, game->endingRoutePendingConfirm);
+        } else {
+            Audio_PlayCue(&game->audio, AUDIO_CUE_CLOSE);
+        }
+        game->endingRouteDoubleConfirmOpen = false;
+    }
 }
 
 static void UpdateSavePanel(Game *game) {
@@ -1099,14 +1164,48 @@ bool Game_UpdateFrontEndOverlayState(Game *game) {
     }
 
     if (game->state == GAME_STATE_ENDING) {
-        if (IsKeyPressed(KEY_ESCAPE)) {
-            game->requestClose = true;
+        if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
+            game->endingMenuSelection -= 1;
+            if (game->endingMenuSelection < 0) {
+                game->endingMenuSelection = 3;
+            }
+            return true;
+        }
+        if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
+            game->endingMenuSelection = (game->endingMenuSelection + 1) % 4;
+            return true;
+        }
+        if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ESCAPE)) {
+            switch (game->endingMenuSelection) {
+                case 0:
+                    Game_BeginScreenTransition(game, SCREEN_TRANSITION_RETURN_TO_MENU, -1);
+                    break;
+                case 1:
+                    Game_ReturnToMenu(game);
+                    break;
+                case 2:
+                    if (game->hasSaveFile) {
+                        Game_OpenSavePanel(game, SAVE_PANEL_MODE_LOAD);
+                        game->state = GAME_STATE_INTRO;
+                    }
+                    break;
+                case 3:
+                    game->requestClose = true;
+                    break;
+                default:
+                    break;
+            }
         }
         return true;
     }
 
     if (game->settlementConfirmOpen) {
         UpdateSettlementConfirm(game);
+        return true;
+    }
+
+    if (game->endingRouteDoubleConfirmOpen) {
+        UpdateEndingRouteDoubleConfirm(game);
         return true;
     }
 

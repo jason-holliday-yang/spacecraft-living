@@ -194,8 +194,6 @@ Color GetPropTileColor(TileType propTile) {
             return Color{184, 140, 82, 255};
         case TILE_BARRIER_RUINS:
             return Color{154, 146, 126, 255};
-        case TILE_LOG_SITE:
-            return Color{255, 204, 140, 255};
         case TILE_CRASH_CLUE:
             return Color{255, 190, 126, 255};
         case TILE_VOID:

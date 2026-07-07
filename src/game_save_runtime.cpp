@@ -207,7 +207,7 @@ void Game_BuildSaveSnapshot(const Game *game, SaveSnapshot *snapshot) {
     snapshot->facingY = game->player.facingY;
     snapshot->health = game->player.health;
     snapshot->stamina = game->player.health;
-    snapshot->pressure = INITIAL_PRESSURE;
+    snapshot->pressure = LEGACY_INITIAL_PRESSURE;
     snapshot->oxygen = game->player.oxygen;
     snapshot->poison = game->player.poison;
     snapshot->maxHealthBonus = game->player.maxHealthBonus;

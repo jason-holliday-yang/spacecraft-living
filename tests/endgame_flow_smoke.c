@@ -97,8 +97,10 @@ int main(void) {
     PrepareMainArchiveOnly(&tasks);
     MovePlayerToLoxiLeftPickupTile(&player);
     Tasks_UpdateObjective(&tasks, &player);
-    Require(Tasks_IsEndingBranchReady(&tasks),
-            "mainline archive completion should be enough to open the ending branch");
+    Require(Tasks_IsEndingPreCheckReady(&tasks),
+            "mainline archive completion plus west/south closure should meet the pre-check for archive review");
+    Require(!Tasks_IsEndingBranchReady(&tasks),
+            "ending branch should stay locked until the archive review step is completed");
     Require(strcmp(tasks.objective, "Return to Loxi and review the assembled archive before choosing the final route. The story is finally whole enough to judge what your answer should cost.") == 0,
             "mainline archive completion should now require a final ship-side archive review before route selection");
     Require(!Tasks_SelectEndingRoute(&tasks, ENDING_PEACEFUL),

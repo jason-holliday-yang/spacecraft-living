@@ -238,7 +238,7 @@ static void BuildEncounterHighlights(const TaskSystem *tasks, char *buffer, size
 
 #undef LT
 
-void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds) {
+void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *tasks, const AssetBundle *assets, int screenWidth, int screenHeight, float elapsedSeconds, int menuSelection) {
     char detail[256];
     char combatSummary[256];
     char encounterHighlights[256];
@@ -265,6 +265,14 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
     Rectangle combatRect;
     Rectangle encounterRect;
     Rectangle badgeRect;
+    const char *menuLabels[4];
+    float menuStartY;
+    int i;
+
+    menuLabels[0] = Loc_PickLiteral("Return to Menu", "返回菜单");
+    menuLabels[1] = Loc_PickLiteral("New Game", "新游戏");
+    menuLabels[2] = Loc_PickLiteral("Load Save", "读取存档");
+    menuLabels[3] = Loc_PickLiteral("Exit Game", "退出游戏");
 
     endingBackdropIndex = GetEndingBackdropIndex(ending, tasks);
     endingBackdrop = &kEndingBackdropDefs[endingBackdropIndex];
@@ -272,9 +280,9 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
     scale = UIRuntime_GetScale(screenWidth, screenHeight);
     textPanel = Rectangle{
         screenWidth * 0.5f - 470.0f * scale,
-        screenHeight - 304.0f * scale,
+        screenHeight - 370.0f * scale,
         940.0f * scale,
-        230.0f * scale
+        296.0f * scale
     };
     bodyRect = Rectangle{
         textPanel.x + 32.0f * scale,
@@ -286,29 +294,29 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
         textPanel.x + 32.0f * scale,
         textPanel.y + 128.0f * scale,
         textPanel.width - 64.0f * scale,
-        20.0f * scale
+        45.0f * scale
     };
     breakdownRect = Rectangle{
         textPanel.x + 32.0f * scale,
-        textPanel.y + 146.0f * scale,
+        textPanel.y + 174.0f * scale,
         textPanel.width - 64.0f * scale,
         20.0f * scale
     };
     combatRect = Rectangle{
         textPanel.x + 32.0f * scale,
-        textPanel.y + 164.0f * scale,
+        textPanel.y + 192.0f * scale,
         textPanel.width - 64.0f * scale,
         20.0f * scale
     };
     encounterRect = Rectangle{
         textPanel.x + 32.0f * scale,
-        textPanel.y + 184.0f * scale,
+        textPanel.y + 212.0f * scale,
         textPanel.width - 64.0f * scale,
         28.0f * scale
     };
     badgeRect = Rectangle{
         textPanel.x + 32.0f * scale,
-        textPanel.y + 208.0f * scale,
+        textPanel.y + 236.0f * scale,
         textPanel.width - 64.0f * scale,
         20.0f * scale
     };
@@ -378,5 +386,20 @@ void UI_DrawEnding(GameEnding ending, const Player *player, const TaskSystem *ta
                   Loc_PickLiteral("Total Deaths", "总死亡次数"),
                   player->deathCount);
     UIRuntime_DrawText(assets, detail, Vector2{textPanel.x + 30.0f * scale, textPanel.y + textPanel.height - 24.0f * scale}, 15.5f * scale, Color{255, 205, 151, 255});
-    UIRuntime_DrawText(assets, LOC_UI_END_EXIT, Vector2{screenWidth - UIRuntime_MeasureText(assets, LOC_UI_END_EXIT, 16.0f * scale).x - 28.0f * scale, screenHeight - 30.0f * scale}, 16.0f * scale, Color{196, 213, 225, 255});
+    menuStartY = screenHeight - 30.0f * scale - 4.0f * 26.0f * scale;
+    for (i = 0; i < 4; i++) {
+        Color menuColor;
+        float menuY;
+        char labelBuffer[64];
+
+        menuY = menuStartY + i * 26.0f * scale;
+        if (i == menuSelection) {
+            menuColor = Color{255, 234, 177, 255};
+            std::snprintf(labelBuffer, sizeof(labelBuffer), "> %s", menuLabels[i]);
+        } else {
+            menuColor = Color{175, 198, 218, 255};
+            std::snprintf(labelBuffer, sizeof(labelBuffer), "  %s", menuLabels[i]);
+        }
+        UIRuntime_DrawText(assets, labelBuffer, Vector2{screenWidth - 300.0f * scale, menuY}, 16.0f * scale, menuColor);
+    }
 }

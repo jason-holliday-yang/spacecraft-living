@@ -101,6 +101,7 @@ typedef struct Monster {
     bool phaseTriggered;
     BossAttackType currentAttack;
     float attackTelegraph;
+    float weakPointTimer;
     int targetX;
     int targetY;
 } Monster;
@@ -202,6 +203,7 @@ const char *Tasks_GetPhaseName(DayPhase phase);
 const char *Tasks_GetEventName(EventType eventType);
 bool Tasks_IsCommunicatorUnlocked(const TaskSystem *tasks);
 const char *Tasks_GetCommunicatorHint(const TaskSystem *tasks);
+bool Tasks_IsEndingPreCheckReady(const TaskSystem *tasks);
 bool Tasks_IsEndingBranchReady(const TaskSystem *tasks);
 GameEnding Tasks_GetSelectedEndingRoute(const TaskSystem *tasks);
 bool Tasks_SelectEndingRoute(TaskSystem *tasks, GameEnding ending);

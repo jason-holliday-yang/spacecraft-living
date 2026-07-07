@@ -782,6 +782,46 @@ Rectangle UI_GetSettlementConfirmButtonRect(int screenWidth, int screenHeight, i
     };
 }
 
+Rectangle UI_GetEndingRouteConfirmPanelRect(int screenWidth, int screenHeight) {
+    float scale;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    return Rectangle{
+        screenWidth * 0.5f - 240.0f * scale,
+        screenHeight * 0.5f - 100.0f * scale,
+        480.0f * scale,
+        200.0f * scale
+    };
+}
+
+Rectangle UI_GetEndingRouteConfirmButtonRect(int screenWidth, int screenHeight, int buttonIndex, int buttonCount) {
+    float scale;
+    Rectangle panel;
+    float width;
+    float gap;
+    float startX;
+    float y;
+    float totalWidth;
+
+    scale = UIRuntime_GetScale(screenWidth, screenHeight);
+    panel = UI_GetEndingRouteConfirmPanelRect(screenWidth, screenHeight);
+    width = 136.0f * scale;
+    gap = 16.0f * scale;
+    if (buttonCount < 1) {
+        buttonCount = 1;
+    }
+    totalWidth = width * buttonCount + gap * (buttonCount - 1);
+    startX = panel.x + panel.width * 0.5f - totalWidth * 0.5f;
+    y = panel.y + panel.height - 62.0f * scale;
+
+    return Rectangle{
+        startX + buttonIndex * (width + gap),
+        y,
+        width,
+        40.0f * scale
+    };
+}
+
 Rectangle UI_GetAccountDeleteConfirmPanelRect(int screenWidth, int screenHeight) {
     float scale;
 

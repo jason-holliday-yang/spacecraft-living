@@ -542,6 +542,14 @@ static void ExecuteBossAttack(TaskSystem *tasks, Monster *boss, Player *player) 
                 if (phase >= 3) {
                     nextAttackTimer *= 0.78f;
                 }
+            } else {
+                float weakPointDuration;
+                int litMonoliths;
+
+                litMonoliths = tasks != NULL ? tasks->monolithsLit : 0;
+                weakPointDuration = (phase == 2 ? 0.92f : 1.14f);
+                weakPointDuration *= 1.0f + 0.12f * (float)litMonoliths;
+                boss->weakPointTimer = weakPointDuration;
             }
             break;
         }
@@ -603,6 +611,12 @@ void TasksRuntime_UpdateMonsters(TaskSystem *tasks, const GameMap *map, Player *
         monster->moveTimer -= deltaTime;
         monster->attackTimer -= deltaTime;
         monster->recoverTimer -= deltaTime;
+        if (monster->weakPointTimer > 0.0f) {
+            monster->weakPointTimer -= deltaTime;
+            if (monster->weakPointTimer < 0.0f) {
+                monster->weakPointTimer = 0.0f;
+            }
+        }
         if (monster->recoverTimer < 0.0f) {
             monster->recoverTimer = 0.0f;
         }

@@ -198,11 +198,11 @@ void Game_Update(Game *game, float deltaTime) {
     UpdateScreenTransition(game, deltaTime);
     Game_SanitizeGameplayState(game, GetScreenWidth(), GetScreenHeight());
 
-    if (game->screenTransitionActive) {
+    if (Game_UpdateOverlayState(game)) {
         return;
     }
 
-    if (Game_UpdateOverlayState(game)) {
+    if (game->screenTransitionActive) {
         return;
     }
 

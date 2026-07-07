@@ -96,37 +96,52 @@ bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *m
     damage = Player_GetAttackPower(player);
 
     target->health -= damage;
-    if (target->health <= 0.0f) {
-        target->active = false;
-        TasksRuntime_DropMonsterRewards(tasks, player, target);
+    {
+        const bool wasWeakPoint = target->weakPointTimer > 0.0f;
+        if (wasWeakPoint) {
+            const float weakPointBonus = damage * 0.60f + 10.0f;
+            target->health -= weakPointBonus;
+            target->weakPointTimer = 0.0f;
+        }
+        if (target->health <= 0.0f) {
+            target->active = false;
+            TasksRuntime_DropMonsterRewards(tasks, player, target);
+            if (target->type == MONSTER_FINAL_BOSS) {
+                Tasks_UpdateObjective(tasks, player);
+                TasksRuntime_WriteMessage(message,
+                                          messageSize,
+                                          Loc_PickLiteral("The guardian collapses in the northwest ruins. The path to the Signal Tower is finally open, and Loxi can now confirm any settlement plan back at the ship.",
+                                                          "西北遗迹中的守卫终于倒下了。通往信号塔的道路彻底打开，现在也可以回到飞船让洛希确认任何定居方案。"));
+            } else {
+                TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Target eliminated. Loot collected.", "目标已清除，战利品已收集。"));
+            }
+            if (tasks->stage == 5 && player->resources[RESOURCE_ENERGY_CORE] > 0) {
+                Tasks_UpdateObjective(tasks, player);
+            }
+            return true;
+        }
+
+        ApplyMonsterHitRecoveryWindow(target);
+
+        if (target->type == MONSTER_THORN_LARVA && !player->hasLaserGun) {
+            Player_DamageHealth(player, 1.0f);
+        }
+
         if (target->type == MONSTER_FINAL_BOSS) {
-            Tasks_UpdateObjective(tasks, player);
-            TasksRuntime_WriteMessage(message,
-                                      messageSize,
-                                      Loc_PickLiteral("The guardian collapses in the northwest ruins. The path to the Signal Tower is finally open, and Loxi can now confirm any settlement plan back at the ship.",
-                                                      "西北遗迹中的守卫终于倒下了。通往信号塔的道路彻底打开，现在也可以回到飞船让洛希确认任何定居方案。"));
+            if (wasWeakPoint) {
+                TasksRuntime_WriteMessage(message,
+                                          messageSize,
+                                          Loc_PickLiteral("Core hit — the guardian staggers from the deep blow.",
+                                                          "核心命中——守卫被这次深层打击打得踉跄后退。"));
+            } else {
+                TasksRuntime_WriteMessage(message,
+                                          messageSize,
+                                          Loc_PickLiteral("The guardian absorbs the hit, but its momentum breaks for a moment.",
+                                                          "守卫吃下了这次打击，但它的推进节奏还是被短暂打断了。"));
+            }
         } else {
-            TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Target eliminated. Loot collected.", "目标已清除，战利品已收集。"));
+            TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Attack connected.", "攻击命中。"));
         }
-        if (tasks->stage == 5 && player->resources[RESOURCE_ENERGY_CORE] > 0) {
-            Tasks_UpdateObjective(tasks, player);
-        }
-        return true;
-    }
-
-    ApplyMonsterHitRecoveryWindow(target);
-
-    if (target->type == MONSTER_THORN_LARVA && !player->hasLaserGun) {
-        Player_DamageHealth(player, 1.0f);
-    }
-
-    if (target->type == MONSTER_FINAL_BOSS) {
-        TasksRuntime_WriteMessage(message,
-                                  messageSize,
-                                  Loc_PickLiteral("The guardian absorbs the hit, but its momentum breaks for a moment.",
-                                                  "守卫吃下了这次打击，但它的推进节奏还是被短暂打断了。"));
-    } else {
-        TasksRuntime_WriteMessage(message, messageSize, Loc_PickLiteral("Attack connected.", "攻击命中。"));
     }
     return true;
 }

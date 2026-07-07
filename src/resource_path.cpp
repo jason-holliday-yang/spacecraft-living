@@ -113,10 +113,6 @@ bool ResourcePath_Resolve(const char *relativePath, char *buffer, size_t bufferS
         return false;
     }
 
-    if (PathExists(relativePath)) {
-        return CopyResolvedPath(buffer, bufferSize, fs::path(relativePath));
-    }
-
     if (!GetExecutableDirectory(&executableDir)) {
         return false;
     }
@@ -137,6 +133,10 @@ bool ResourcePath_Resolve(const char *relativePath, char *buffer, size_t bufferS
             break;
         }
         searchDir = searchDir.parent_path();
+    }
+
+    if (PathExists(relativePath)) {
+        return CopyResolvedPath(buffer, bufferSize, fs::path(relativePath));
     }
 
     return false;

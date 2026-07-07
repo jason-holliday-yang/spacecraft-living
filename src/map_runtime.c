@@ -372,7 +372,7 @@ bool Map_CanCrossWithRope(const GameMap *map, int fromX, int fromY, int toX, int
     }
 
     toTile = map->propTiles[toY][toX];
-    return toTile == TILE_BARRIER_SWAMP || toTile == TILE_BARRIER_DEEP;
+    return toTile == TILE_BARRIER_SWAMP || toTile == TILE_BARRIER_DEEP || toTile == TILE_BARRIER_RUINS;
 }
 
 void Map_CreateRopeBridge(GameMap *map, int gridX, int gridY) {
@@ -383,7 +383,7 @@ void Map_CreateRopeBridge(GameMap *map, int gridX, int gridY) {
     }
 
     tile = map->propTiles[gridY][gridX];
-    if (tile == TILE_BARRIER_SWAMP || tile == TILE_BARRIER_DEEP) {
+    if (tile == TILE_BARRIER_SWAMP || tile == TILE_BARRIER_DEEP || tile == TILE_BARRIER_RUINS) {
         map->propTiles[gridY][gridX] = TILE_VOID;
     }
 }

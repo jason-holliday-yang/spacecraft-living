@@ -47,22 +47,16 @@ TASK_RUNTIME_C_SOURCES := \
 UI_RUNTIME_C_SOURCES := \
 	src/ui_system.c
 
-TASK_CONTENT_BASE_CXX_SOURCES := \
+TASK_CONTENT_CXX_SOURCES := \
 	src/recipe_catalog.cpp \
 	src/task_content.cpp \
 	src/task_content_data.cpp \
-	src/puzzle.cpp
-
-TASK_ACTION_CXX_SOURCES := \
+	src/puzzle.cpp \
 	src/task_actions.cpp \
 	src/task_interactions.cpp \
 	src/task_ship_interactions.cpp \
 	src/task_world_interactions.cpp \
 	src/task_crafting.cpp
-
-TASK_CONTENT_CXX_SOURCES := \
-	$(TASK_CONTENT_BASE_CXX_SOURCES) \
-	$(TASK_ACTION_CXX_SOURCES)
 
 ASSET_CXX_SOURCES := \
 	src/assets.cpp \
@@ -125,9 +119,6 @@ SUPPORT_CXX_SOURCES := \
 	src/minimap.cpp \
 	src/resource_path.cpp
 
-LOCALIZATION_CXX_SOURCES := \
-	src/localization.cpp
-
 APP_C_SOURCES := \
 	src/main.c \
 	$(MAP_C_SOURCES) \
@@ -148,112 +139,46 @@ APP_CXX_SOURCES := \
 	$(UI_CXX_SOURCES) \
 	src/game_manager.cpp
 
-SAVE_SMOKE_NAME := save_system_smoke
-MAP_SMOKE_NAME := map_layout_smoke
-TASK_RECIPE_SMOKE_NAME := task_recipe_smoke
-TASK_INTERACTION_SMOKE_NAME := task_interaction_smoke
-TASK_TEXT_SMOKE_NAME := task_text_smoke
-SESSION_SMOKE_NAME := game_session_smoke
-ENDGAME_SMOKE_NAME := endgame_flow_smoke
-UI_LAYOUT_SMOKE_NAME := ui_layout_smoke
-HEALTH_OXYGEN_SMOKE_NAME := health_oxygen_smoke
-STATUS_SYSTEM_SMOKE_NAME := status_system_smoke
-CAMP_RECOVERY_SMOKE_NAME := camp_recovery_smoke
-SAVE_STATUS_SMOKE_NAME := save_status_smoke
-ENDGAME_NEW_SURVIVAL_SMOKE_NAME := endgame_new_survival_smoke
+TASK_SMOKE_C := $(MAP_C_SOURCES) $(PLAYER_C_SOURCES) $(TASK_RUNTIME_C_SOURCES)
+TASK_SMOKE_CXX := $(TASK_CONTENT_CXX_SOURCES) src/localization.cpp
 
-TASK_SMOKE_C_SOURCES := \
-	$(MAP_C_SOURCES) \
-	$(PLAYER_C_SOURCES) \
-	$(TASK_RUNTIME_C_SOURCES)
+SAVE_SMOKE_SOURCES := tests/save_system_smoke.c $(MAP_C_SOURCES) $(SAVE_CXX_SOURCES) src/localization.cpp
+MAP_SMOKE_SOURCES := tests/map_layout_smoke.c $(MAP_C_SOURCES)
+TASK_RECIPE_SMOKE_SOURCES := tests/task_recipe_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
+TASK_INTERACTION_SMOKE_SOURCES := tests/task_interaction_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
+TASK_TEXT_SMOKE_SOURCES := tests/task_text_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
+SESSION_SMOKE_SOURCES := tests/game_session_smoke.c $(MAP_C_SOURCES) $(PLAYER_C_SOURCES) src/game_play_story.c $(TASK_RUNTIME_C_SOURCES) src/audio_system.cpp src/localization.cpp src/minimap.cpp $(TASK_CONTENT_CXX_SOURCES) src/task_presentation.cpp $(SAVE_CXX_SOURCES) $(SESSION_CXX_SOURCES) src/resource_path.cpp
+ENDGAME_SMOKE_SOURCES := tests/endgame_flow_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
+UI_LAYOUT_SMOKE_SOURCES := tests/ui_layout_smoke.c $(UI_RUNTIME_C_SOURCES) src/ui_layout.cpp
+HEALTH_OXYGEN_SMOKE_SOURCES := tests/health_oxygen_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
+STATUS_SYSTEM_SMOKE_SOURCES := tests/status_system_smoke.c $(MAP_C_SOURCES) $(PLAYER_C_SOURCES) src/recipe_catalog.cpp src/localization.cpp
+CAMP_RECOVERY_SMOKE_SOURCES := tests/camp_recovery_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
+SAVE_STATUS_SMOKE_SOURCES := tests/save_status_smoke.c $(MAP_C_SOURCES) $(SAVE_CXX_SOURCES) src/localization.cpp
+ENDGAME_NEW_SURVIVAL_SMOKE_SOURCES := tests/endgame_new_survival_smoke.c $(TASK_SMOKE_C) $(TASK_SMOKE_CXX)
 
-TASK_SMOKE_CXX_SOURCES := \
-	$(TASK_CONTENT_CXX_SOURCES) \
-	$(LOCALIZATION_CXX_SOURCES)
+BUILD ?= debug
 
-SAVE_SMOKE_SOURCES := \
-	tests/save_system_smoke.c \
-	$(MAP_C_SOURCES) \
-	$(SAVE_CXX_SOURCES) \
-	$(LOCALIZATION_CXX_SOURCES)
-
-MAP_SMOKE_SOURCES := \
-	tests/map_layout_smoke.c \
-	$(MAP_C_SOURCES)
-
-TASK_RECIPE_SMOKE_SOURCES := \
-	tests/task_recipe_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
-
-TASK_INTERACTION_SMOKE_SOURCES := \
-	tests/task_interaction_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
-
-TASK_TEXT_SMOKE_SOURCES := \
-	tests/task_text_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
-
-SESSION_SMOKE_SOURCES := \
-	tests/game_session_smoke.c \
-	$(MAP_C_SOURCES) \
-	$(PLAYER_C_SOURCES) \
-	src/game_play_story.c \
-	$(TASK_RUNTIME_C_SOURCES) \
-	src/audio_system.cpp \
-	src/localization.cpp \
-	src/minimap.cpp \
-	$(TASK_CONTENT_CXX_SOURCES) \
-	src/task_presentation.cpp \
-	$(SAVE_CXX_SOURCES) \
-	$(SESSION_CXX_SOURCES) \
-	src/resource_path.cpp
-
-ENDGAME_SMOKE_SOURCES := \
-	tests/endgame_flow_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
-
-UI_LAYOUT_SMOKE_SOURCES := \
-	tests/ui_layout_smoke.c \
-	$(UI_RUNTIME_C_SOURCES) \
-	src/ui_layout.cpp
-
-HEALTH_OXYGEN_SMOKE_SOURCES := \
-	tests/health_oxygen_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
-
-STATUS_SYSTEM_SMOKE_SOURCES := \
-	tests/status_system_smoke.c \
-	$(MAP_C_SOURCES) \
-	$(PLAYER_C_SOURCES) \
-	src/recipe_catalog.cpp \
-	$(LOCALIZATION_CXX_SOURCES)
-
-CAMP_RECOVERY_SMOKE_SOURCES := \
-	tests/camp_recovery_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
-
-SAVE_STATUS_SMOKE_SOURCES := \
-	tests/save_status_smoke.c \
-	$(MAP_C_SOURCES) \
-	$(SAVE_CXX_SOURCES) \
-	$(LOCALIZATION_CXX_SOURCES)
-
-ENDGAME_NEW_SURVIVAL_SMOKE_SOURCES := \
-	tests/endgame_new_survival_smoke.c \
-	$(TASK_SMOKE_C_SOURCES) \
-	$(TASK_SMOKE_CXX_SOURCES)
+ifeq ($(BUILD),release)
+  OPT_FLAGS := -O2 -DNDEBUG
+else
+  OPT_FLAGS := -g -O0
+endif
 
 CPPFLAGS := -Iinclude -I$(RAYLIB_PREFIX)/include
 DEPFLAGS := -MMD -MP
-CFLAGS := -std=c11 -Wall -Wextra -pedantic $(DEPFLAGS)
-CXXFLAGS := -std=c++17 -Wall -Wextra -pedantic $(DEPFLAGS)
+CFLAGS := -std=c11 $(OPT_FLAGS) -Wall -Wextra -pedantic $(DEPFLAGS)
+CXXFLAGS := -std=c++17 $(OPT_FLAGS) -Wall -Wextra -pedantic $(DEPFLAGS)
 LDFLAGS := -L$(RAYLIB_PREFIX)/lib -lraylib -framework IOKit -framework Cocoa -framework OpenGL -framework CoreVideo
+
+define smoke_target
+$(BUILD_DIR)/$(1)_smoke: $$(call objects_for,smoke_$(1),$(2))
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $$^ -o $$@ $(LDFLAGS)
+
+.PHONY: smoke-$(1)
+smoke-$(1): $(BUILD_DIR)/$(1)_smoke
+	$(BUILD_DIR)/$(1)_smoke
+endef
 
 objects_for = \
 	$(patsubst src/%.c,$(BUILD_DIR)/$1/%.o,$(filter src/%.c,$2)) \
@@ -261,134 +186,67 @@ objects_for = \
 	$(patsubst tests/%.c,$(BUILD_DIR)/$1/tests_%.o,$(filter tests/%.c,$2))
 
 APP_OBJECTS := $(call objects_for,app,$(APP_C_SOURCES) $(APP_CXX_SOURCES))
-SAVE_SMOKE_OBJECTS := $(call objects_for,smoke,$(SAVE_SMOKE_SOURCES))
-MAP_SMOKE_OBJECTS := $(call objects_for,smoke_map,$(MAP_SMOKE_SOURCES))
-TASK_RECIPE_SMOKE_OBJECTS := $(call objects_for,smoke_task,$(TASK_RECIPE_SMOKE_SOURCES))
-TASK_INTERACTION_SMOKE_OBJECTS := $(call objects_for,smoke_task_interaction,$(TASK_INTERACTION_SMOKE_SOURCES))
-TASK_TEXT_SMOKE_OBJECTS := $(call objects_for,smoke_task_text,$(TASK_TEXT_SMOKE_SOURCES))
-SESSION_SMOKE_OBJECTS := $(call objects_for,smoke_session,$(SESSION_SMOKE_SOURCES))
-ENDGAME_SMOKE_OBJECTS := $(call objects_for,smoke_endgame,$(ENDGAME_SMOKE_SOURCES))
-UI_LAYOUT_SMOKE_OBJECTS := $(call objects_for,smoke_ui,$(UI_LAYOUT_SMOKE_SOURCES))
-HEALTH_OXYGEN_SMOKE_OBJECTS := $(call objects_for,smoke_health_oxygen,$(HEALTH_OXYGEN_SMOKE_SOURCES))
-STATUS_SYSTEM_SMOKE_OBJECTS := $(call objects_for,smoke_status_system,$(STATUS_SYSTEM_SMOKE_SOURCES))
-CAMP_RECOVERY_SMOKE_OBJECTS := $(call objects_for,smoke_camp_recovery,$(CAMP_RECOVERY_SMOKE_SOURCES))
-SAVE_STATUS_SMOKE_OBJECTS := $(call objects_for,smoke_save_status,$(SAVE_STATUS_SMOKE_SOURCES))
-ENDGAME_NEW_SURVIVAL_SMOKE_OBJECTS := $(call objects_for,smoke_endgame_survival,$(ENDGAME_NEW_SURVIVAL_SMOKE_SOURCES))
+DEPFILES := $(APP_OBJECTS:.o=.d)
 
-ALL_OBJECTS := \
-	$(APP_OBJECTS) \
-	$(SAVE_SMOKE_OBJECTS) \
-	$(MAP_SMOKE_OBJECTS) \
-	$(TASK_RECIPE_SMOKE_OBJECTS) \
-	$(TASK_INTERACTION_SMOKE_OBJECTS) \
-	$(TASK_TEXT_SMOKE_OBJECTS) \
-	$(SESSION_SMOKE_OBJECTS) \
-	$(ENDGAME_SMOKE_OBJECTS) \
-	$(UI_LAYOUT_SMOKE_OBJECTS) \
-	$(HEALTH_OXYGEN_SMOKE_OBJECTS) \
-	$(STATUS_SYSTEM_SMOKE_OBJECTS) \
-	$(CAMP_RECOVERY_SMOKE_OBJECTS) \
-	$(SAVE_STATUS_SMOKE_OBJECTS) \
-	$(ENDGAME_NEW_SURVIVAL_SMOKE_OBJECTS)
+$(BUILD_DIR)/app/%.o: src/%.c Makefile
+	mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-DEPFILES := $(ALL_OBJECTS:.o=.d)
+$(BUILD_DIR)/app/%.o: src/%.cpp Makefile
+	mkdir -p $(@D)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-define define_compile_rules
-$(BUILD_DIR)/$1/%.o: src/%.c Makefile
+define smoke_compile_rules
+$(BUILD_DIR)/$(1)/%.o: src/%.c Makefile
 	mkdir -p $$(@D)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $$< -o $$@
 
-$(BUILD_DIR)/$1/%.o: src/%.cpp Makefile
+$(BUILD_DIR)/$(1)/%.o: src/%.cpp Makefile
 	mkdir -p $$(@D)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $$< -o $$@
 
-$(BUILD_DIR)/$1/tests_%.o: tests/%.c Makefile
+$(BUILD_DIR)/$(1)/tests_%.o: tests/%.c Makefile
 	mkdir -p $$(@D)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $$< -o $$@
 endef
 
-BUILD_SUBDIRS := \
-	app \
-	smoke \
-	smoke_map \
-	smoke_task \
-	smoke_task_interaction \
-	smoke_task_text \
-	smoke_session \
-	smoke_endgame \
-	smoke_ui \
-	smoke_health_oxygen \
-	smoke_status_system \
-	smoke_camp_recovery \
-	smoke_save_status \
-	smoke_endgame_survival
+$(eval $(call smoke_compile_rules,smoke_save_system))
+$(eval $(call smoke_compile_rules,smoke_map_layout))
+$(eval $(call smoke_compile_rules,smoke_task_recipe))
+$(eval $(call smoke_compile_rules,smoke_task_interaction))
+$(eval $(call smoke_compile_rules,smoke_task_text))
+$(eval $(call smoke_compile_rules,smoke_game_session))
+$(eval $(call smoke_compile_rules,smoke_endgame_flow))
+$(eval $(call smoke_compile_rules,smoke_ui_layout))
+$(eval $(call smoke_compile_rules,smoke_health_oxygen))
+$(eval $(call smoke_compile_rules,smoke_status_system))
+$(eval $(call smoke_compile_rules,smoke_camp_recovery))
+$(eval $(call smoke_compile_rules,smoke_save_status))
+$(eval $(call smoke_compile_rules,smoke_endgame_new_survival))
 
-$(foreach dir,$(BUILD_SUBDIRS),$(eval $(call define_compile_rules,$(dir))))
-
-define define_binary_target
-$($1_BIN): $$($1_OBJECTS)
-	mkdir -p $(BUILD_DIR)
-	$(CXX) $$($1_OBJECTS) -o $$@ $(LDFLAGS)
-
-.PHONY: $($1_ALIAS)
-$($1_ALIAS): $$($1_BIN)
-	$$($1_BIN)
-endef
-
-SAVE_SMOKE_BIN := $(BUILD_DIR)/$(SAVE_SMOKE_NAME)
-SAVE_SMOKE_ALIAS := smoke-save
-MAP_SMOKE_BIN := $(BUILD_DIR)/$(MAP_SMOKE_NAME)
-MAP_SMOKE_ALIAS := smoke-map
-TASK_RECIPE_SMOKE_BIN := $(BUILD_DIR)/$(TASK_RECIPE_SMOKE_NAME)
-TASK_RECIPE_SMOKE_ALIAS := smoke-task-recipe
-TASK_INTERACTION_SMOKE_BIN := $(BUILD_DIR)/$(TASK_INTERACTION_SMOKE_NAME)
-TASK_INTERACTION_SMOKE_ALIAS := smoke-task-interaction
-TASK_TEXT_SMOKE_BIN := $(BUILD_DIR)/$(TASK_TEXT_SMOKE_NAME)
-TASK_TEXT_SMOKE_ALIAS := smoke-task-text
-SESSION_SMOKE_BIN := $(BUILD_DIR)/$(SESSION_SMOKE_NAME)
-SESSION_SMOKE_ALIAS := smoke-session
-ENDGAME_SMOKE_BIN := $(BUILD_DIR)/$(ENDGAME_SMOKE_NAME)
-ENDGAME_SMOKE_ALIAS := smoke-endgame
-UI_LAYOUT_SMOKE_BIN := $(BUILD_DIR)/$(UI_LAYOUT_SMOKE_NAME)
-UI_LAYOUT_SMOKE_ALIAS := smoke-ui-layout
-HEALTH_OXYGEN_SMOKE_BIN := $(BUILD_DIR)/$(HEALTH_OXYGEN_SMOKE_NAME)
-HEALTH_OXYGEN_SMOKE_ALIAS := smoke-health-oxygen
-STATUS_SYSTEM_SMOKE_BIN := $(BUILD_DIR)/$(STATUS_SYSTEM_SMOKE_NAME)
-STATUS_SYSTEM_SMOKE_ALIAS := smoke-status-system
-CAMP_RECOVERY_SMOKE_BIN := $(BUILD_DIR)/$(CAMP_RECOVERY_SMOKE_NAME)
-CAMP_RECOVERY_SMOKE_ALIAS := smoke-camp-recovery
-SAVE_STATUS_SMOKE_BIN := $(BUILD_DIR)/$(SAVE_STATUS_SMOKE_NAME)
-SAVE_STATUS_SMOKE_ALIAS := smoke-save-status
-ENDGAME_NEW_SURVIVAL_SMOKE_BIN := $(BUILD_DIR)/$(ENDGAME_NEW_SURVIVAL_SMOKE_NAME)
-ENDGAME_NEW_SURVIVAL_SMOKE_ALIAS := smoke-endgame-new-survival
-
-SMOKE_SUITES := \
-	SAVE_SMOKE \
-	MAP_SMOKE \
-	TASK_RECIPE_SMOKE \
-	TASK_INTERACTION_SMOKE \
-	TASK_TEXT_SMOKE \
-	SESSION_SMOKE \
-	ENDGAME_SMOKE \
-	UI_LAYOUT_SMOKE \
-	HEALTH_OXYGEN_SMOKE \
-	STATUS_SYSTEM_SMOKE \
-	CAMP_RECOVERY_SMOKE \
-	SAVE_STATUS_SMOKE \
-	ENDGAME_NEW_SURVIVAL_SMOKE
-
-$(foreach suite,$(SMOKE_SUITES),$(eval $(call define_binary_target,$(suite))))
+$(eval $(call smoke_target,save_system,$(SAVE_SMOKE_SOURCES)))
+$(eval $(call smoke_target,map_layout,$(MAP_SMOKE_SOURCES)))
+$(eval $(call smoke_target,task_recipe,$(TASK_RECIPE_SMOKE_SOURCES)))
+$(eval $(call smoke_target,task_interaction,$(TASK_INTERACTION_SMOKE_SOURCES)))
+$(eval $(call smoke_target,task_text,$(TASK_TEXT_SMOKE_SOURCES)))
+$(eval $(call smoke_target,game_session,$(SESSION_SMOKE_SOURCES)))
+$(eval $(call smoke_target,endgame_flow,$(ENDGAME_SMOKE_SOURCES)))
+$(eval $(call smoke_target,ui_layout,$(UI_LAYOUT_SMOKE_SOURCES)))
+$(eval $(call smoke_target,health_oxygen,$(HEALTH_OXYGEN_SMOKE_SOURCES)))
+$(eval $(call smoke_target,status_system,$(STATUS_SYSTEM_SMOKE_SOURCES)))
+$(eval $(call smoke_target,camp_recovery,$(CAMP_RECOVERY_SMOKE_SOURCES)))
+$(eval $(call smoke_target,save_status,$(SAVE_STATUS_SMOKE_SOURCES)))
+$(eval $(call smoke_target,endgame_new_survival,$(ENDGAME_NEW_SURVIVAL_SMOKE_SOURCES)))
 
 APP_BIN := $(BUILD_DIR)/$(APP_NAME)
 
-.PHONY: all
+.PHONY: all run xcode clean smoke bundle
+
 all: $(APP_BIN)
 
 $(APP_BIN): $(APP_OBJECTS)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(APP_OBJECTS) -o $@ $(LDFLAGS)
-
-.PHONY: run xcode clean smoke
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 run: $(APP_BIN)
 	$(APP_BIN)
@@ -396,9 +254,22 @@ run: $(APP_BIN)
 xcode:
 	cmake -S . -B build/xcode -G Xcode -DRAYLIB_ROOT=$(RAYLIB_PREFIX)
 
-smoke: smoke-save smoke-map smoke-task-recipe smoke-task-interaction smoke-task-text smoke-session smoke-endgame smoke-ui-layout smoke-health-oxygen smoke-status-system smoke-camp-recovery smoke-save-status smoke-endgame-new-survival
+smoke: smoke-save_system smoke-map_layout smoke-task_recipe smoke-task_interaction smoke-task_text smoke-game_session smoke-endgame_flow smoke-ui_layout smoke-health_oxygen smoke-status_system smoke-camp_recovery smoke-save_status smoke-endgame_new_survival
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+BUNDLE_DIR := $(BUILD_DIR)/$(APP_NAME).app
+BUNDLE_CONTENTS := $(BUNDLE_DIR)/Contents
+BUNDLE_MACOS := $(BUNDLE_CONTENTS)/MacOS
+BUNDLE_RESOURCES := $(BUNDLE_CONTENTS)/Resources
+
+bundle: $(APP_BIN)
+	mkdir -p $(BUNDLE_MACOS)
+	cp $(APP_BIN) $(BUNDLE_MACOS)/$(APP_NAME)
+	cp Info.plist $(BUNDLE_CONTENTS)/Info.plist
+	mkdir -p $(BUNDLE_RESOURCES)
+	ln -sfn "$(shell pwd)/resources" $(BUNDLE_RESOURCES)/resources
+	@echo "App bundle created at $(BUNDLE_DIR)"
 
 -include $(DEPFILES)

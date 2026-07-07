@@ -429,7 +429,13 @@ int main(void) {
     Require(CountPropTiles(&map, TILE_TECH_TABLE) == SHIP_FURNITURE_FOOTPRINT_SIZE * SHIP_FURNITURE_FOOTPRINT_SIZE,
             "diagnostics should keep exactly one tech-table focal prop");
     Require(CountPropTiles(&map, TILE_LOG_SITE) == 0,
-            "legacy archive marker props should be removed so only real collectible logs remain");
+            "legacy archive marker props should be absent; logs are runtime entities");
+    Require(CountPropTiles(&map, TILE_BARRIER_DEEP) == 3,
+            "deep swamp should contain exactly three deep barriers");
+    Require(CountPropTiles(&map, TILE_BARRIER_RUINS) == 3,
+            "ruins plateau should contain exactly three ruins barriers");
+    Require(CountPropTiles(&map, TILE_BARRIER_SWAMP) == 3,
+            "swamp outer boundary should contain exactly three rope barriers");
 
     puts("map_layout smoke ok");
     return 0;

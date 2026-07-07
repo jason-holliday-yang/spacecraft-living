@@ -7,6 +7,7 @@ typedef struct GameplayFeedbackSnapshot {
     bool oxygenLeak;
     bool suffocating;
     bool bossTelegraph;
+    int bossPhase;
     GameEnding ending;
     int dayCount;
 } GameplayFeedbackSnapshot;
@@ -49,6 +50,34 @@ static bool HasActiveBossTelegraph(const TaskSystem *tasks) {
 
 static bool BossStartedTelegraphing(const TaskSystem *tasks, bool hadTelegraphBefore) {
     return !hadTelegraphBefore && HasActiveBossTelegraph(tasks);
+}
+
+static int GetActiveBossPhase(const TaskSystem *tasks) {
+    int index;
+
+    if (tasks == NULL) {
+        return 0;
+    }
+
+    for (index = 0; index < tasks->monsterCount; index++) {
+        const Monster *monster;
+
+        monster = &tasks->monsters[index];
+        if (!monster->active || monster->type != MONSTER_FINAL_BOSS || monster->maxHealth <= 0.0f) {
+            continue;
+        }
+
+        const float healthPercent = monster->health / monster->maxHealth;
+        if (healthPercent > 0.70f) {
+            return 1;
+        }
+        if (healthPercent > 0.35f) {
+            return 2;
+        }
+        return 3;
+    }
+
+    return 0;
 }
 
 static void GamePlay_UpdateGameplayTimers(Game *game, float deltaTime) {
@@ -94,6 +123,7 @@ static void GamePlay_CaptureFeedbackSnapshot(const Game *game, GameplayFeedbackS
     snapshot->oxygenLeak = Player_HasStatus(&game->player, PLAYER_STATUS_OXYGEN_LEAK);
     snapshot->suffocating = Player_HasStatus(&game->player, PLAYER_STATUS_SUFFOCATING);
     snapshot->bossTelegraph = HasActiveBossTelegraph(&game->tasks);
+    snapshot->bossPhase = GetActiveBossPhase(&game->tasks);
     snapshot->ending = game->tasks.ending;
     snapshot->dayCount = game->tasks.dayCount;
 }
@@ -128,6 +158,20 @@ static void GamePlay_UpdateGameplayFeedback(Game *game, const GameplayFeedbackSn
     if (BossStartedTelegraphing(&game->tasks, before->bossTelegraph) && game->monsterCueCooldown <= 0.0f) {
         Audio_PlayCue(&game->audio, AUDIO_CUE_MONSTER);
         game->monsterCueCooldown = 1.25f;
+    }
+
+    const int bossPhaseNow = GetActiveBossPhase(&game->tasks);
+    if (before->bossPhase == 1 && bossPhaseNow == 2) {
+        Game_PostMessage(game, Loc_PickLiteral("The guardian falters. Its rhythm breaks, and reinforcements begin to stir around the arena. Hold position and do not let the new pressure scatter you.",
+                                               "守卫的步伐开始不稳，节奏出现断口，增援开始在战场四周苏醒。稳住位置，别让新来的压力把你冲散。"), 4.5f);
+        Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
+    } else if (before->bossPhase == 2 && bossPhaseNow == 3) {
+        Game_PostMessage(game, Loc_PickLiteral("The guardian is breaking apart. Faster, more desperate chain attacks are coming. Keep oxygen in reserve and finish this on the next real opening.",
+                                               "守卫正在崩解。更快、更绝望的连段攻击即将到来。留好氧气，在下一次真正露出破绽时结束它。"), 4.5f);
+        Audio_PlayCue(&game->audio, AUDIO_CUE_WARNING);
+    } else if (before->bossPhase >= 1 && bossPhaseNow == 0 && game->tasks.bossDefeated) {
+        Game_PostMessage(game, Loc_PickLiteral("The guardian collapses. The arena falls silent, and the northwest ruins no longer contest your presence here.",
+                                               "守卫轰然倒塌。战场归于沉寂，西北遗迹不再抗拒你的存在。"), 5.0f);
     }
 }
 

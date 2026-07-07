@@ -72,7 +72,7 @@ void SaveLegacy_ApplyDerivedSurvivalFields(SaveSnapshot *snapshot) {
 
     snapshot->health = snapshot->stamina;
     snapshot->maxHealthBonus = snapshot->maxStaminaBonus;
-    snapshot->pressure = INITIAL_PRESSURE;
+    snapshot->pressure = LEGACY_INITIAL_PRESSURE;
     ApplyLegacyDerivedStatuses(snapshot);
 }
 

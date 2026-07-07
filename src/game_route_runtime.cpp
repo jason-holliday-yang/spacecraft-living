@@ -411,6 +411,15 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         Tasks_UpdateObjective(&game->tasks, &game->player);
     }
     std::snprintf(game->lastLocationName, sizeof(game->lastLocationName), "%s", locationName);
+
+    if (game->tasks.stage == 5
+        && std::strcmp(locationName, "Deep Basin") == 0
+        && previousLocationName != NULL
+        && std::strcmp(previousLocationName, "Deep Basin") != 0) {
+        Game_PostMessage(game, Loc_PickLiteral("Deep Basin entry: this is the high-risk extraction zone. Every minute here costs oxygen and invites poison. The wreck materials are here, but so is the real cost of pushing this far without retreat planned first.",
+                                               "深潭区入口：这里是高风险提取区。残骸所需材料确实在这里，但每一分钟都在消耗氧气并招来毒素——这也正是把路线推到这么深却不先想好退路的真正代价。"), 4.2f);
+    }
+
     if (westFifthCompletedNow) {
         Game_PostMessage(game, Loc_PickLiteral("Base summary: the final west archive has been filed.", "基地简报：西线最终档案已归档。"), 3.4f);
         return;
@@ -420,7 +429,8 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         return;
     }
     if (!x3ReadyBefore && x3ReadyNow) {
-        Game_PostMessage(game, Loc_PickLiteral("Base summary: west and south evidence now supports a fully informed rescue-versus-settlement choice.", "基地简报：西线与南线证据现已足够支撑一次完整知情的“救援还是定居”抉择。"), 3.4f);
+        Game_PostMessage(game, Loc_PickLiteral("Base summary: west and south evidence now supports a fully informed rescue-versus-settlement choice. Every west trace and south facility handover has been archived. The relic fragments and signal amplifier route are both visible now, and Loxi can read all three roads side by side before you lock the final answer.",
+                                               "基地简报：西线与南线证据现已足够支撑一次完整知情的“救援还是定居”抉择。每一条西线痕迹和每一个南线设施交接记录都已归档。遗迹碎片和信号放大器路线此时都已可见，洛希可以并排读出三条路，由你在锁定最终答案之前再做判断。"), 4.0f);
         return;
     }
     if (westFourthCompletedNow) {
@@ -432,7 +442,8 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         return;
     }
     if (!x2ReadyBefore && x2ReadyNow) {
-        Game_PostMessage(game, Loc_PickLiteral("Base summary: Loxi can now redraw the final choice using both investigations.", "基地简报：洛希现在可以结合两条调查线重新整理最终抉择。"), 3.4f);
+        Game_PostMessage(game, Loc_PickLiteral("Base summary: Loxi can now redraw the final choice using both investigations. West crew survival traces and south facility systems now sit in the same archive, and together they rule out every third-option delusion. Two more archives upstream will seal it.",
+                                               "基地简报：洛希现在可以结合两条调查线重新整理最终抉择。西线船员生存痕迹与南线设施系统现已归入同一档案，合在一起可以排除每一种第三条路幻想。再往上游补两份档案，就能封死。"), 3.8f);
         return;
     }
     if (westThirdCompletedNow) {
@@ -444,7 +455,8 @@ void Game_MaybePostNorthRouteTransitionHint(Game *game) {
         return;
     }
     if (!x1ReadyBefore && x1ReadyNow) {
-        Game_PostMessage(game, Loc_PickLiteral("Base summary: west traces and south facility records now align into one investigation.", "基地简报：西线痕迹与南线设施记录现已汇合成同一条调查线。"), 3.4f);
+        Game_PostMessage(game, Loc_PickLiteral("Base summary: west traces and south facility records now align into one investigation. The crew dropout path and the facility shutdown log share a single origin event, so the archive is no longer two separate problems but one interlocking picture.",
+                                               "基地简报：西线痕迹与南线设施记录现已汇合成同一条调查线。船员消失路径与设施停机日记共享同一个起源事件，从此刻起档案不再是两个孤立问题，而是一幅彼此咬合的画面。"), 3.6f);
         return;
     }
     if (westSecondCompletedNow) {

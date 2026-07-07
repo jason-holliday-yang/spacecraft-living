@@ -250,7 +250,7 @@ void Game_Draw(Game *game) {
     EndMode2D();
 
     if (game->state == GAME_STATE_ENDING) {
-        UI_DrawEnding(game->tasks.ending, &game->player, &game->tasks, &game->assets, screenWidth, screenHeight, game->elapsedSeconds);
+        UI_DrawEnding(game->tasks.ending, &game->player, &game->tasks, &game->assets, screenWidth, screenHeight, game->elapsedSeconds, game->endingMenuSelection);
     } else if (game->settlementConfirmOpen) {
         UI_DrawHud(&game->player, &game->tasks, &game->hudMessage, &game->assets, screenWidth, screenHeight);
         UI_DrawSettlementConfirmPopup(&game->assets,
@@ -262,6 +262,13 @@ void Game_Draw(Game *game) {
                                           ? Tasks_GetAvailableEndingCount(&game->tasks) + 1
                                           : 2,
                                       game->settlementConfirmSelection);
+    } else if (game->endingRouteDoubleConfirmOpen) {
+        UI_DrawHud(&game->player, &game->tasks, &game->hudMessage, &game->assets, screenWidth, screenHeight);
+        UI_DrawEndingRouteConfirmPopup(&game->assets,
+                                       game->endingRoutePendingConfirm,
+                                       screenWidth,
+                                       screenHeight,
+                                       game->endingRouteDoubleConfirmSelection);
     } else if (game->showDeathPopup) {
         UI_DrawDeathPopup(&game->player, game->hasSaveFile, &game->assets, screenWidth, screenHeight, game->deathPopupSelection);
     } else if (game->savePanelOpen) {

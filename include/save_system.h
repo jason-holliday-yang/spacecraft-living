@@ -56,13 +56,13 @@ typedef struct SaveSnapshot {
     int gridY;
     int facingX;
     int facingY;
-    float health;
-    float stamina;
-    float pressure;
-    float oxygen;
-    float poison;
-    float maxHealthBonus;
-    float maxStaminaBonus;
+    float health;                 /* canonical player resource */
+    float stamina;                /* @deprecated - retained only for backward-compatible save deserialization */
+    float pressure;               /* @deprecated - retained only for backward-compatible save deserialization */
+    float oxygen;                 /* canonical player resource */
+    float poison;                 /* canonical player resource */
+    float maxHealthBonus;         /* canonical */
+    float maxStaminaBonus;        /* @deprecated - legacy alias for maxHealthBonus */
     float attackBonus;
     int deathCount;
     bool hasGlowStick;

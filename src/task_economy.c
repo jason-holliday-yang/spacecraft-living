@@ -73,9 +73,7 @@ void TasksRuntime_SanitizeDisplayText(const char *source, char *dest, size_t des
         {"S1", "opening south pass"},
         {"X3", "shared ending context"},
         {"X2", "strategy synthesis"},
-        {"X1", "shared insight"},
-        {"Pressure", "Strain"},
-        {"pressure", "strain"}
+        {"X1", "shared insight"}
     };
     size_t sourceIndex;
     size_t destLength;
