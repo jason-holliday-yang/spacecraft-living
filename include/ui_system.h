@@ -147,6 +147,9 @@ Rectangle UI_GetAuthDeleteAccountRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthSubmitButtonRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthSwitchModeRect(int screenWidth, int screenHeight);
 Rectangle UI_GetAuthExitButtonRect(int screenWidth, int screenHeight);
+Rectangle UI_GetAuthAccountPickerPanelRect(int screenWidth, int screenHeight);
+Rectangle UI_GetAuthAccountPickerRowRect(int screenWidth, int screenHeight, int visibleIndex);
+int UI_GetAuthAccountPickerVisibleRowCount(void);
 Rectangle UI_GetPauseMenuPanelRect(int screenWidth, int screenHeight);
 Rectangle UI_GetPauseMenuButtonRect(int screenWidth, int screenHeight, int buttonIndex);
 Rectangle UI_GetDeathPopupButtonRect(int screenWidth, int screenHeight, int buttonIndex);
@@ -196,6 +199,13 @@ void UI_DrawAuthScreen(const AssetBundle *assets,
                        int screenWidth,
                        int screenHeight,
                        float elapsedSeconds);
+void UI_DrawAuthAccountPickerPopup(const AssetBundle *assets,
+                                   const char accountNames[][SAVE_ACCOUNT_NAME_MAX],
+                                   int accountCount,
+                                   int selectedAccount,
+                                   int firstVisibleAccount,
+                                   int screenWidth,
+                                   int screenHeight);
 void UI_DrawMainMenu(const AssetBundle *assets,
                      bool hasSave,
                      int saveCount,

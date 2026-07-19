@@ -1,4 +1,5 @@
 #include "map.h"
+#include "task_presentation.h"
 #include "player.h"
 #include "task_system.h"
 
@@ -82,7 +83,7 @@ static void MovePlayerToLoxiLeftPickupTile(Player *player) {
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
     char message[256];

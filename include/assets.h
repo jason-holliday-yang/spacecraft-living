@@ -15,11 +15,6 @@ typedef struct TextureAsset {
     bool loaded;
 } TextureAsset;
 
-#define INTRO_CUTSCENE_SLIDE_COUNT 5
-#define STORY_MAIN_SCENE_COUNT 30
-#define STORY_LOG_SCENE_COUNT 14
-#define STORY_ENDING_SCENE_COUNT 7
-
 typedef struct AssetBundle {
     TextureAsset player;
     bool playerIsSpriteSheet;
@@ -58,6 +53,7 @@ typedef struct AssetBundle {
     TextureAsset tileBarrierSwamp;
     TextureAsset tileBarrierDeep;
     TextureAsset tileBarrierRuins;
+    TextureAsset entityPlayerShipExterior;
     TextureAsset nodeWood;
     TextureAsset nodeOre;
     TextureAsset nodeMetalScrap;

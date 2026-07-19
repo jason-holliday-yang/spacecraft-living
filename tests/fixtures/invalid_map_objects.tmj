@@ -1,0 +1,204 @@
+{
+  "compressionlevel": -1,
+  "height": 3,
+  "infinite": false,
+  "layers": [
+    {
+      "data": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "height": 3,
+      "id": 1,
+      "name": "Ground",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 4,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "height": 3,
+      "id": 2,
+      "name": "Props",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 4,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        101,
+        101,
+        101,
+        101,
+        101,
+        101,
+        101,
+        101,
+        101,
+        101,
+        101,
+        101
+      ],
+      "height": 3,
+      "id": 3,
+      "name": "Area",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 4,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "height": 3,
+      "id": 4,
+      "name": "Hazard",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 4,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "data": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        301
+      ],
+      "height": 3,
+      "id": 5,
+      "name": "Decor",
+      "opacity": 1,
+      "type": "tilelayer",
+      "visible": true,
+      "width": 4,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "draworder": "topdown",
+      "id": 6,
+      "name": "Portals",
+      "objects": [
+        {
+          "height": 96,
+          "id": 1,
+          "name": "BROKEN_PORTAL",
+          "properties": [
+            {
+              "name": "portalId",
+              "type": "string",
+              "value": "BROKEN_PORTAL"
+            },
+            {
+              "name": "targetMapId",
+              "type": "string",
+              "value": "ship_interior"
+            },
+            {
+              "name": "transitionId",
+              "type": "string",
+              "value": "test"
+            },
+            {
+              "name": "promptKey",
+              "type": "string",
+              "value": "TEST"
+            }
+          ],
+          "rotation": 0,
+          "type": "portal",
+          "visible": true,
+          "width": 96,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "opacity": 1,
+      "type": "objectgroup",
+      "visible": true,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "nextlayerid": 7,
+  "nextobjectid": 2,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "tileheight": 96,
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "source": "../../maps/tilesets/spacecraft_tiles.tsj"
+    },
+    {
+      "firstgid": 101,
+      "source": "../../maps/tilesets/spacecraft_areas.tsj"
+    },
+    {
+      "firstgid": 201,
+      "source": "../../maps/tilesets/spacecraft_hazards.tsj"
+    },
+    {
+      "firstgid": 301,
+      "source": "../../maps/tilesets/spacecraft_decor.tsj"
+    }
+  ],
+  "tilewidth": 96,
+  "type": "map",
+  "version": "1.10",
+  "width": 4
+}

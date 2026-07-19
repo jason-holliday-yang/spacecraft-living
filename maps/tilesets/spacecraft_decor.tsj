@@ -1,0 +1,21 @@
+{
+  "columns": 5,
+  "image": "spacecraft_decor.png",
+  "imageheight": 96,
+  "imagewidth": 480,
+  "margin": 0,
+  "name": "spacecraft_decor",
+  "spacing": 0,
+  "tilecount": 5,
+  "tileheight": 96,
+  "tiles": [
+    {"id": 0, "properties": [{"name": "enum", "type": "int", "value": 1}, {"name": "name", "type": "string", "value": "Debris"}]},
+    {"id": 1, "properties": [{"name": "enum", "type": "int", "value": 2}, {"name": "name", "type": "string", "value": "Grass"}]},
+    {"id": 2, "properties": [{"name": "enum", "type": "int", "value": 3}, {"name": "name", "type": "string", "value": "Reeds"}]},
+    {"id": 3, "properties": [{"name": "enum", "type": "int", "value": 4}, {"name": "name", "type": "string", "value": "Ruins Crack"}]},
+    {"id": 4, "properties": [{"name": "enum", "type": "int", "value": 5}, {"name": "name", "type": "string", "value": "Warning Light"}]}
+  ],
+  "tilewidth": 96,
+  "type": "tileset",
+  "version": "1.10"
+}

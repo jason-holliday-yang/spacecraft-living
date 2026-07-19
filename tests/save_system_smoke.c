@@ -1,6 +1,6 @@
 #include "save_system.h"
 #include "persistence_platform.h"
-#include "../src/save_legacy_format.h"
+#include "save_legacy_format.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -82,6 +82,8 @@ static SaveSnapshot BuildSnapshot(void) {
     snapshot.gridY = PLAYER_START_Y;
     snapshot.facingX = 0;
     snapshot.facingY = 1;
+    snapshot.mapWidth = 160;
+    snapshot.mapHeight = 120;
     snapshot.health = 68.0f;
     snapshot.stamina = 72.5f;
     snapshot.pressure = 12.0f;
@@ -327,6 +329,7 @@ static void WriteLegacySaveV5(int slotIndex, const SaveSnapshot *snapshot) {
 int main(void) {
     char tempRoot[] = "/tmp/scl_save_smoke.XXXXXX";
     char authMessage[SAVE_AUTH_MESSAGE_MAX];
+    char accountNames[SAVE_ACCOUNT_LIST_MAX][SAVE_ACCOUNT_NAME_MAX];
     char deletedAccountPath[640];
     char gammaAccountPath[640];
     int bestScore;
@@ -351,6 +354,9 @@ int main(void) {
     Require(!SaveSystem_HasAnySave(), "logged out state should not expose save slots");
     Require(!SaveSystem_SaveGame(0, &saved), "saving should require an authenticated account");
     Require(SaveSystem_Register("alpha", "pass1234", authMessage, sizeof(authMessage)), "register should create the first local account");
+    Require(SaveSystem_ListRegisteredAccounts(&accountNames[0][0], sizeof(accountNames[0]), SAVE_ACCOUNT_LIST_MAX) == 1,
+            "account listing should expose the first registered account");
+    Require(strcmp(accountNames[0], "alpha") == 0, "account listing should preserve the display username");
     Require(SaveSystem_IsAccountAuthenticated(), "register should sign the first account in");
     Require(strcmp(SaveSystem_GetActiveAccountName(), "alpha") == 0, "registered account name should become active");
     Require(!SaveSystem_GetActiveAccountBestScore(&bestScore), "fresh accounts should not report a best score yet");
@@ -411,6 +417,8 @@ int main(void) {
     Require(loaded.communicatorUnlocked, "communicator state should round-trip");
     Require(loaded.endingArchiveReviewed == saved.endingArchiveReviewed, "ending archive review state should round-trip");
     Require(loaded.clearedDynamicTileCount == saved.clearedDynamicTileCount, "dynamic tile count should round-trip");
+    Require(loaded.mapWidth == saved.mapWidth && loaded.mapHeight == saved.mapHeight,
+            "runtime map dimensions should round-trip in the current save format");
     Require(loaded.resources[RESOURCE_JUNK_METAL] == saved.resources[RESOURCE_JUNK_METAL], "resource inventory should round-trip");
     Require(loaded.logs[0].collected == saved.logs[0].collected, "log collection should round-trip");
     Require(loaded.storyMainSceneShown[0] == saved.storyMainSceneShown[0],
@@ -424,6 +432,10 @@ int main(void) {
     Require(!SaveSystem_IsAccountAuthenticated(), "logout should clear the active account");
     Require(!SaveSystem_HasAnySave(), "logged out state should hide existing saves");
     Require(SaveSystem_Register("beta", "beta5678", authMessage, sizeof(authMessage)), "register should create a second local account");
+    Require(SaveSystem_ListRegisteredAccounts(&accountNames[0][0], sizeof(accountNames[0]), SAVE_ACCOUNT_LIST_MAX) == 2,
+            "account listing should expose every registered account");
+    Require(strcmp(accountNames[0], "alpha") == 0 && strcmp(accountNames[1], "beta") == 0,
+            "account listing should keep registration order for the picker");
     Require(!SaveSystem_HasAnySave(), "a different account should start with its own empty save list");
 
     secondAccountSaved = saved;
@@ -498,6 +510,8 @@ int main(void) {
     memset(&loaded, 0, sizeof(loaded));
     Require(SaveSystem_LoadGame(2, &loaded), "legacy v4 load should succeed");
     Require(loaded.clearedDynamicTileCount == legacySource.clearedDynamicTileCount, "legacy v4 dynamic tile count should round-trip");
+    Require(loaded.mapWidth == MAP_WIDTH && loaded.mapHeight == MAP_HEIGHT,
+            "legacy saves should migrate to the historical map dimensions");
     Require(loaded.clearedDynamicTileX[0] == legacySource.clearedDynamicTileX[0], "legacy v4 dynamic tile x should round-trip");
     Require(loaded.health == legacySource.stamina, "legacy v4 should map stamina to health");
     Require(loaded.pressure == LEGACY_INITIAL_PRESSURE, "legacy v4 should discard old pressure into the default state");

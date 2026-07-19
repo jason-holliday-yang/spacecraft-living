@@ -4,12 +4,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "c_compat.h"
-#include "assets.h"
-#include "localization.h"
+#include "map.h"
 #include "player.h"
 #include "puzzle.h"
 
-/* Public task/runtime state, progression enums, and gameplay-side task APIs. */
+/* Public task/runtime state, progression enums, and gameplay-side task APIs.
+ * Drawing and localized display queries live in task_presentation.h.
+ */
 
 SCL_EXTERN_C_BEGIN
 
@@ -62,6 +63,7 @@ typedef enum GameEnding {
 } GameEnding;
 
 typedef struct ResourceNode {
+    char mapId[MAP_ID_MAX];
     bool active;
     ResourceType type;
     int gridX;
@@ -83,6 +85,7 @@ typedef enum BossAttackType {
 } BossAttackType;
 
 typedef struct Monster {
+    char mapId[MAP_ID_MAX];
     bool active;
     MonsterType type;
     CombatEncounterId encounterId;
@@ -112,6 +115,8 @@ typedef enum ShipLogCategory {
 } ShipLogCategory;
 
 typedef struct ShipLog {
+    char mapId[MAP_ID_MAX];
+    int sourceIndex;
     bool active;
     bool collected;
     int gridX;
@@ -126,6 +131,10 @@ typedef struct ShipLog {
 } ShipLog;
 
 typedef struct TaskSystem {
+    char activeMapId[MAP_ID_MAX];
+    MapKind activeMapKind;
+    char registeredMapIds[MAX_MAP_CATALOG_ENTRIES][MAP_ID_MAX];
+    int registeredMapCount;
     int stage;
     int dayCount;
     DayPhase phase;
@@ -179,7 +188,10 @@ typedef struct TaskSystem {
 } TaskSystem;
 
 void Tasks_Init(TaskSystem *tasks, GameMap *map);
-void Tasks_UpdateObjective(TaskSystem *tasks, const Player *player);
+bool Tasks_RegisterMapEntities(TaskSystem *tasks, GameMap *map);
+void Tasks_SetActiveMap(TaskSystem *tasks, const GameMap *map);
+bool Tasks_IsEntityOnActiveMap(const TaskSystem *tasks, const char *mapId);
+void Tasks_ApplyProgressToMap(const TaskSystem *tasks, GameMap *map);
 void Tasks_Update(TaskSystem *tasks, GameMap *map, Player *player, float deltaTime);
 bool Tasks_HandleInteraction(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize);
 bool Tasks_HandleAttack(TaskSystem *tasks, GameMap *map, Player *player, char *message, size_t messageSize);
@@ -187,22 +199,15 @@ bool Tasks_TryCraft(TaskSystem *tasks, GameMap *map, Player *player, RecipeType 
 bool Tasks_IsNearWorkbench(const Player *player);
 bool Tasks_IsBlockingActorTile(const TaskSystem *tasks, int gridX, int gridY);
 bool Tasks_GetObjectiveMarker(const TaskSystem *tasks, const Player *player, int *gridX, int *gridY);
-void Tasks_DrawWorld(const TaskSystem *tasks, const AssetBundle *assets, float elapsedSeconds);
+bool Tasks_GetObjectiveMarkerForMap(const TaskSystem *tasks, const GameMap *map, const Player *player, int *gridX, int *gridY);
 int Tasks_GetCollectedLogCount(const TaskSystem *tasks);
 const ShipLog *Tasks_GetCollectedLogAt(const TaskSystem *tasks, int index);
 int Tasks_GetLogSceneIndex(const TaskSystem *tasks, const ShipLog *log);
-const char *Tasks_GetLogTitle(const ShipLog *log);
-const char *Tasks_GetLogStoryText(const ShipLog *log);
-const char *Tasks_GetLogDetailText(const ShipLog *log);
 bool Tasks_IsRecipeVisible(const TaskSystem *tasks, RecipeType recipe);
 bool Tasks_CanCraftRecipe(const TaskSystem *tasks, const Player *player, RecipeType recipe);
 int Tasks_GetVisibleRecipeCount(const TaskSystem *tasks);
 RecipeType Tasks_GetVisibleRecipeAt(const TaskSystem *tasks, int index);
-const char *Tasks_GetStageName(int stage);
-const char *Tasks_GetPhaseName(DayPhase phase);
-const char *Tasks_GetEventName(EventType eventType);
 bool Tasks_IsCommunicatorUnlocked(const TaskSystem *tasks);
-const char *Tasks_GetCommunicatorHint(const TaskSystem *tasks);
 bool Tasks_IsEndingPreCheckReady(const TaskSystem *tasks);
 bool Tasks_IsEndingBranchReady(const TaskSystem *tasks);
 GameEnding Tasks_GetSelectedEndingRoute(const TaskSystem *tasks);
@@ -213,10 +218,7 @@ GameEnding Tasks_GetAvailableEndingAt(const TaskSystem *tasks, int index);
 bool Tasks_CanChooseSettlement(const TaskSystem *tasks);
 void Tasks_CommitSettlement(TaskSystem *tasks);
 GameEnding Tasks_GetEnding(const TaskSystem *tasks);
-const char *Tasks_GetEndingTitle(GameEnding ending);
-const char *Tasks_GetEndingBody(GameEnding ending);
 int Tasks_CalculateEndingScore(const TaskSystem *tasks, const Player *player);
-const char *Tasks_GetEndingScoreRank(int score);
 int Tasks_GetArchiveScore(const TaskSystem *tasks);
 int Tasks_GetInvestigationScore(const TaskSystem *tasks);
 int Tasks_GetSurvivalScore(const TaskSystem *tasks, const Player *player);
@@ -226,7 +228,6 @@ int Tasks_GetCombatScoreMax(void);
 int Tasks_GetCombatEncounterCount(void);
 bool Tasks_IsCombatEncounterCompleted(const TaskSystem *tasks, CombatEncounterId encounter);
 int Tasks_GetCombatEncounterScore(CombatEncounterId encounter);
-const char *Tasks_GetCombatEncounterName(CombatEncounterId encounter);
 
 SCL_EXTERN_C_END
 

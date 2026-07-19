@@ -1,9 +1,13 @@
 #include "map.h"
+#include "player.h"
+#include "task_system.h"
 
 #include <stdbool.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 static void Require(bool condition, const char *message) {
     if (condition) {
@@ -12,6 +16,48 @@ static void Require(bool condition, const char *message) {
 
     fprintf(stderr, "map_layout_smoke failed: %s\n", message);
     exit(1);
+}
+
+
+static void RequireAnchor(const GameMap *map, MapAnchor anchor, int expectedX, int expectedY, const char *message) {
+    int gridX;
+    int gridY;
+
+    Require(Map_GetAnchorPosition(map, anchor, &gridX, &gridY), message);
+    Require(gridX == expectedX && gridY == expectedY, message);
+}
+
+static void RequireRuntimeAnchor(MapAnchor anchor, int expectedX, int expectedY, const char *message) {
+    int gridX;
+    int gridY;
+
+    Require(Map_GetRuntimeAnchorPosition(anchor, &gridX, &gridY), message);
+    Require(gridX == expectedX && gridY == expectedY, message);
+}
+
+
+static const MapMonsterSeed *FindMonsterSeed(const GameMap *map, int monsterType) {
+    int index;
+
+    for (index = 0; index < map->monsterSeedCount; index++) {
+        if (map->monsterSeeds[index].monsterType == monsterType) {
+            return &map->monsterSeeds[index];
+        }
+    }
+
+    return NULL;
+}
+
+static const MapLogSeed *FindLogSeedBySourceIndex(const GameMap *map, int sourceIndex) {
+    int index;
+
+    for (index = 0; index < map->logSeedCount; index++) {
+        if (map->logSeeds[index].sourceIndex == sourceIndex) {
+            return &map->logSeeds[index];
+        }
+    }
+
+    return NULL;
 }
 
 static bool IsShipRoom(int gridX, int gridY) {
@@ -126,13 +172,176 @@ static bool IsWithinPlayableWorldEnvelope(int gridX, int gridY) {
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     int gridY;
     int gridX;
     int offsetX;
     int offsetY;
 
-    Map_Init(&map);
+    Require(Map_Init(&map), "production map initialization should require a complete Tiled source");
+
+    Require(Map_IsProductionReady(&map), "production map should satisfy all required Tiled layers");
+    Require(!map.loadFailed && Map_GetLoadError(&map)[0] == '\0',
+            "successful production map initialization should not retain a load error");
+    Require(map.loadedFromTiled, "map should report the Tiled world as its active source");
+    Require(map.width == MAP_WIDTH && map.height == MAP_HEIGHT, "map should record the loaded Tiled dimensions");
+    Require(map.tileWidth == TILE_SIZE && map.tileHeight == TILE_SIZE, "map should record the loaded Tiled tile size");
+    Require(map.hasAreaLayer, "map should load or rebuild an editable area layer");
+    Require(map.hasHazardLayer, "map should load or rebuild an editable hazard layer");
+    Require(map.hasDecorLayer, "map should load the non-blocking Tiled decor layer");
+    Require(Map_GetDecorAt(&map, 45, 65) == MAP_DECOR_GRASS,
+            "decor layer should expose the west-route grass marker");
+    Require(Map_GetDecorAt(&map, 101, 45) == MAP_DECOR_REEDS,
+            "decor layer should expose the swamp reeds marker");
+    Require(Map_GetDecorAt(&map, 64, 18) == MAP_DECOR_RUINS_CRACK,
+            "decor layer should expose the ruins crack marker");
+    Require(Map_GetDecorAt(&map, 84, 51) == MAP_DECOR_WARNING_LIGHT,
+            "decor layer should expose the airlock warning light marker");
+    Require(map.hasAnchorLayer, "map should load editable anchor objects from the Tiled map");
+    Require(map.hasResourceLayer, "map should load editable resource objects from the Tiled map");
+    Require(map.resourceSeedCount == 69, "resource layer should expose the current set of valid resource seeds");
+    Require(map.resourceSeeds[0].resourceType == RESOURCE_WOOD
+                && map.resourceSeeds[0].gridX == EXTERIOR_X(55)
+                && map.resourceSeeds[0].gridY == EXTERIOR_Y(53),
+            "first resource seed should match the exported wood node");
+    Require(map.resourceSeeds[map.resourceSeedCount - 1].resourceType == RESOURCE_ORE
+                && map.resourceSeeds[map.resourceSeedCount - 1].gridX == SHIP_POWER_BAY_X + 3
+                && map.resourceSeeds[map.resourceSeedCount - 1].gridY == SHIP_POWER_BAY_Y + 3,
+            "last resource seed should match the exported ship ore node");
+    Require(map.hasMonsterLayer, "map should load editable monster spawn objects from the Tiled map");
+    Require(map.monsterSeedCount == 8, "monster layer should expose the current set of monster seeds");
+    Require(map.monsterSeeds[0].monsterType == MONSTER_THORN_LARVA
+                && map.monsterSeeds[0].gridX == EXTERIOR_X(20)
+                && map.monsterSeeds[0].gridY == EXTERIOR_Y(72)
+                && map.monsterSeeds[0].unlockStage == 4,
+            "first monster seed should match the exported thorn larva spawn");
+    {
+        const MapMonsterSeed *bossSeed;
+        const MapMonsterSeed *relicGuardSeed;
+
+        bossSeed = FindMonsterSeed(&map, MONSTER_FINAL_BOSS);
+        Require(bossSeed != NULL
+                    && bossSeed->gridX == BOSS_ARENA_BOSS_X
+                    && bossSeed->gridY == BOSS_ARENA_BOSS_Y
+                    && bossSeed->unlockStage == 7,
+                "final boss seed should match the configured boss arena spawn");
+        relicGuardSeed = FindMonsterSeed(&map, MONSTER_RELIC_GUARD);
+        Require(relicGuardSeed != NULL
+                    && Map_GetAreaTileAt(&map, relicGuardSeed->gridX, relicGuardSeed->gridY) == MAP_AREA_RUINS,
+                "relic guard seed should remain in the ruins area");
+    }
+    Require(map.hasLogLayer, "map should load editable log site objects from the Tiled map");
+    Require(map.hasRegionLayer, "map should load editable region objects from the Tiled map");
+    Require(map.regionCount >= 30, "region layer should expose the current named route regions");
+    {
+        const MapRegion *northwestRuins;
+        const MapRegion *runtimeNorthwestRuins;
+
+        northwestRuins = Map_GetRegionByName(&map, "Northwest Ruins");
+        runtimeNorthwestRuins = Map_GetRuntimeRegionByName("Northwest Ruins");
+        Require(northwestRuins != NULL
+                    && northwestRuins->gridX == BOSS_ARENA_X
+                    && northwestRuins->gridY == BOSS_ARENA_Y
+                    && northwestRuins->width == BOSS_ARENA_WIDTH
+                    && northwestRuins->height == BOSS_ARENA_HEIGHT,
+                "named region lookup should expose the Tiled boss arena bounds");
+        Require(runtimeNorthwestRuins != NULL
+                    && runtimeNorthwestRuins->gridX == northwestRuins->gridX
+                    && runtimeNorthwestRuins->gridY == northwestRuins->gridY,
+                "runtime region lookup should expose the active Tiled boss arena bounds");
+    }
+    Require(map.hasUnlockLayer, "map should load editable unlock objects from the Tiled map");
+    Require(map.unlockCount >= 7, "unlock layer should expose current doors, gates, and rope barriers");
+    {
+        const MapUnlock *airlockUnlock;
+        const MapUnlock *swampGateUnlock;
+
+        airlockUnlock = Map_GetUnlockById(&map, "AIRLOCK_DOOR");
+        Require(airlockUnlock != NULL
+                    && airlockUnlock->gridX == AIRLOCK_DOOR_X
+                    && airlockUnlock->gridY == AIRLOCK_DOOR_TOP_Y
+                    && airlockUnlock->width == 1
+                    && airlockUnlock->height == AIRLOCK_DOOR_HEIGHT
+                    && airlockUnlock->clearsTile == TILE_AIRLOCK_DOOR,
+                "airlock unlock should expose its Tiled-managed footprint");
+        Require(Map_GetUnlockAt(&map, AIRLOCK_DOOR_X, AIRLOCK_DOOR_Y) == airlockUnlock,
+                "unlock lookup by tile should find the airlock footprint");
+        swampGateUnlock = Map_GetUnlockById(&map, "SWAMP_DEEP_GATE");
+        Require(swampGateUnlock != NULL
+                    && swampGateUnlock->gridX == SWAMP_GATE_X
+                    && swampGateUnlock->gridY == SWAMP_GATE_TOP_Y
+                    && swampGateUnlock->width == 2
+                    && swampGateUnlock->height == SWAMP_GATE_HEIGHT
+                    && swampGateUnlock->clearsTile == TILE_BARRIER_DEEP,
+                "deep swamp gate should expose its Tiled-managed footprint");
+        Require(Map_GetUnlockById(&map, "UNKNOWN_UNLOCK") == NULL,
+                "unknown unlock ids should not resolve");
+    }
+    Require(map.logSeedCount == 14, "log layer should expose the current set of log seeds");
+    Require(map.logSeeds[0].sourceIndex == 0
+                && map.logSeeds[0].logCategory == SHIP_LOG_MAINLINE
+                && map.logSeeds[0].gridX == SHIP_CARGO_HOLD_X + 3
+                && map.logSeeds[0].gridY == SHIP_CARGO_HOLD_Y + 3,
+            "first log seed should match the exported impact protocol log");
+    {
+        const MapLogSeed *supplementalSeed;
+        const MapLogSeed *lastSeed;
+
+        supplementalSeed = FindLogSeedBySourceIndex(&map, 5);
+        Require(supplementalSeed != NULL
+                    && supplementalSeed->logCategory == SHIP_LOG_SUPPLEMENTAL
+                    && supplementalSeed->gridX == EXTERIOR_X(41)
+                    && supplementalSeed->gridY == EXTERIOR_Y(67),
+                "supplemental canopy log should keep its exported category and position");
+        lastSeed = FindLogSeedBySourceIndex(&map, 13);
+        Require(lastSeed != NULL
+                    && lastSeed->logCategory == SHIP_LOG_MAINLINE
+                    && lastSeed->gridX == EXTERIOR_X(122)
+                    && lastSeed->gridY == EXTERIOR_Y(102),
+                "last log seed should match the root vault dossier log");
+    }
+    RequireAnchor(&map, MAP_ANCHOR_PLAYER_START, PLAYER_START_X, PLAYER_START_Y,
+                  "player start anchor should match the configured spawn point");
+    RequireAnchor(&map, MAP_ANCHOR_AIRLOCK_EXIT, AIRLOCK_DOOR_X + 1, AIRLOCK_DOOR_Y,
+                  "airlock exit anchor should sit outside the airlock door");
+    RequireAnchor(&map, MAP_ANCHOR_COMM_RELAY, COMM_RELAY_X, COMM_RELAY_Y,
+                  "comm relay anchor should match the relay prop");
+    RequireAnchor(&map, MAP_ANCHOR_SIGNAL_TOWER, SIGNAL_TOWER_X, SIGNAL_TOWER_Y,
+                  "signal tower anchor should match the tower prop");
+    RequireRuntimeAnchor(MAP_ANCHOR_COMM_RELAY, COMM_RELAY_X, COMM_RELAY_Y,
+                         "runtime anchor query should expose the map comm relay point");
+    RequireRuntimeAnchor(MAP_ANCHOR_SIGNAL_TOWER, SIGNAL_TOWER_X, SIGNAL_TOWER_Y,
+                         "runtime anchor query should expose the map signal tower point");
+    RequireRuntimeAnchor(MAP_ANCHOR_MONOLITH_A, MONOLITH_A_X, MONOLITH_A_Y,
+                         "runtime anchor query should expose the map monolith A point");
+    RequireRuntimeAnchor(MAP_ANCHOR_MONOLITH_B, MONOLITH_B_X, MONOLITH_B_Y,
+                         "runtime anchor query should expose the map monolith B point");
+    RequireRuntimeAnchor(MAP_ANCHOR_MONOLITH_C, MONOLITH_C_X, MONOLITH_C_Y,
+                         "runtime anchor query should expose the map monolith C point");
+    RequireRuntimeAnchor(MAP_ANCHOR_BOSS_SPAWN, BOSS_ARENA_BOSS_X, BOSS_ARENA_BOSS_Y,
+                         "runtime anchor query should expose the map boss spawn point");
+    RequireRuntimeAnchor(MAP_ANCHOR_RUINS_APPROACH, EXTERIOR_X(64), EXTERIOR_Y(27),
+                         "runtime anchor query should expose the editable ruins approach marker");
+    RequireAnchor(&map, MAP_ANCHOR_BOSS_SPAWN, BOSS_ARENA_BOSS_X, BOSS_ARENA_BOSS_Y,
+                  "boss spawn anchor should match the arena boss spawn");
+    RequireAnchor(&map, MAP_ANCHOR_ROPE_BARRIER_C, ROPE_BARRIER_C_X, ROPE_BARRIER_C_Y,
+                  "rope barrier anchor should preserve the de-overlapped shortcut point");
+    Require(Map_GetAreaTileAt(&map, PLAYER_START_X, PLAYER_START_Y) == MAP_AREA_BASE,
+            "area layer should mark the ship start as base");
+    Require(Map_GetAreaAt(PLAYER_START_X, PLAYER_START_Y) == MAP_AREA_BASE,
+            "runtime area query should use the active area layer for the ship start");
+    Require(Map_GetAreaTileAt(&map, SWAMP_OUTER_X, SWAMP_OUTER_Y) == MAP_AREA_SWAMP_OUTER,
+            "area layer should mark the outer swamp region");
+    Require(Map_GetAreaTileAt(&map, SWAMP_DEEP_X, SWAMP_DEEP_Y) == MAP_AREA_SWAMP_DEEP,
+            "area layer should mark the deep swamp region");
+    Require(Map_GetAreaTileAt(&map, SIGNAL_TOWER_X, SIGNAL_TOWER_Y) == MAP_AREA_RUINS,
+            "area layer should mark the signal tower plateau as ruins");
+    Require(Map_GetAreaTileAt(&map, BOSS_ARENA_X + 1, BOSS_ARENA_Y + 1) == MAP_AREA_BOSS_ARENA,
+            "area layer should mark the boss arena");
+    Require(Map_GetHazardAt(&map, SWAMP_OUTER_X, SWAMP_OUTER_Y) == HAZARD_SWAMP,
+            "hazard layer should mark the outer swamp as swamp hazard");
+    Require(Map_GetHazardAt(&map, SWAMP_DEEP_X, SWAMP_DEEP_Y) == HAZARD_POISON,
+            "hazard layer should mark the deep swamp as poison hazard");
 
     for (gridY = 0; gridY < MAP_HEIGHT; ++gridY) {
         for (gridX = 0; gridX < MAP_WIDTH; ++gridX) {
@@ -240,14 +449,25 @@ int main(void) {
         Require(Map_GetPropTileAt(&map, LOXI_ROOM_DOOR_X + offsetX, LOXI_ROOM_DOOR_Y) == TILE_LOXI_ROOM_DOOR,
                 "Loxi room door should seal the terminal cabin before the first sync");
     }
+    Require(!Map_IsUnlockOpen(&map, "LOXI_ROOM_DOOR"),
+            "Tiled unlock state should report the initial Loxi room door as closed");
     Map_UnlockLoxiRoom(&map);
-    Require(Map_IsLoxiRoomUnlocked(&map),
-            "unlocking the Loxi room should clear the cabin door");
+    Require(Map_IsLoxiRoomUnlocked(&map) && Map_IsUnlockOpen(&map, "LOXI_ROOM_DOOR"),
+            "unlocking the Loxi room should clear the Tiled-managed cabin door");
+    Require(Map_SetUnlockOpen(&map, "LOXI_ROOM_DOOR", false),
+            "generic unlock control should restore a managed door");
+    Require(!Map_IsLoxiRoomUnlocked(&map) && !Map_IsUnlockOpen(&map, "LOXI_ROOM_DOOR"),
+            "restoring the Loxi room unlock should close its full footprint");
+    Map_UnlockLoxiRoom(&map);
     Require(CanReach(&map, PLAYER_RESPAWN_X, PLAYER_RESPAWN_Y, SHIP_CORRIDOR_X + 10, SHIP_CORRIDOR_Y + 1),
             "once unlocked, the Loxi room should reconnect to the central corridor");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, SHIP_TERMINAL_BAY_X, SHIP_TERMINAL_BAY_Y + SHIP_TERMINAL_BAY_HEIGHT - 1),
             "central corridor should reconnect into the terminal bay after the cabin door unlocks");
+    Require(!Map_IsUnlockOpen(&map, "AIRLOCK_DOOR"),
+            "Tiled unlock state should report the initial airlock as closed");
     Map_UnlockSwampOuter(&map);
+    Require(Map_IsUnlockOpen(&map, "AIRLOCK_DOOR"),
+            "unlocking the airlock should open its Tiled-managed footprint");
     Require(CanReach(&map, PLAYER_START_X, PLAYER_START_Y, AIRLOCK_DOOR_X + 1, AIRLOCK_DOOR_Y),
             "unlocking the airlock should connect the ship interior to the exterior approach");
     for (offsetX = 1; offsetX <= AIRLOCK_EXIT_WIDTH; offsetX++) {
@@ -407,6 +627,14 @@ int main(void) {
             "ruins gate should no longer use a decorative full-height barrier that can be bypassed");
     Require(Map_GetPropTileAt(&map, ROPE_BARRIER_B_X, ROPE_BARRIER_B_Y) == TILE_BARRIER_SWAMP,
             "rope shortcut barrier should remain present before interaction");
+    Require(!Map_IsUnlockOpen(&map, "ROPE_BARRIER_B"),
+            "rope shortcut unlock should initially report closed");
+    Map_CreateRopeBridge(&map, ROPE_BARRIER_B_X, ROPE_BARRIER_B_Y);
+    Require(Map_IsUnlockOpen(&map, "ROPE_BARRIER_B")
+                && Map_GetPropTileAt(&map, ROPE_BARRIER_B_X, ROPE_BARRIER_B_Y) == TILE_VOID,
+            "rope interaction should clear the full Tiled-managed unlock footprint");
+    Require(Map_SetUnlockOpen(&map, "ROPE_BARRIER_B", false),
+            "generic unlock control should restore a rope barrier for subsequent layout assertions");
     for (gridY = RUINS_MAIN_Y; gridY < RUINS_MAIN_Y + RUINS_MAIN_HEIGHT; ++gridY) {
         for (gridX = RUINS_MAIN_X; gridX < RUINS_MAIN_X + RUINS_MAIN_WIDTH; ++gridX) {
             TileType groundTile = Map_GetGroundTileAt(&map, gridX, gridY);
@@ -436,6 +664,58 @@ int main(void) {
             "ruins plateau should contain exactly three ruins barriers");
     Require(CountPropTiles(&map, TILE_BARRIER_SWAMP) == 3,
             "swamp outer boundary should contain exactly three rope barriers");
+
+    {
+        GameMap relocatedMap = {0};
+        char originalWorkingDirectory[PATH_MAX];
+
+        Require(getcwd(originalWorkingDirectory, sizeof(originalWorkingDirectory)) != NULL,
+                "path regression test should capture the original working directory");
+        Require(chdir("/tmp") == 0,
+                "path regression test should switch away from the repository root");
+        Require(Map_Init(&relocatedMap),
+                "production map should resolve relative to the executable when launched from another directory");
+        Require(chdir(originalWorkingDirectory) == 0,
+                "path regression test should restore the original working directory");
+        Map_Destroy(&relocatedMap);
+    }
+
+    {
+        GameMap missingMap = {0};
+
+        Require(!Map_LoadTiled(&missingMap, "tests/fixtures/does_not_exist.tmj"),
+                "explicit Tiled loads should not silently fall back to the production world");
+        Require(missingMap.loadFailed && Map_GetLoadError(&missingMap)[0] != '\0',
+                "failed Tiled loads should expose a diagnostic error");
+        Map_Destroy(&missingMap);
+    }
+
+    {
+        GameMap dynamicMap = {0};
+
+        Require(Map_LoadTiled(&dynamicMap, "tests/fixtures/dynamic_map.tmj"),
+                "loader should accept a Tiled map whose dimensions differ from the legacy constants");
+        Require(!Map_IsProductionReady(&dynamicMap),
+                "minimal dynamic fixtures should remain valid loader tests without masquerading as production maps");
+        Require(dynamicMap.width == 4 && dynamicMap.height == 3,
+                "dynamic map should preserve its runtime dimensions");
+        Require(Map_IsWithinMapBounds(&dynamicMap, 3, 2)
+                    && !Map_IsWithinMapBounds(&dynamicMap, 4, 2)
+                    && !Map_IsWithinMapBounds(&dynamicMap, 3, 3),
+                "map-specific bounds should use runtime dimensions");
+        Require(Map_IsWithinBounds(3, 2) && !Map_IsWithinBounds(4, 2),
+                "active runtime bounds should follow the loaded dynamic map");
+        Require(Map_GetGroundTileAt(&dynamicMap, 3, 2) == TILE_BASE_FLOOR
+                    && Map_GetAreaTileAt(&dynamicMap, 3, 2) == MAP_AREA_BASE
+                    && Map_GetDecorAt(&dynamicMap, 3, 2) == MAP_DECOR_DEBRIS,
+                "all dynamic tile layers should load through runtime-sized storage");
+        dynamicMap.propTiles[2][3] = TILE_ROCK;
+        Require(Map_GetPropTileAt(&dynamicMap, 3, 2) == TILE_ROCK,
+                "runtime-sized layer rows should remain writable at the final cell");
+        Map_Destroy(&dynamicMap);
+        Require(dynamicMap.groundTiles == NULL && dynamicMap.width == 0 && dynamicMap.height == 0,
+                "destroying a dynamic map should release and clear its storage");
+    }
 
     puts("map_layout smoke ok");
     return 0;

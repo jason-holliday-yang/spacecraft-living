@@ -1,8 +1,14 @@
 #include "map.h"
+#include "player_presentation.h"
+#include "task_presentation.h"
 #include "localization.h"
 #include "player.h"
 #include "task_system.h"
-#include "../src/task_runtime_internal.h"
+#include "task_crafting_internal.h"
+#include "task_encounter_internal.h"
+#include "task_interaction_internal.h"
+#include "task_runtime_internal.h"
+#include "task_survival_internal.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -484,7 +490,7 @@ static void RequireReasonableTaskPlacements(const GameMap *map, const TaskSystem
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
     PlayerStatusType activeStatuses[PLAYER_STATUS_COUNT];
@@ -554,9 +560,10 @@ int main(void) {
     Require(FindLogInLocation(&tasks, "Root Vault")->category == SHIP_LOG_MAINLINE,
             "root vault should keep the final south mainline archive");
     {
-        GameMap unlockedMap;
+        GameMap unlockedMap = {0};
 
-        unlockedMap = map;
+        Require(Map_Clone(&unlockedMap, &map),
+                "unlocked route verification should deep-clone dynamic map storage");
         Map_UnlockLoxiRoom(&unlockedMap);
         Map_UnlockSwampOuter(&unlockedMap);
         Map_UnlockSwampDeep(&unlockedMap);
@@ -565,6 +572,7 @@ int main(void) {
             Require(CanReach(&unlockedMap, PLAYER_START_X, PLAYER_START_Y, tasks.logs[logIndex].gridX, tasks.logs[logIndex].gridY),
                     "every seeded log should remain collectible once the route gates are unlocked");
         }
+        Map_Destroy(&unlockedMap);
     }
     Require(CountActiveNodesInLocation(&tasks, "Terminal Bay") == 0,
             "Loxi's terminal room should not contain stray pickup resources");
@@ -894,7 +902,7 @@ int main(void) {
 
     {
         TaskSystem unlockTasks;
-        GameMap unlockMap;
+        GameMap unlockMap = {0};
         Player unlockPlayer;
 
         Map_Init(&unlockMap);

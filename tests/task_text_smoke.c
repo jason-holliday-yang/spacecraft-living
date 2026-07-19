@@ -1,4 +1,5 @@
 #include "map.h"
+#include "task_presentation.h"
 #include "localization.h"
 #include "player.h"
 #include "task_system.h"
@@ -54,7 +55,7 @@ static void PrepareEndingBranch(TaskSystem *tasks) {
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
     int markerX;

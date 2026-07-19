@@ -5,423 +5,361 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type (Debug or Release)" FORCE)
 endif()
 
-set(CMAKE_C_FLAGS_DEBUG   "-g -O0")
-set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
-set(CMAKE_CXX_FLAGS_DEBUG   "-g -O0")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(RAYLIB_ROOT "/opt/homebrew" CACHE PATH "Prefix path where raylib is installed")
-
 find_path(RAYLIB_INCLUDE_DIR raylib.h
-    PATHS
-        ${RAYLIB_ROOT}/include
-        /opt/homebrew/include
-        /usr/local/include
+    PATHS ${RAYLIB_ROOT}/include /opt/homebrew/include /usr/local/include
 )
-
 find_library(RAYLIB_LIBRARY raylib
-    PATHS
-        ${RAYLIB_ROOT}/lib
-        /opt/homebrew/lib
-        /usr/local/lib
+    PATHS ${RAYLIB_ROOT}/lib /opt/homebrew/lib /usr/local/lib
 )
-
-if (NOT RAYLIB_INCLUDE_DIR OR NOT RAYLIB_LIBRARY)
+if(NOT RAYLIB_INCLUDE_DIR OR NOT RAYLIB_LIBRARY)
     message(FATAL_ERROR "raylib was not found. Set RAYLIB_ROOT to the correct installation prefix.")
 endif()
 
-set(SPACECRAFT_COMMON_INCLUDE_DIRS
-    include
-    ${RAYLIB_INCLUDE_DIR}
+if(APPLE)
+    find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
+    find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+    find_library(OPENGL_FRAMEWORK OpenGL REQUIRED)
+    find_library(COREVIDEO_FRAMEWORK CoreVideo REQUIRED)
+    set(SCL_PLATFORM_LIBRARIES
+        ${RAYLIB_LIBRARY}
+        ${IOKIT_FRAMEWORK}
+        ${COCOA_FRAMEWORK}
+        ${OPENGL_FRAMEWORK}
+        ${COREVIDEO_FRAMEWORK}
+    )
+else()
+    set(SCL_PLATFORM_LIBRARIES ${RAYLIB_LIBRARY})
+endif()
+
+set(SCL_PUBLIC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(SCL_INTERNAL_INCLUDE_DIRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/app"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/app/session"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/content"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gameplay/player"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/gameplay/task"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/infrastructure/assets"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/infrastructure/audio"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/infrastructure/save"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/presentation/render"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/presentation/ui"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/world/map"
+)
+set(SCL_WARNING_FLAGS -Wall -Wextra -pedantic)
+
+# Keep Tiled data beside out-of-tree executables. ResourcePath_Resolve also
+# searches parent directories, so source-tree runs and bundle runs keep the
+# same resolution behavior.
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/maps" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+
+set(SCL_ASSET_SOURCES
+    src/infrastructure/assets/assets.cpp
+    src/infrastructure/assets/assets_gameplay_content.cpp
+    src/infrastructure/assets/assets_io.cpp
+    src/infrastructure/assets/assets_story_content.cpp
+    src/infrastructure/assets/resource_path.cpp
 )
 
-set(SPACECRAFT_COMMON_WARNING_FLAGS
-    -Wall
-    -Wextra
-    -pedantic
+set(SCL_AUDIO_SOURCES
+    src/infrastructure/audio/audio_system.cpp
 )
 
-set(SPACECRAFT_APPLE_FRAMEWORKS
-    "-framework IOKit"
-    "-framework Cocoa"
-    "-framework OpenGL"
-    "-framework CoreVideo"
+set(SCL_CONTENT_SOURCES
+    src/content/localization.cpp
+    src/content/puzzle.cpp
+    src/content/recipe_catalog.cpp
+    src/content/task_content.cpp
+    src/content/task_content_data.cpp
 )
 
-set(SPACECRAFT_MAP_SOURCES
-    src/map.c
-    src/map_layout.c
-    src/map_layout_world.c
-    src/map_layout_ship.c
-    src/map_render_ground.c
-    src/map_render_ground_details.c
-    src/map_render_ground_ship_forest.c
-    src/map_render_ground_swamp_ruins.c
-    src/map_render_ground_assets.c
-    src/map_render_props.c
-    src/map_runtime.c
+set(SCL_MAP_SOURCES
+    src/world/map/map_anchors.c
+    src/world/map/map_catalog.c
+    src/world/map/map_layout.c
+    src/world/map/map_layout_ship.c
+    src/world/map/map_layout_world.c
+    src/world/map/map_prop_bounds.c
+    src/world/map/map_regions.c
+    src/world/map/map_runtime.c
+    src/world/map/map_scene_manager.c
+    src/world/map/map_tiled_loader.c
+    src/world/map/map_unlocks.c
 )
 
-set(SPACECRAFT_PLAYER_SOURCES
-    src/player.c
-    src/player_status_runtime.c
-    src/player_status_text.c
-    src/player_consumables.c
-    src/player_resources.c
+set(SCL_MAP_RENDER_SOURCES
+    src/presentation/render/map.c
+    src/presentation/render/map_render_decor.c
+    src/presentation/render/map_render_ground.c
+    src/presentation/render/map_render_ground_assets.c
+    src/presentation/render/map_render_ground_details.c
+    src/presentation/render/map_render_ground_ship_forest.c
+    src/presentation/render/map_render_ground_swamp_ruins.c
+    src/presentation/render/map_render_legacy_bounds.c
+    src/presentation/render/map_render_props.c
+    src/presentation/render/minimap.cpp
 )
 
-set(SPACECRAFT_TASK_RUNTIME_SOURCES
-    src/task_seed_setup.c
-    src/task_setup.c
-    src/task_progress.c
-    src/task_economy.c
-    src/task_targeting.c
-    src/task_survival.c
-    src/task_survival_support.c
-    src/task_survival_player.c
-    src/task_monsters.c
-    src/task_update.c
-    src/task_system.c
+set(SCL_PLAYER_SOURCES
+    src/gameplay/player/player.c
+    src/gameplay/player/player_consumables.c
+    src/gameplay/player/player_resources.c
+    src/gameplay/player/player_status_runtime.c
+    src/gameplay/player/player_status_text.c
 )
 
-set(SPACECRAFT_TASK_CONTENT_SOURCES
-    src/recipe_catalog.cpp
-    src/task_content.cpp
-    src/task_content_data.cpp
-    src/task_actions.cpp
-    src/task_interactions.cpp
-    src/task_ship_interactions.cpp
-    src/task_world_interactions.cpp
-    src/task_crafting.cpp
-    src/puzzle.cpp
+set(SCL_TASK_SOURCES
+    src/gameplay/task/task_actions.cpp
+    src/gameplay/task/task_archive.c
+    src/gameplay/task/task_crafting.cpp
+    src/gameplay/task/task_economy.c
+    src/gameplay/task/task_ending.c
+    src/gameplay/task/task_interactions.cpp
+    src/gameplay/task/task_monsters.c
+    src/gameplay/task/task_progress.c
+    src/gameplay/task/task_runtime_common.c
+    src/gameplay/task/task_seed_setup.c
+    src/gameplay/task/task_setup.c
+    src/gameplay/task/task_ship_interactions.cpp
+    src/gameplay/task/task_survival.c
+    src/gameplay/task/task_survival_player.c
+    src/gameplay/task/task_survival_support.c
+    src/gameplay/task/task_system.c
+    src/gameplay/task/task_targeting.c
+    src/gameplay/task/task_update.c
+    src/gameplay/task/task_world_interactions.cpp
 )
 
-set(SPACECRAFT_SAVE_SOURCES
-    src/save_storage.cpp
-    src/save_legacy_runtime.cpp
-    src/save_system.cpp
-    src/save_buffer_codec.cpp
-    src/save_settings_codec.cpp
-    src/save_snapshot_codec.cpp
-    src/save_snapshot_loader.cpp
-    src/save_snapshot_sanitizer.cpp
-    src/save_legacy_adapter.cpp
-    src/persistence_platform.cpp
+set(SCL_SAVE_SOURCES
+    src/infrastructure/save/persistence_platform.cpp
+    src/infrastructure/save/save_buffer_codec.cpp
+    src/infrastructure/save/save_legacy_adapter.cpp
+    src/infrastructure/save/save_legacy_runtime.cpp
+    src/infrastructure/save/save_settings_codec.cpp
+    src/infrastructure/save/save_snapshot_codec.cpp
+    src/infrastructure/save/save_snapshot_loader.cpp
+    src/infrastructure/save/save_snapshot_sanitizer.cpp
+    src/infrastructure/save/save_storage.cpp
+    src/infrastructure/save/save_system.cpp
 )
 
-set(SPACECRAFT_SESSION_SOURCES
-    src/game_runtime.cpp
-    src/game_save_flow.cpp
-    src/game_save_runtime.cpp
-    src/game_session.cpp
-    src/game_messages.cpp
-    src/game_transition.cpp
-    src/game_audio_scene.cpp
-    src/game_route_runtime.cpp
-    src/game_state_sanitize.cpp
+set(SCL_SESSION_SOURCES
+    src/app/session/game_audio_scene.cpp
+    src/app/session/game_map_transition.cpp
+    src/app/session/game_messages.cpp
+    src/app/session/game_route_runtime.cpp
+    src/app/session/game_runtime.cpp
+    src/app/session/game_save_flow.cpp
+    src/app/session/game_save_runtime.cpp
+    src/app/session/game_session.cpp
+    src/app/session/game_state_sanitize.cpp
+    src/app/session/game_transition.cpp
 )
 
-set(SPACECRAFT_UI_LAYOUT_SOURCES
-    src/ui_system.c
-    src/ui_layout.cpp
+set(SCL_UI_SOURCES
+    src/presentation/ui/ui_auth.cpp
+    src/presentation/ui/ui_backpack.cpp
+    src/presentation/ui/ui_components.cpp
+    src/presentation/ui/ui_confirm_dialogs.cpp
+    src/presentation/ui/ui_craft_panel.cpp
+    src/presentation/ui/ui_ending_panel.cpp
+    src/presentation/ui/ui_hud.cpp
+    src/presentation/ui/ui_hud_shortcuts.cpp
+    src/presentation/ui/ui_hud_status.cpp
+    src/presentation/ui/ui_info_panels.cpp
+    src/presentation/ui/ui_inventory.cpp
+    src/presentation/ui/ui_inventory_data.cpp
+    src/presentation/ui/ui_inventory_icons.cpp
+    src/presentation/ui/ui_layout.cpp
+    src/presentation/ui/ui_log_reader.cpp
+    src/presentation/ui/ui_map_panel.cpp
+    src/presentation/ui/ui_menu.cpp
+    src/presentation/ui/ui_narrative_panels.cpp
+    src/presentation/ui/ui_overlays.cpp
+    src/presentation/ui/ui_save_slots_panel.cpp
+    src/presentation/ui/ui_settings.cpp
+    src/presentation/ui/ui_status.cpp
+    src/presentation/ui/ui_story_panels.cpp
+    src/presentation/ui/ui_system.c
+    src/presentation/ui/ui_theme.cpp
 )
 
-set(SPACECRAFT_LOCALIZATION_SOURCES
-    src/localization.cpp
+set(SCL_RENDER_SOURCES
+    src/presentation/render/game_render.cpp
+    src/presentation/render/player_presentation.c
+    src/presentation/render/task_presentation.cpp
+    src/presentation/render/task_presentation_text.c
 )
 
-set(SPACECRAFT_TASK_SMOKE_SOURCES
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_PLAYER_SOURCES}
-    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
-    ${SPACECRAFT_TASK_CONTENT_SOURCES}
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
+set(SCL_APP_SOURCES
+    src/app/game_manager.cpp
+    src/app/game_overlay.cpp
+    src/app/game_overlay_auth.cpp
+    src/app/game_overlay_backpack.cpp
+    src/app/game_overlay_communicator.cpp
+    src/app/game_overlay_craft.cpp
+    src/app/game_overlay_death.cpp
+    src/app/game_overlay_ending.cpp
+    src/app/game_overlay_frontend.cpp
+    src/app/game_overlay_gameplay.cpp
+    src/app/game_overlay_info.cpp
+    src/app/game_overlay_main_menu.cpp
+    src/app/game_overlay_map.cpp
+    src/app/game_overlay_narrative.cpp
+    src/app/game_overlay_save.cpp
+    src/app/game_overlay_settings.cpp
+    src/app/game_play.c
+    src/app/game_play_input.c
+    src/app/game_play_story.c
 )
 
-set(SPACECRAFT_GAME_SESSION_SMOKE_SOURCES
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_PLAYER_SOURCES}
-    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
-    ${SPACECRAFT_TASK_CONTENT_SOURCES}
-    ${SPACECRAFT_SAVE_SOURCES}
-    ${SPACECRAFT_SESSION_SOURCES}
-    src/game_play_story.c
-    src/audio_system.cpp
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-    src/minimap.cpp
-    src/task_presentation.cpp
-    src/resource_path.cpp
-)
-
-set(SPACECRAFT_ENDGAME_FLOW_SOURCES
-    ${SPACECRAFT_MAP_SOURCES}
-    src/player.c
-    src/player_status_runtime.c
-    src/player_resources.c
-    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
-    src/recipe_catalog.cpp
-    src/task_actions.cpp
-    src/task_interactions.cpp
-    src/task_ship_interactions.cpp
-    src/task_world_interactions.cpp
-    src/task_crafting.cpp
-    src/task_content.cpp
-    src/task_content_data.cpp
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-    src/puzzle.cpp
-)
-
-set(SPACECRAFT_STATUS_SYSTEM_SOURCES
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_PLAYER_SOURCES}
-    src/recipe_catalog.cpp
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-)
-
-set(SPACECRAFT_SAVE_STATUS_SOURCES
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_SAVE_SOURCES}
-)
-
-set(SPACECRAFT_PUBLIC_HEADERS
-    include/assets.h
-    include/audio_system.h
-    include/c_compat.h
-    include/config.h
-    include/game_manager.h
-    include/localization.h
-    include/map.h
-    include/minimap.h
-    include/persistence_platform.h
-    include/player.h
-    include/puzzle.h
-    include/recipe_catalog.h
-    include/resource_path.h
-    include/save_system.h
-    include/task_system.h
-    include/ui_system.h
-)
-
-set(SPACECRAFT_PRIVATE_HEADERS
-    src/assets_internal.h
-    src/game_manager_internal.h
-    src/game_overlay_internal.h
-    src/game_play_internal.h
-    src/game_session_internal.h
-    src/map_internal.h
-    src/save_codec_internal.h
-    src/save_internal.h
-    src/save_legacy_adapter.h
-    src/save_legacy_format.h
-    src/save_legacy_runtime.h
-    src/task_content.h
-    src/task_runtime_internal.h
-    src/ui_inventory_internal.h
-    src/ui_runtime_internal.h
-    src/ui_story_internal.h
-)
-
-set(SPACECRAFT_APP_SOURCES
-    src/main.c
-    src/assets.cpp
-    src/assets_io.cpp
-    src/assets_story_content.cpp
-    src/assets_gameplay_content.cpp
-    src/audio_system.cpp
-    src/resource_path.cpp
-    src/recipe_catalog.cpp
-    ${SPACECRAFT_SESSION_SOURCES}
-    src/game_overlay.cpp
-    src/game_overlay_frontend.cpp
-    src/game_overlay_gameplay.cpp
-    src/game_play.c
-    src/game_play_input.c
-    src/game_play_story.c
-    src/game_render.cpp
-    src/task_actions.cpp
-    src/task_interactions.cpp
-    src/task_ship_interactions.cpp
-    src/task_world_interactions.cpp
-    src/task_crafting.cpp
-    src/task_content.cpp
-    src/task_content_data.cpp
-    src/task_presentation.cpp
-    src/ui_inventory_data.cpp
-    src/ui_inventory_icons.cpp
-    src/ui_inventory.cpp
-    src/ui_backpack.cpp
-    src/ui_craft_panel.cpp
-    src/ui_layout.cpp
-    src/ui_menu.cpp
-    src/ui_narrative_panels.cpp
-    src/ui_ending_panel.cpp
-    src/ui_story_panels.cpp
-    src/ui_log_reader.cpp
-    src/ui_map_panel.cpp
-    src/ui_save_slots_panel.cpp
-    src/ui_overlays.cpp
-    src/ui_hud.cpp
-    src/ui_hud_status.cpp
-    src/ui_hud_shortcuts.cpp
-    src/ui_info_panels.cpp
-    src/ui_status.cpp
-    src/ui_system.c
-    src/game_manager.cpp
-    src/puzzle.cpp
-    src/minimap.cpp
-)
-
-set(SPACECRAFT_TEST_SOURCES
-    tests/camp_recovery_smoke.c
-    tests/endgame_flow_smoke.c
-    tests/endgame_new_survival_smoke.c
-    tests/game_session_smoke.c
-    tests/health_oxygen_smoke.c
-    tests/map_layout_smoke.c
-    tests/save_status_smoke.c
-    tests/save_system_smoke.c
-    tests/status_system_smoke.c
-    tests/task_interaction_smoke.c
-    tests/task_recipe_smoke.c
-    tests/task_text_smoke.c
-    tests/ui_layout_smoke.c
-)
-
-set(SPACECRAFT_XCODE_GROUP_FILES
-    CMakeLists.txt
-    ${SPACECRAFT_PUBLIC_HEADERS}
-    ${SPACECRAFT_PRIVATE_HEADERS}
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_PLAYER_SOURCES}
-    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
-    ${SPACECRAFT_TASK_CONTENT_SOURCES}
-    ${SPACECRAFT_SAVE_SOURCES}
-    ${SPACECRAFT_SESSION_SOURCES}
-    ${SPACECRAFT_UI_LAYOUT_SOURCES}
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-    ${SPACECRAFT_APP_SOURCES}
-    ${SPACECRAFT_TEST_SOURCES}
-)
-
-source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${SPACECRAFT_XCODE_GROUP_FILES})
-
-function(spacecraft_add_executable target)
-    add_executable(${target} ${ARGN})
-    target_include_directories(${target} PRIVATE ${SPACECRAFT_COMMON_INCLUDE_DIRS})
-    target_compile_options(${target} PRIVATE ${SPACECRAFT_COMMON_WARNING_FLAGS})
-
-    if (APPLE)
-        target_link_libraries(${target} PRIVATE ${RAYLIB_LIBRARY} ${SPACECRAFT_APPLE_FRAMEWORKS})
-    else()
-        target_link_libraries(${target} PRIVATE ${RAYLIB_LIBRARY})
-    endif()
+function(scl_add_object_library target)
+    add_library(${target} OBJECT ${ARGN})
+    target_include_directories(${target}
+        PUBLIC "${SCL_PUBLIC_INCLUDE_DIR}"
+        PRIVATE ${SCL_INTERNAL_INCLUDE_DIRS} "${RAYLIB_INCLUDE_DIR}"
+    )
+    target_compile_options(${target} PRIVATE ${SCL_WARNING_FLAGS})
 endfunction()
 
-spacecraft_add_executable(SpaceCraftLiving
-    ${SPACECRAFT_APP_SOURCES}
-    ${SPACECRAFT_SAVE_SOURCES}
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_PLAYER_SOURCES}
-    ${SPACECRAFT_TASK_RUNTIME_SOURCES}
-)
+scl_add_object_library(scl_assets_obj ${SCL_ASSET_SOURCES})
+scl_add_object_library(scl_audio_obj ${SCL_AUDIO_SOURCES})
+scl_add_object_library(scl_content_obj ${SCL_CONTENT_SOURCES})
+scl_add_object_library(scl_map_obj ${SCL_MAP_SOURCES})
+scl_add_object_library(scl_map_render_obj ${SCL_MAP_RENDER_SOURCES})
+scl_add_object_library(scl_player_obj ${SCL_PLAYER_SOURCES})
+scl_add_object_library(scl_task_obj ${SCL_TASK_SOURCES})
+scl_add_object_library(scl_save_obj ${SCL_SAVE_SOURCES})
+scl_add_object_library(scl_session_obj ${SCL_SESSION_SOURCES})
+scl_add_object_library(scl_ui_obj ${SCL_UI_SOURCES})
+scl_add_object_library(scl_render_obj ${SCL_RENDER_SOURCES})
+scl_add_object_library(scl_app_obj ${SCL_APP_SOURCES})
 
-target_sources(SpaceCraftLiving PRIVATE
-    ${SPACECRAFT_PUBLIC_HEADERS}
-    ${SPACECRAFT_PRIVATE_HEADERS}
+# One archive is the common internal link boundary for the app and every smoke
+# executable. Object libraries compile each module once; tests no longer build
+# private copies of the whole source tree.
+add_library(spacecraft_internal STATIC
+    $<TARGET_OBJECTS:scl_assets_obj>
+    $<TARGET_OBJECTS:scl_audio_obj>
+    $<TARGET_OBJECTS:scl_content_obj>
+    $<TARGET_OBJECTS:scl_map_obj>
+    $<TARGET_OBJECTS:scl_map_render_obj>
+    $<TARGET_OBJECTS:scl_player_obj>
+    $<TARGET_OBJECTS:scl_task_obj>
+    $<TARGET_OBJECTS:scl_save_obj>
+    $<TARGET_OBJECTS:scl_session_obj>
+    $<TARGET_OBJECTS:scl_ui_obj>
+    $<TARGET_OBJECTS:scl_render_obj>
+    $<TARGET_OBJECTS:scl_app_obj>
 )
+set_target_properties(spacecraft_internal PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(spacecraft_internal
+    PUBLIC "${SCL_PUBLIC_INCLUDE_DIR}" ${SCL_INTERNAL_INCLUDE_DIRS} "${RAYLIB_INCLUDE_DIR}"
+)
+add_library(SpaceCraft::Internal ALIAS spacecraft_internal)
 
-if (CMAKE_GENERATOR STREQUAL "Xcode")
+function(scl_link_internal target)
+    target_link_libraries(${target} PRIVATE SpaceCraft::Internal ${SCL_PLATFORM_LIBRARIES})
+    target_include_directories(${target} PRIVATE ${SCL_INTERNAL_INCLUDE_DIRS})
+    target_compile_options(${target} PRIVATE ${SCL_WARNING_FLAGS})
+    set_target_properties(${target} PROPERTIES LINKER_LANGUAGE CXX)
+endfunction()
+
+add_executable(SpaceCraftLiving src/app/main.c)
+scl_link_internal(SpaceCraftLiving)
+
+if(CMAKE_GENERATOR STREQUAL "Xcode")
     set_target_properties(SpaceCraftLiving PROPERTIES
         XCODE_GENERATE_SCHEME TRUE
-        XCODE_SCHEME_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        XCODE_SCHEME_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 endif()
 
-spacecraft_add_executable(SpaceCraftSaveSmoke
-    tests/save_system_smoke.c
-    ${SPACECRAFT_SAVE_SOURCES}
-    ${SPACECRAFT_MAP_SOURCES}
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
+add_custom_target(run
+    COMMAND $<TARGET_FILE:SpaceCraftLiving>
+    DEPENDS SpaceCraftLiving
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    USES_TERMINAL
 )
 
-spacecraft_add_executable(SpaceCraftMapSmoke
-    tests/map_layout_smoke.c
-    ${SPACECRAFT_MAP_SOURCES}
+set(SCL_BUNDLE_DIR "${CMAKE_CURRENT_BINARY_DIR}/SpaceCraftLiving.app")
+add_custom_target(bundle
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${SCL_BUNDLE_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${SCL_BUNDLE_DIR}/Contents/MacOS"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${SCL_BUNDLE_DIR}/Contents/Resources"
+    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:SpaceCraftLiving>" "${SCL_BUNDLE_DIR}/Contents/MacOS/SpaceCraftLiving"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" "${SCL_BUNDLE_DIR}/Contents/Info.plist"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "${CMAKE_CURRENT_SOURCE_DIR}/resources" "${SCL_BUNDLE_DIR}/Contents/Resources/resources"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/maps" "${SCL_BUNDLE_DIR}/Contents/Resources/maps"
+    COMMAND ${CMAKE_COMMAND} -E echo "App bundle created at ${SCL_BUNDLE_DIR}"
+    DEPENDS SpaceCraftLiving
+    USES_TERMINAL
 )
 
-spacecraft_add_executable(SpaceCraftTaskRecipeSmoke
-    tests/task_recipe_smoke.c
-    ${SPACECRAFT_TASK_SMOKE_SOURCES}
-)
+include(CTest)
+function(scl_add_smoke_test target test_name source)
+    add_executable(${target} "${source}")
+    scl_link_internal(${target})
+    add_test(NAME ${test_name} COMMAND ${target})
+    set_tests_properties(${test_name} PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
-spacecraft_add_executable(SpaceCraftTaskInteractionSmoke
-    tests/task_interaction_smoke.c
-    ${SPACECRAFT_TASK_SMOKE_SOURCES}
-)
+    string(REGEX REPLACE "_smoke$" "" smoke_short_name "${test_name}")
+    add_custom_target(smoke-${smoke_short_name}
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG> -R "^${test_name}$"
+        DEPENDS ${target}
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        USES_TERMINAL
+    )
+endfunction()
 
-spacecraft_add_executable(SpaceCraftTaskTextSmoke
-    tests/task_text_smoke.c
-    ${SPACECRAFT_TASK_SMOKE_SOURCES}
-)
+scl_add_smoke_test(SpaceCraftSaveSmoke save_system_smoke tests/save_system_smoke.c)
+scl_add_smoke_test(SpaceCraftSaveMultiMapSmoke save_multi_map_smoke tests/save_multi_map_smoke.c)
+scl_add_smoke_test(SpaceCraftMapSmoke map_layout_smoke tests/map_layout_smoke.c)
+scl_add_smoke_test(SpaceCraftMultiMapSmoke multi_map_smoke tests/multi_map_smoke.c)
+scl_add_smoke_test(SpaceCraftMapSceneSmoke map_scene_smoke tests/map_scene_smoke.c)
+scl_add_smoke_test(SpaceCraftMapStateSmoke map_state_smoke tests/map_state_smoke.c)
+scl_add_smoke_test(SpaceCraftMapPortalSmoke map_portal_smoke tests/map_portal_smoke.c)
+scl_add_smoke_test(SpaceCraftMapEntityScopeSmoke map_entity_scope_smoke tests/map_entity_scope_smoke.c)
+scl_add_smoke_test(SpaceCraftTaskRecipeSmoke task_recipe_smoke tests/task_recipe_smoke.c)
+scl_add_smoke_test(SpaceCraftTaskInteractionSmoke task_interaction_smoke tests/task_interaction_smoke.c)
+scl_add_smoke_test(SpaceCraftTaskTextSmoke task_text_smoke tests/task_text_smoke.c)
+scl_add_smoke_test(SpaceCraftGameSessionSmoke game_session_smoke tests/game_session_smoke.c)
+scl_add_smoke_test(SpaceCraftEndgameFlowSmoke endgame_flow_smoke tests/endgame_flow_smoke.c)
+scl_add_smoke_test(SpaceCraftUiLayoutSmoke ui_layout_smoke tests/ui_layout_smoke.c)
+scl_add_smoke_test(SpaceCraftHealthOxygenSmoke health_oxygen_smoke tests/health_oxygen_smoke.c)
+scl_add_smoke_test(SpaceCraftStatusSystemSmoke status_system_smoke tests/status_system_smoke.c)
+scl_add_smoke_test(SpaceCraftCampRecoverySmoke camp_recovery_smoke tests/camp_recovery_smoke.c)
+scl_add_smoke_test(SpaceCraftSaveStatusSmoke save_status_smoke tests/save_status_smoke.c)
+scl_add_smoke_test(SpaceCraftEndgameNewSurvivalSmoke endgame_new_survival_smoke tests/endgame_new_survival_smoke.c)
 
-spacecraft_add_executable(SpaceCraftGameSessionSmoke
-    tests/game_session_smoke.c
-    ${SPACECRAFT_GAME_SESSION_SMOKE_SOURCES}
+add_custom_target(smoke
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>
+    DEPENDS
+    SpaceCraftSaveSmoke
+    SpaceCraftSaveMultiMapSmoke
+    SpaceCraftMapSmoke
+    SpaceCraftMultiMapSmoke
+    SpaceCraftMapSceneSmoke
+    SpaceCraftMapStateSmoke
+    SpaceCraftMapPortalSmoke
+    SpaceCraftMapEntityScopeSmoke
+    SpaceCraftTaskRecipeSmoke
+    SpaceCraftTaskInteractionSmoke
+    SpaceCraftTaskTextSmoke
+    SpaceCraftGameSessionSmoke
+    SpaceCraftEndgameFlowSmoke
+    SpaceCraftUiLayoutSmoke
+    SpaceCraftHealthOxygenSmoke
+    SpaceCraftStatusSystemSmoke
+    SpaceCraftCampRecoverySmoke
+    SpaceCraftSaveStatusSmoke
+    SpaceCraftEndgameNewSurvivalSmoke
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    USES_TERMINAL
 )
-
-spacecraft_add_executable(SpaceCraftEndgameFlowSmoke
-    tests/endgame_flow_smoke.c
-    ${SPACECRAFT_ENDGAME_FLOW_SOURCES}
-)
-
-spacecraft_add_executable(SpaceCraftUiLayoutSmoke
-    tests/ui_layout_smoke.c
-    ${SPACECRAFT_UI_LAYOUT_SOURCES}
-)
-
-spacecraft_add_executable(SpaceCraftHealthOxygenSmoke
-    tests/health_oxygen_smoke.c
-    ${SPACECRAFT_TASK_SMOKE_SOURCES}
-)
-
-spacecraft_add_executable(SpaceCraftStatusSystemSmoke
-    tests/status_system_smoke.c
-    ${SPACECRAFT_STATUS_SYSTEM_SOURCES}
-)
-
-spacecraft_add_executable(SpaceCraftCampRecoverySmoke
-    tests/camp_recovery_smoke.c
-    ${SPACECRAFT_TASK_SMOKE_SOURCES}
-)
-
-spacecraft_add_executable(SpaceCraftSaveStatusSmoke
-    tests/save_status_smoke.c
-    ${SPACECRAFT_SAVE_STATUS_SOURCES}
-    ${SPACECRAFT_LOCALIZATION_SOURCES}
-)
-
-spacecraft_add_executable(SpaceCraftEndgameNewSurvivalSmoke
-    tests/endgame_new_survival_smoke.c
-    ${SPACECRAFT_TASK_SMOKE_SOURCES}
-)
-
-enable_testing()
-add_test(NAME save_system_smoke COMMAND SpaceCraftSaveSmoke)
-add_test(NAME map_layout_smoke COMMAND SpaceCraftMapSmoke)
-add_test(NAME task_recipe_smoke COMMAND SpaceCraftTaskRecipeSmoke)
-add_test(NAME task_interaction_smoke COMMAND SpaceCraftTaskInteractionSmoke)
-add_test(NAME task_text_smoke COMMAND SpaceCraftTaskTextSmoke)
-add_test(NAME game_session_smoke COMMAND SpaceCraftGameSessionSmoke)
-add_test(NAME endgame_flow_smoke COMMAND SpaceCraftEndgameFlowSmoke)
-add_test(NAME ui_layout_smoke COMMAND SpaceCraftUiLayoutSmoke)
-add_test(NAME health_oxygen_smoke COMMAND SpaceCraftHealthOxygenSmoke)
-add_test(NAME status_system_smoke COMMAND SpaceCraftStatusSystemSmoke)
-add_test(NAME camp_recovery_smoke COMMAND SpaceCraftCampRecoverySmoke)
-add_test(NAME save_status_smoke COMMAND SpaceCraftSaveStatusSmoke)
-add_test(NAME endgame_new_survival_smoke COMMAND SpaceCraftEndgameNewSurvivalSmoke)

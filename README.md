@@ -26,25 +26,29 @@
 
 ### 构建
 
-使用 `Makefile`：
+`CMakeLists.txt` 是唯一的源文件、内部库、应用目标和测试目标定义来源；根目录 `Makefile` 只提供快捷入口。
 
 ```sh
-make
-./build/SpaceCraftLiving
+make configure  # 生成 build/cmake
+make build      # 构建应用和全部 smoke 可执行文件
+make run        # 从项目根目录运行游戏
+make smoke      # 构建并运行全部 smoke
+make bundle     # 生成 macOS .app
 ```
 
-如果 `raylib` 不在默认路径：
+`make` 与 `make all` 等价于 `make build`。如果 `raylib` 不在默认路径：
 
 ```sh
-make RAYLIB_PREFIX=/custom/prefix
+make build RAYLIB_ROOT=/custom/prefix
 ```
 
-使用 `CMake`：
+直接使用 `CMake`：
 
 ```sh
-cmake -S . -B build/cmake
-cmake --build build/cmake
+cmake -S . -B build/cmake -DRAYLIB_ROOT=/opt/homebrew
+cmake --build build/cmake --parallel
 ctest --test-dir build/cmake --output-on-failure
+cmake --build build/cmake --target bundle
 ```
 
 使用 `Xcode`：
@@ -64,12 +68,12 @@ open build/xcode/SpaceCraftLiving.xcodeproj
 make smoke
 ```
 
-运行单项 smoke：
+运行单项 smoke 可直接使用 CTest：
 
 ```sh
-make smoke-session
-make smoke-save
-make smoke-map
+ctest --test-dir build/cmake -R game_session_smoke --output-on-failure
+ctest --test-dir build/cmake -R save_system_smoke --output-on-failure
+ctest --test-dir build/cmake -R map_layout_smoke --output-on-failure
 ```
 
 ---
@@ -318,73 +322,77 @@ make smoke-map
 - **C 负责**：Player/TaskSystem/GameMap 等核心运行时状态、血量、氧气、状态结算、地图可走性、危险判定、移动阻挡判定、战斗、采集、阶段推进等热路径玩法逻辑
 - **C++ 负责**：静态内容表与文本内容、状态图标、状态文案、Tooltip 数据表、存档 schema、兼容适配、平台层、UI 大块拆分与展示逻辑、高层会话、菜单、状态机编排
 
-### 核心模块
+### 最终物理目录
 
-#### 主循环与状态管理
+```text
+src/
+├── app/
+│   ├── session/                 # 新游戏、存档流、地图切换、消息和转场
+│   └── game_* / main.c          # 应用入口、顶层状态机、Overlay 和活动帧
+├── gameplay/
+│   ├── player/                  # 玩家数值、状态、物品和移动规则
+│   └── task/                    # 任务推进、生存、战斗、交互和制作
+├── world/
+│   └── map/                     # Tiled 加载、布局生命周期、查询、Region/Anchor/Unlock
+├── presentation/
+│   ├── ui/                      # UI 主题、布局、组件和全部面板
+│   └── render/                  # 游戏、地图、玩家、任务和 MiniMap 表现
+├── infrastructure/
+│   ├── assets/                  # 资源生命周期、资源 IO 和路径解析
+│   ├── audio/                   # 音频系统
+│   └── save/                    # 存档 codec、存储、兼容适配和平台持久化
+└── content/                     # 本地化、配方、谜题和任务静态内容
+```
 
-- `src/main.c`：应用入口、窗口设置和主循环
-- `src/game_manager.cpp`：顶层游戏状态机、帧编排、生命周期和顶层路由
-- `src/game_session.cpp`：新游戏/开场完成/返回菜单生命周期流程、单生命死亡处理和重启状态重建
-- `src/game_overlay.cpp`：Overlay 状态分发器
+公共 C/C++ 头文件继续位于 `include/`，因此现有 `#include "map.h"`、`#include "player.h"` 等调用方式不变。模块私有头文件与实现一起放在对应目录。
 
-#### 游戏玩法
+### CMake 内部库
 
-- `src/game_play.c`：游戏中状态下的活动游戏帧编排
-- `src/game_play_input.c`：游戏中状态下的活动游戏输入循环
-- `src/game_play_story.c`：围绕游戏更新捕获的故事触发快照
-- `src/player.c`：玩家初始化、移动、动画时机和基础属性计算
-- `src/player_status_runtime.c`：状态运行时存储、变更和衰减
-- `src/player_consumables.c`：快速消耗品逻辑
-- `src/task_system.c`：最小化的空间辅助/查询函数
-- `src/task_progress.c`：目标和通讯器刷新
-- `src/task_economy.c`：配方可见性和可制作性检查
-- `src/task_update.c`：每帧任务运行时编排的薄层
-- `src/task_survival.c`：昼夜循环和每日事件轮换
-- `src/task_actions.cpp`：直接玩家攻击的战斗入口
-- `src/task_interactions.cpp`：交互编排和首选目标评分
-- `src/task_ship_interactions.cpp`：飞船控制台和房间交互逻辑
-- `src/task_world_interactions.cpp`：荒野交互逻辑
-- `src/task_crafting.cpp`：配方验证后的制作结果应用
+CMake 将稳定边界编译为 object library：
 
-#### 地图系统
+- `scl_map_obj` / `scl_map_render_obj`
+- `scl_player_obj`
+- `scl_task_obj`
+- `scl_save_obj`
+- `scl_session_obj`
+- `scl_ui_obj`
+- `scl_render_obj`
+- `scl_assets_obj` / `scl_audio_obj`
+- `scl_content_obj`
+- `scl_app_obj`
 
-- `src/map.c`：可见网格遍历和渲染编排
-- `src/map_render_ground.c`：地面瓷砖渲染
-- `src/map_render_props.c`：道具和地标渲染
-- `src/map_layout.c`：共享地图布局辅助和 Map_Init 编排
-- `src/map_layout_world.c`：世界地形和生物群系足迹放置
-- `src/map_layout_ship.c`：飞船内部平面布置
-- `src/map_runtime.c`：可走性、不透明度、瓷砖查找、危险查找和区域命名
+这些对象只编译一次，再汇总为公共内部静态库 `spacecraft_internal`（别名 `SpaceCraft::Internal`）。应用和全部 smoke 测试都链接这一内部库，测试不再为每个可执行文件重复编译整套源码。
 
-#### UI 系统
+```text
+object libraries
+       │
+       ▼
+spacecraft_internal
+       ├── SpaceCraftLiving
+       └── 19 个 smoke test executables
+```
 
-- `src/ui_system.c`：共享 UI 绘制辅助
-- `src/ui_layout.cpp`：所有 UI 矩形/布局计算器
-- `src/ui_menu.cpp`：主菜单、暂停菜单、设置覆盖、死亡弹窗
-- `src/ui_narrative_panels.cpp`：开场过场、故事场景面板
-- `src/ui_ending_panel.cpp`：结局屏幕
-- `src/ui_hud.cpp`：HUD 呈现
-- `src/ui_info_panels.cpp`：通讯器、帮助覆盖
-- `src/ui_backpack.cpp`：背包覆盖
-- `src/ui_craft_panel.cpp`：制作覆盖
-- `src/ui_log_reader.cpp`：日志归档覆盖
-- `src/ui_map_panel.cpp`：完整地图覆盖
-- `src/ui_save_slots_panel.cpp`：存档槽覆盖
+运行时依赖方向保持为：
 
-#### 资源与持久化
+```text
+app / session
+  ├── gameplay (player, task)
+  ├── world (map)
+  ├── infrastructure (assets, audio, save)
+  └── presentation (render, ui)
 
-- `src/assets.cpp`：顶层资源生命周期编排
-- `src/assets_io.cpp`：可选纹理和字体加载辅助
-- `src/assets_story_content.cpp`：开场过场、主线故事、日志故事和结局艺术加载
-- `src/assets_gameplay_content.cpp`：游戏/世界纹理加载
-- `src/audio_system.cpp`：可选提示和音乐加载
-- `src/save_system.cpp`：持久化公共 API
-- `src/save_storage.cpp`：持久化路径辅助
-- `src/save_snapshot_loader.cpp`：快照加载流程
-- `src/save_snapshot_codec.cpp`：游戏存档缓冲区的二进制编解码器
-- `src/save_settings_codec.cpp`：设置缓冲区的二进制编解码器
-- `src/save_legacy_adapter.cpp`：遗留存档布局的向后兼容解码
-- `src/localization.cpp`：运行时语言状态、本地化 UI 查找
+presentation ──> gameplay / world / content
+save ──────────> public runtime snapshots
+world/map ─────> Tiled data + resource path resolver
+```
+
+### 玩法与表现边界
+
+- `include/map.h`、`include/player.h`、`include/task_system.h` 保存玩法状态和规则查询。
+- `include/map_render.h`、`include/player_presentation.h`、`include/task_presentation.h` 保存表现查询。
+- UI 和渲染可以读取玩法运行时；玩法核心不反向依赖 UI。
+- 地图正式内容来自 Tiled；`src/world/map/map_layout_world.c` 和 `map_layout_ship.c` 仅用于明确的 legacy fixture。
+- `TaskSystem` 和存档结构保持既有字段顺序，目录移动不改变 schema。
 
 ### 存档系统
 
@@ -444,20 +452,27 @@ make smoke-map
 
 ### 构建与测试
 
-#### 使用 Makefile
+#### 使用 Makefile 快捷入口
 
 ```sh
-make          # 构建
-make clean    # 清理
-make smoke    # 运行所有测试
+make configure
+make build
+make run
+make smoke
+make bundle
+make clean
 ```
 
-#### 使用 CMake
+Makefile 不维护源文件列表，也不直接调用编译器。
+
+#### 直接使用 CMake
 
 ```sh
-cmake -S . -B build/cmake
-cmake --build build/cmake
+cmake -S . -B build/cmake -DRAYLIB_ROOT=/opt/homebrew
+cmake --build build/cmake --parallel
 ctest --test-dir build/cmake --output-on-failure
+cmake --build build/cmake --target run
+cmake --build build/cmake --target bundle
 ```
 
 ### 代码规范
@@ -760,7 +775,7 @@ ctest --test-dir build/cmake --output-on-failure
 
 本目录存放运行时可选加载的音频资源。
 
-当前音频系统在 `src/audio_system.cpp` 中统一初始化，继续采用"缺失即静音"的安全策略：文件缺失或音频设备不可用时，程序仍可正常运行，只是对应音轨不会发声。
+当前音频系统在 `src/infrastructure/audio/audio_system.cpp` 中统一初始化，继续采用"缺失即静音"的安全策略：文件缺失或音频设备不可用时，程序仍可正常运行，只是对应音轨不会发声。
 
 审计日期：`2026-04-26`
 

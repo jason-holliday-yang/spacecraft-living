@@ -1,0 +1,421 @@
+{
+  "columns": 8,
+  "image": "spacecraft_tiles.png",
+  "imageheight": 384,
+  "imagewidth": 768,
+  "margin": 0,
+  "name": "spacecraft_tiles",
+  "spacing": 0,
+  "tilecount": 32,
+  "tileheight": 96,
+  "tiles": [
+    {
+      "id": 0,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 0
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Void"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 1
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Base Floor"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 2
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Forest Ground"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 3
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Swamp Ground"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 4
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Deep Swamp Ground"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 5
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Ruins Ground"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 6
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Tree"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 7
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Rock"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 8
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Tech Table"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 9
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Storage Locker"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 10
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Bunk"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 11
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Oxygen Console"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 12
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Loxi Terminal"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 13
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Workbench"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 14
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Airlock Console"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 15
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Airlock Door"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 16
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Loxi Room Door"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 17
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Comm Relay"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 18
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Crash Clue"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 19
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Energy Console"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 20
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Signal Tower"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 21
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Monolith"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 22
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Swamp Barrier"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 23
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Deep Barrier"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 24
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Ruins Barrier"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 25
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Log Site"
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "properties": [
+        {
+          "name": "enum",
+          "type": "int",
+          "value": 26
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "value": "Entity Blocker"
+        }
+      ]
+    }
+  ],
+  "tilewidth": 96,
+  "type": "tileset",
+  "version": "1.10"
+}

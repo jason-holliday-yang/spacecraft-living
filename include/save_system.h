@@ -3,7 +3,9 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "assets.h"
 #include "c_compat.h"
+#include "config.h"
 #include "localization.h"
 #include "task_system.h"
 
@@ -14,9 +16,11 @@ SCL_EXTERN_C_BEGIN
 #define SAVE_SLOT_COUNT 16
 #define SAVE_SLOT_PATH_MAX 640
 #define SAVE_DYNAMIC_TILE_MAX 256
+#define SAVE_MAP_STATE_MAX MAX_MAP_CATALOG_ENTRIES
 #define SAVE_ACCOUNT_NAME_MAX 32
 #define SAVE_ACCOUNT_PASSWORD_MAX 48
 #define SAVE_AUTH_MESSAGE_MAX 160
+#define SAVE_ACCOUNT_LIST_MAX 128
 
 typedef struct GameSettings {
     float masterVolume;
@@ -44,6 +48,32 @@ typedef struct SavedLogSnapshot {
     bool collected;
 } SavedLogSnapshot;
 
+typedef struct SavedUnlockSnapshot {
+    char unlockId[MAP_UNLOCK_ID_MAX];
+    bool open;
+} SavedUnlockSnapshot;
+
+typedef struct SavedMapStateSnapshot {
+    char mapId[MAP_ID_MAX];
+    int contentVersion;
+    int mapWidth;
+    int mapHeight;
+    int unlockCount;
+    SavedUnlockSnapshot unlocks[MAX_MAP_UNLOCKS];
+    int clearedDynamicTileCount;
+    int clearedDynamicTileX[SAVE_DYNAMIC_TILE_MAX];
+    int clearedDynamicTileY[SAVE_DYNAMIC_TILE_MAX];
+    bool campPlaced;
+    int campX;
+    int campY;
+    int nodeCount;
+    SavedNodeSnapshot nodes[MAX_RESOURCE_NODES];
+    int monsterCount;
+    SavedMonsterSnapshot monsters[MAX_MONSTERS];
+    int logCount;
+    SavedLogSnapshot logs[MAX_LOGS];
+} SavedMapStateSnapshot;
+
 typedef struct SavedStatusSnapshot {
     bool active;
     int level;
@@ -52,10 +82,14 @@ typedef struct SavedStatusSnapshot {
 } SavedStatusSnapshot;
 
 typedef struct SaveSnapshot {
+    int sourceVersion;
+    char currentMapId[MAP_ID_MAX];
     int gridX;
     int gridY;
     int facingX;
     int facingY;
+    int mapWidth;
+    int mapHeight;
     float health;                 /* canonical player resource */
     float stamina;                /* @deprecated - retained only for backward-compatible save deserialization */
     float pressure;               /* @deprecated - retained only for backward-compatible save deserialization */
@@ -122,6 +156,8 @@ typedef struct SaveSnapshot {
     SavedLogSnapshot logs[MAX_LOGS];
     bool storyMainSceneShown[STORY_MAIN_SCENE_COUNT];
     bool communicatorUnlocked;
+    int mapStateCount;
+    SavedMapStateSnapshot mapStates[SAVE_MAP_STATE_MAX];
 } SaveSnapshot;
 
 typedef struct SaveSlotInfo {
@@ -140,6 +176,7 @@ void SaveSystem_SetDefaultSettings(GameSettings *settings);
 bool SaveSystem_LoadSettings(GameSettings *settings);
 bool SaveSystem_SaveSettings(const GameSettings *settings);
 bool SaveSystem_HasRegisteredAccounts(void);
+int SaveSystem_ListRegisteredAccounts(char *names, size_t nameStride, int maxNames);
 bool SaveSystem_IsAccountAuthenticated(void);
 const char *SaveSystem_GetActiveAccountName(void);
 bool SaveSystem_GetActiveAccountBestScore(int *scoreOut);

@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "defaultMapId": "legacy_world",
+  "maps": [
+    {
+      "id": "legacy_world",
+      "file": "maps/legacy_world.tmj",
+      "kind": "legacy",
+      "defaultSpawn": "PLAYER_START",
+      "respawnAnchor": "PLAYER_RESPAWN",
+      "minimapEnabled": true
+    },
+    {
+      "id": "ship_interior",
+      "file": "maps/ship_interior.tmj",
+      "kind": "interior",
+      "defaultSpawn": "PLAYER_START",
+      "respawnAnchor": "PLAYER_RESPAWN",
+      "minimapEnabled": true
+    },
+    {
+      "id": "planet_surface_legacy",
+      "file": "maps/planet_surface_legacy.tmj",
+      "kind": "exterior",
+      "defaultSpawn": "SHIP_EXIT_SPAWN",
+      "respawnAnchor": "SHIP_EXIT_SPAWN",
+      "minimapEnabled": true
+    },
+    {
+      "id": "planet_surface_01",
+      "file": "maps/planet_surface_01.tmj",
+      "kind": "exterior",
+      "defaultSpawn": "SHIP_EXIT_SPAWN",
+      "respawnAnchor": "SHIP_EXIT_SPAWN",
+      "minimapEnabled": true
+    }
+  ]
+}

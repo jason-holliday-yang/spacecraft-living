@@ -1,0 +1,23 @@
+{
+  "columns": 8,
+  "image": "spacecraft_areas.png",
+  "imageheight": 96,
+  "imagewidth": 768,
+  "margin": 0,
+  "name": "spacecraft_areas",
+  "spacing": 0,
+  "tilecount": 8,
+  "tileheight": 96,
+  "tiles": [
+    {"id": 0, "properties": [{"name": "enum", "type": "int", "value": 0}, {"name": "name", "type": "string", "value": "Base"}]},
+    {"id": 1, "properties": [{"name": "enum", "type": "int", "value": 1}, {"name": "name", "type": "string", "value": "Forest"}]},
+    {"id": 2, "properties": [{"name": "enum", "type": "int", "value": 2}, {"name": "name", "type": "string", "value": "Swamp Outer"}]},
+    {"id": 3, "properties": [{"name": "enum", "type": "int", "value": 3}, {"name": "name", "type": "string", "value": "Swamp Deep"}]},
+    {"id": 4, "properties": [{"name": "enum", "type": "int", "value": 4}, {"name": "name", "type": "string", "value": "Ruins"}]},
+    {"id": 5, "properties": [{"name": "enum", "type": "int", "value": 5}, {"name": "name", "type": "string", "value": "Boss Arena"}]},
+    {"id": 6, "properties": [{"name": "enum", "type": "int", "value": 6}, {"name": "name", "type": "string", "value": "Unknown"}]}
+  ],
+  "tilewidth": 96,
+  "type": "tileset",
+  "version": "1.10"
+}

@@ -1,7 +1,8 @@
 #include "map.h"
 #include "player.h"
 #include "task_system.h"
-#include "../src/task_runtime_internal.h"
+#include "task_runtime_internal.h"
+#include "task_survival_internal.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -19,7 +20,7 @@ static void Require(bool condition, const char *message) {
 }
 
 static float MeasureOxygenLoss(int gridX, int gridY, float deltaTime, bool protectionSuit, float *poisonOut, bool *oxygenLeakOut) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
 
@@ -47,7 +48,7 @@ static float MeasureOxygenLoss(int gridX, int gridY, float deltaTime, bool prote
 }
 
 static float MeasureOxygenLossWithReserve(int gridX, int gridY, float deltaTime, float oxygenStart, int reserveLevel, float reserveDuration, float reserveMagnitude) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
 
@@ -69,7 +70,7 @@ static float MeasureOxygenLossWithReserve(int gridX, int gridY, float deltaTime,
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
     float forestLoss;

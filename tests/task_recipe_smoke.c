@@ -1,4 +1,5 @@
 #include "map.h"
+#include "player_presentation.h"
 #include "player.h"
 #include "recipe_catalog.h"
 #include "task_system.h"
@@ -18,7 +19,7 @@ static void Require(bool condition, const char *message) {
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
     char message[256];

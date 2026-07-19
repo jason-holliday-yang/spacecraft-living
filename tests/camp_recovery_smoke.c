@@ -1,7 +1,7 @@
 #include "map.h"
 #include "player.h"
 #include "task_system.h"
-#include "../src/task_runtime_internal.h"
+#include "task_runtime_internal.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ static void Require(bool condition, const char *message) {
 }
 
 int main(void) {
-    GameMap map;
+    GameMap map = {0};
     Player player;
     TaskSystem tasks;
     char message[256];

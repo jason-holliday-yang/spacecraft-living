@@ -3,9 +3,13 @@
 
 #include <stdbool.h>
 #include "c_compat.h"
-#include "map.h"
+#include "raylib.h"
 
-/* Public player data model plus inventory, stat, and consumable helper APIs. */
+typedef struct GameMap GameMap;
+
+/* Public player runtime data, stats, inventory mutation, and consumable APIs.
+ * Localized status/inventory/recipe text lives in player_presentation.h.
+ */
 
 SCL_EXTERN_C_BEGIN
 
@@ -126,19 +130,11 @@ bool Player_IsStatusNegative(PlayerStatusType status);
 int Player_GetStatusPriority(PlayerStatusType status);
 int Player_GetActiveStatusCount(const Player *player);
 int Player_CollectActiveStatuses(const Player *player, PlayerStatusType *statuses, int maxStatuses);
-const char *Player_GetStatusName(PlayerStatusType status);
-void Player_GetStatusSummary(const Player *player, PlayerStatusType status, char *buffer, int bufferSize);
-void Player_GetStatusSourceText(PlayerStatusType status, char *buffer, int bufferSize);
-void Player_GetStatusReliefText(PlayerStatusType status, char *buffer, int bufferSize);
-void Player_GetStatusTooltip(const Player *player, PlayerStatusType status, char *buffer, int bufferSize);
 void Player_AddResource(Player *player, ResourceType resource, int amount);
 bool Player_SpendResource(Player *player, ResourceType resource, int amount);
 bool Player_HasResources(const Player *player, ResourceType resource, int amount);
 bool Player_UseQuickConsumable(Player *player, char *message, int messageSize);
 bool Player_UseSelectedConsumable(Player *player, ResourceType resource, char *message, int messageSize);
-const char *Player_GetResourceLabel(ResourceType resource);
-const char *Player_GetRecipeName(RecipeType recipe);
-const char *Player_GetRecipeSummary(RecipeType recipe);
 
 SCL_EXTERN_C_END
 

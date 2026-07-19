@@ -203,6 +203,29 @@ static void VerifyAuthLayout(int screenWidth, int screenHeight) {
     Require(!CheckCollisionRecs(submitButton, switchButton), "auth buttons should not overlap");
 }
 
+static void VerifyAuthAccountPickerLayout(int screenWidth, int screenHeight) {
+    Rectangle panel;
+    Rectangle previousRow;
+    int visibleIndex;
+    int visibleCount;
+
+    panel = UI_GetAuthAccountPickerPanelRect(screenWidth, screenHeight);
+    visibleCount = UI_GetAuthAccountPickerVisibleRowCount();
+    Require(panel.width > 0.0f && panel.height > 0.0f, "auth account picker panel should have a positive size");
+    Require(visibleCount > 0, "auth account picker should expose visible rows");
+
+    previousRow = UI_GetAuthAccountPickerRowRect(screenWidth, screenHeight, 0);
+    Require(RectContainsRect(panel, previousRow), "first auth account picker row should stay inside the panel");
+    for (visibleIndex = 1; visibleIndex < visibleCount; ++visibleIndex) {
+        Rectangle row;
+
+        row = UI_GetAuthAccountPickerRowRect(screenWidth, screenHeight, visibleIndex);
+        Require(RectContainsRect(panel, row), "auth account picker rows should stay inside the panel");
+        Require(row.y >= previousRow.y + previousRow.height, "auth account picker rows should not overlap");
+        previousRow = row;
+    }
+}
+
 static void VerifySavePanelLayout(int screenWidth, int screenHeight) {
     float scale;
     Rectangle panel;
@@ -284,6 +307,9 @@ int main(void) {
     VerifyAuthLayout(1440, 900);
     VerifyAuthLayout(1280, 720);
     VerifyAuthLayout(1024, 768);
+    VerifyAuthAccountPickerLayout(1440, 900);
+    VerifyAuthAccountPickerLayout(1280, 720);
+    VerifyAuthAccountPickerLayout(1024, 768);
     VerifySavePanelLayout(1440, 900);
     VerifySavePanelLayout(1280, 720);
     VerifySavePanelLayout(1024, 768);

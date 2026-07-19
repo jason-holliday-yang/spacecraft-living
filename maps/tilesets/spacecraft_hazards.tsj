@@ -1,0 +1,20 @@
+{
+  "columns": 4,
+  "image": "spacecraft_hazards.png",
+  "imageheight": 96,
+  "imagewidth": 384,
+  "margin": 0,
+  "name": "spacecraft_hazards",
+  "spacing": 0,
+  "tilecount": 4,
+  "tileheight": 96,
+  "tiles": [
+    {"id": 0, "properties": [{"name": "enum", "type": "int", "value": 0}, {"name": "name", "type": "string", "value": "None"}]},
+    {"id": 1, "properties": [{"name": "enum", "type": "int", "value": 1}, {"name": "name", "type": "string", "value": "Trip"}]},
+    {"id": 2, "properties": [{"name": "enum", "type": "int", "value": 2}, {"name": "name", "type": "string", "value": "Swamp"}]},
+    {"id": 3, "properties": [{"name": "enum", "type": "int", "value": 3}, {"name": "name", "type": "string", "value": "Poison"}]}
+  ],
+  "tilewidth": 96,
+  "type": "tileset",
+  "version": "1.10"
+}
